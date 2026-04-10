@@ -449,21 +449,241 @@ An event is the canonical signed unit carried over Nostr. An object is a stable 
 
 An Overnet core event MUST be represented as a Nostr event conforming to the Overnet core profile.
 
-The content of an Overnet core event MUST be structured JSON in the canonical format defined by this specification. Standardized Nostr tags MUST be used for references, indexing metadata, and related routing or discovery purposes defined by the core or by an applicable profile.
+Overnet defines three Nostr event kinds:
+
+| Kind | Name | Nostr behavior |
+|------|------|----------------|
+| 7800 | Overnet Event | Regular (stored, never replaced) |
+| 37800 | Overnet State | Parameterized replaceable (latest per pubkey + `d` tag) |
+| 7801 | Overnet Removal | Regular (stored, never replaced) |
+
+**Kind 7800 (Overnet Event)** is used for immutable event log entries: messages, comments, actions, mutations, and other events that accumulate over time.
+
+**Kind 37800 (Overnet State)** is used for current state of single-author objects: profiles, settings, adapter mappings, and any object where one pubkey owns the canonical latest state. The Nostr `d` tag MUST be set to the object identifier. Because this kind is parameterized replaceable, Nostr relays will automatically retain only the latest event per pubkey and `d` tag combination.
+
+**Kind 7801 (Overnet Removal)** is used for tombstone events that mark an object or prior event as removed.
+
+These kind numbers are working values subject to change before registration with the Nostr kind registry.
+
+The content of an Overnet core event MUST be a JSON string conforming to the content schema defined in §6.3.
 
 ### 6.3 Required Fields
 
-Every Overnet core event MUST convey at least the following semantic fields, whether directly in structured content, standardized tags, or both as defined by the core representation rules:
+Overnet core events carry required fields in two locations: Nostr tags and the JSON content body. Tags are used for fields that relays need to filter on. Content is used for structured data that is only needed after retrieval.
 
-- core specification version
-- event type
-- object type when the event pertains to a stable object type
-- object identifier when the event pertains to a stable object
-- authoring or acting identity
-- event timestamp
-- provenance information
+#### 6.3.1 Required Nostr Tags
 
-Profiles MAY require additional fields.
+Every Overnet core event MUST include the following tags:
+
+| Tag | Value | Description |
+|-----|-------|-------------|
+| `overnet_v` | semver string | Core specification version (currently `"0.1.0"`) |
+| `overnet_et` | string | Event type (e.g., `"chat.message"`, `"repo.commit"`) |
+
+The following tags are REQUIRED when the event pertains to a stable object:
+
+| Tag | Value | Description |
+|-----|-------|-------------|
+| `overnet_ot` | string | Object type (e.g., `"chat.channel"`, `"repo.issue"`) |
+| `overnet_oid` | string | Object identifier |
+
+Tag names use the `overnet_` prefix to avoid collision with Nostr core tags and other protocols. Nostr relays can filter on these tags without parsing the event content.
+
+The following fields are carried by the Nostr event structure itself and MUST NOT be duplicated in tags or content:
+
+- **Authoring identity**: the Nostr event `pubkey`
+- **Event timestamp**: the Nostr event `created_at`
+- **Event identifier**: the Nostr event `id`
+
+*Example (informative). Nostr tags for a chat message event:*
+
+```json
+[
+  ["overnet_v", "0.1.0"],
+  ["overnet_et", "chat.message"],
+  ["overnet_ot", "chat.channel"],
+  ["overnet_oid", "a1b2c3d4"]
+]
+```
+
+#### 6.3.2 Required Content Fields
+
+The Nostr event `content` field MUST be a JSON object with the following structure:
+
+```json
+{
+  "provenance": { ... },
+  "body": { ... }
+}
+```
+
+The `provenance` field is REQUIRED on all Overnet core events. Its structure is defined in §6.3.3.
+
+The `body` field contains profile-defined payload data. The core does not define the structure of `body`; applicable profiles define what fields appear inside it.
+
+Core-defined fields occupy the top level of the content JSON object. Profiles MUST NOT add fields at the top level; all profile-specific data MUST go inside `body`. This separation ensures that future core fields cannot collide with profile-defined fields.
+
+#### 6.3.3 Provenance
+
+The `provenance` object describes the origin of the data carried by the event.
+
+**For native Overnet data:**
+
+```json
+{
+  "provenance": {
+    "type": "native"
+  }
+}
+```
+
+**For adapted data:**
+
+```json
+{
+  "provenance": {
+    "type": "adapted",
+    "protocol": "irc",
+    "origin": "irc.libera.chat/#overnet",
+    "external_identity": "someircnick",
+    "limitations": ["unsigned", "no_edit_history"]
+  }
+}
+```
+
+The `type` field is REQUIRED. It MUST be `"native"` or `"adapted"`.
+
+When `type` is `"adapted"`, the following fields are REQUIRED:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `protocol` | string | The external protocol or system (e.g., `"irc"`, `"email"`, `"gitlab"`) |
+| `origin` | string | The specific external source (e.g., `"irc.libera.chat/#overnet"`) |
+| `limitations` | array of strings | Known translation limitations (MAY be empty) |
+
+The `external_identity` field is REQUIRED when the event is attributable to a specific external actor. It MUST contain the identity of the original author in the external system (e.g., an IRC nickname, an email address).
+
+#### 6.3.4 Core Limitation Identifiers
+
+The following limitation identifiers are defined by the core. Adapter specifications MAY define additional identifiers using namespaced names (e.g., `irc.no_presence`, `email.no_attachments`).
+
+| Identifier | Meaning |
+|---|---|
+| `unsigned` | Original data has no cryptographic signature from the external author |
+| `no_edit_history` | Edit or revision history from the external system is not preserved |
+| `lossy` | Some content or metadata was lost or simplified in translation |
+| `delayed` | Data may not reflect real-time state of the external system |
+| `synthetic_identity` | The external identity was constructed or inferred, not directly authenticated |
+| `partial` | Only a subset of the external resource's data is represented |
+
+#### 6.3.5 Complete Event Examples
+
+This section is informative. It shows complete Nostr events conforming to the Overnet core profile.
+
+*Example 1. A native Overnet Event (kind 7800) representing a chat message:*
+
+```json
+{
+  "id": "a1e2f3...",
+  "pubkey": "b4c5d6...",
+  "created_at": 1744300800,
+  "kind": 7800,
+  "tags": [
+    ["overnet_v", "0.1.0"],
+    ["overnet_et", "chat.message"],
+    ["overnet_ot", "chat.channel"],
+    ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"]
+  ],
+  "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"text\":\"Hello, world!\"}}",
+  "sig": "e7f8a9..."
+}
+```
+
+In this example:
+
+- `kind` is 7800 (Overnet Event), so the relay stores it as a regular immutable event.
+- `overnet_v` identifies the core spec version. A relay can filter for all Overnet 0.1.0 events.
+- `overnet_et` is `"chat.message"`, defined by a chat profile (not the core).
+- `overnet_ot` and `overnet_oid` identify the object this event pertains to — a chat channel with a UUID.
+- `pubkey` is the authoring identity. `created_at` is the event timestamp. These are not duplicated in tags or content.
+- `content` is a JSON string. The `provenance` type is `"native"`. The `body` contains profile-defined payload.
+
+*Example 2. An adapted event from IRC:*
+
+```json
+{
+  "id": "c3d4e5...",
+  "pubkey": "a1b2c3...",
+  "created_at": 1744300860,
+  "kind": 7800,
+  "tags": [
+    ["overnet_v", "0.1.0"],
+    ["overnet_et", "chat.message"],
+    ["overnet_ot", "chat.channel"],
+    ["overnet_oid", "irc:libera.chat:#overnet"]
+  ],
+  "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\"]},\"body\":{\"text\":\"Hello from IRC!\"}}",
+  "sig": "d5e6f7..."
+}
+```
+
+In this example:
+
+- `pubkey` is the adapter's Nostr key, not the original IRC user's.
+- `provenance.external_identity` is `"alice"`, the IRC nickname.
+- `provenance.limitations` declares that the original message has no cryptographic signature and edit history is not available.
+- `overnet_oid` uses a protocol-scoped identifier (`irc:libera.chat:#overnet`) as defined by the IRC adapter spec.
+
+*Example 3. An Overnet State event (kind 37800) representing a user profile:*
+
+```json
+{
+  "id": "e5f6a7...",
+  "pubkey": "b4c5d6...",
+  "created_at": 1744300900,
+  "kind": 37800,
+  "tags": [
+    ["d", "b4c5d6..."],
+    ["overnet_v", "0.1.0"],
+    ["overnet_et", "identity.profile"],
+    ["overnet_ot", "identity.profile"],
+    ["overnet_oid", "b4c5d6..."]
+  ],
+  "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"display_name\":\"Alice\",\"bio\":\"Overnet early adopter\"}}",
+  "sig": "f8a9b0..."
+}
+```
+
+In this example:
+
+- `kind` is 37800 (Overnet State). The relay keeps only the latest event per pubkey + `d` tag.
+- The `d` tag is set to the object identifier, as required by §6.2 for kind 37800.
+- Publishing a new event with the same `kind`, `pubkey`, and `d` tag replaces this one on any NIP-01 relay.
+
+*Example 4. An Overnet Removal event (kind 7801):*
+
+```json
+{
+  "id": "b2c3d4...",
+  "pubkey": "b4c5d6...",
+  "created_at": 1744301000,
+  "kind": 7801,
+  "tags": [
+    ["overnet_v", "0.1.0"],
+    ["overnet_et", "core.removal"],
+    ["e", "a1e2f3..."]
+  ],
+  "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{}}",
+  "sig": "c4d5e6..."
+}
+```
+
+In this example:
+
+- `kind` is 7801 (Overnet Removal).
+- The `e` tag references the Nostr event ID of the event being removed, using the standard Nostr event reference tag.
+- `overnet_et` is `"core.removal"`, a core-defined event type.
+- The `body` is empty; the removal's meaning comes from the reference, not from payload data.
 
 ### 6.4 Optional Fields
 
@@ -475,7 +695,9 @@ Optional fields MUST NOT silently change the meaning of core-required fields.
 
 Objects MUST have stable object identifiers distinct from event identifiers.
 
-Object identifiers MUST be namespace-based and stable across revisions of the same logical object.
+Object identifiers MUST be non-empty strings. Object identifiers MUST be globally unique across all object types. Object identifiers MUST be stable across revisions of the same logical object.
+
+The core does not mandate a specific identifier format. Profiles MUST define identifier schemes for their object types that ensure global uniqueness structurally (for example, through UUIDs, content-addressed hashes, or protocol-scoped identifiers).
 
 ### 6.6 Event Identity
 
@@ -858,9 +1080,9 @@ An implementation MUST distinguish authentication from authorization and MUST NO
 
 ### 13.3 Provenance and Integrity Requirements
 
-All Overnet data MUST carry provenance.
+All Overnet data MUST carry provenance as defined in §6.3.3.
 
-Adapted data MUST disclose its origin, relevant mapping context, and any known partial, delayed, synthetic, or lossy translation affecting correctness or trust interpretation.
+Adapted data MUST disclose its origin, relevant mapping context, and any known translation limitations as defined in §6.3.3 and §6.3.4.
 
 ### 13.4 Privacy Considerations
 
@@ -914,16 +1136,16 @@ This section is informative.
 
 The following topics remain intentionally open or are expected to be completed by companion specifications or later revisions:
 
-- the exact canonical JSON rules for Overnet core content
-- the exact standardized Nostr tag set for core references and indexing metadata
-- the exact baseline query and filter surface
-- the exact baseline subscription resume and continuation rules
+- the exact query and filter surface for relay operations
+- the exact subscription resume and continuation rules
 - the exact session-oriented authentication handshake details where used
 - stronger identity continuity, rotation, and revocation mechanisms
+- concrete reference tag conventions for revision, supersession, and removal relationships
 - detailed adapter specifications for systems such as IRC, email, and GitLab-like systems
 - application profile specifications such as chat, email, code hosting, marketplaces, and websites
 - storage and replication profiles
 - registry governance and publication details
+- registration of Overnet kind numbers (7800, 37800, 7801) with the Nostr kind registry
 
 ## Appendix A. Rationale
 

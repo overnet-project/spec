@@ -1,0 +1,21 @@
+{
+  "description": "Invalid: adapted provenance is missing the required protocol field. A relay MUST reject this event.",
+  "input": {
+    "id": "eeee4444eeee4444eeee4444eeee4444eeee4444eeee4444eeee4444eeee4444",
+    "pubkey": "a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2",
+    "created_at": 1744300800,
+    "kind": 7800,
+    "tags": [
+      ["overnet_v", "0.1.0"],
+      ["overnet_et", "chat.message"],
+      ["overnet_ot", "chat.channel"],
+      ["overnet_oid", "irc:libera.chat:#overnet"]
+    ],
+    "content": "{\"provenance\":{\"type\":\"adapted\",\"origin\":\"irc.libera.chat/#overnet\",\"limitations\":[]},\"body\":{\"text\":\"Hello\"}}",
+    "sig": "ffff5555ffff5555ffff5555ffff5555ffff5555ffff5555ffff5555ffff5555ffff5555ffff5555ffff5555ffff5555ffff5555ffff5555ffff5555ffff5555"
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "Adapted provenance missing required protocol field"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "description": "A valid Overnet Removal event (kind 7801) that tombstones a prior event using an e tag reference.",
+  "input": {
+    "id": "b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3",
+    "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+    "created_at": 1744301000,
+    "kind": 7801,
+    "tags": [
+      ["overnet_v", "0.1.0"],
+      ["overnet_et", "core.removal"],
+      ["e", "a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2"]
+    ],
+    "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{}}",
+    "sig": "c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4"
+  },
+  "expected": {
+    "overnet_valid": true
+  }
+}

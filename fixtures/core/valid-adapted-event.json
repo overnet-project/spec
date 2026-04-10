@@ -1,0 +1,20 @@
+{
+  "description": "A valid adapted Overnet Event (kind 7800) from IRC with full provenance.",
+  "input": {
+    "id": "c3d4e5c3d4e5c3d4e5c3d4e5c3d4e5c3d4e5c3d4e5c3d4e5c3d4e5c3d4e5c3d4",
+    "pubkey": "a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2",
+    "created_at": 1744300860,
+    "kind": 7800,
+    "tags": [
+      ["overnet_v", "0.1.0"],
+      ["overnet_et", "chat.message"],
+      ["overnet_ot", "chat.channel"],
+      ["overnet_oid", "irc:libera.chat:#overnet"]
+    ],
+    "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\"]},\"body\":{\"text\":\"Hello from IRC!\"}}",
+    "sig": "d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5e6f7d5"
+  },
+  "expected": {
+    "overnet_valid": true
+  }
+}
