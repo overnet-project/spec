@@ -10,7 +10,15 @@ At the current checkpoint, the project has:
 - a shared core fixture corpus
 - a working core validator/reference implementation in the sibling `overnet-code` repository
 - a first companion adapter specification for IRC
+- a first draft companion specification for the Overnet Program Runtime
+- a first draft companion specification for the Overnet Program Protocol
+- a first draft companion specification for Overnet Program Services
 - a working IRC adapter implementation in the sibling `overnet-adapter-irc` repository
+
+At this checkpoint, the specification also distinguishes between:
+
+- adapter specifications, which define source-system mapping semantics
+- Overnet programs, which are runnable implementations of the core and any companion specifications they support
 
 This is still pre-stable work. The documents are useful for implementation and review, but they should not yet be treated as frozen interoperability standards.
 
@@ -26,6 +34,9 @@ The following areas are now comparatively mature for this stage:
 - baseline delegation semantics for removal
 - general adapter fidelity principles
 - first-pass IRC mapping semantics for observed IRC events
+- first-pass Overnet Program Runtime architecture
+- first-pass Overnet Program Protocol framing and envelope rules
+- first-pass Overnet Program service method definitions
 
 These areas may still change, but they are now backed by fixtures and implementation pressure rather than only abstract design.
 
@@ -61,6 +72,8 @@ The IRC adapter specification currently covers:
 
 The IRC adapter is deliberately preserving observed IRC semantics rather than defining derived state or native Overnet moderation semantics.
 
+The project now has initial draft runtime, protocol, and services specifications for Overnet programs, but they should still be treated as early design work rather than stable execution standards.
+
 ## What Is Not Stable Yet
 
 The following areas should still be treated as open design territory:
@@ -70,6 +83,7 @@ The following areas should still be treated as open design territory:
 - storage/replication profiles
 - richer authority and moderation models
 - derived state from adapted event streams
+- mature and implementation-tested service-level semantics for Overnet program APIs
 - relay/query capability details beyond the current baseline
 - user-scoped IRC mode mapping
 - derived IRC channel privilege or membership state

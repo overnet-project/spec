@@ -7,6 +7,11 @@ It is intended to support systems such as chat, email, code hosting, marketplace
 
 At present, this repository contains the Overnet Core Specification draft plus the first companion adapter specification for IRC, along with shared conformance fixtures used by the reference implementation work.
 
+In this specification family:
+
+- adapter specifications define how external systems map into Overnet semantics
+- Overnet programs are runnable implementations that consume or produce Overnet data
+
 ## Status
 
 This repository is in active development.
@@ -34,6 +39,8 @@ See [docs/status.md](docs/status.md) for more detail.
   - major design decisions and rationale
 - [docs/adapters/](docs/adapters/)
   - companion adapter specifications
+- [docs/programs/](docs/programs/)
+  - companion Overnet program runtime, protocol, and services specifications
 - [docs/profiles/](docs/profiles/)
   - companion application profile specifications
 - [docs/registries/](docs/registries/)
@@ -52,8 +59,13 @@ The current documents and fixtures cover:
 - removal and delegation baseline semantics
 - generic adapter fidelity requirements
 - the first IRC adapter specification and IRC fixture corpus
+- the first draft Overnet Program Runtime specification
+- the first draft Overnet Program Protocol specification
+- the first draft Overnet Program Services specification
 
 Application-specific behavior and additional adapters are still expected to be defined in companion specifications rather than folded into the core.
+
+This repository now contains initial working drafts for both the Overnet Program Runtime and Overnet Program Protocol.
 
 ## Planned Companion Specifications
 

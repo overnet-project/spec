@@ -4,7 +4,7 @@
 
 This document defines the Overnet core protocol and platform architecture.
 
-It is the foundational specification in a broader Overnet specification family. Additional Overnet specifications are expected to define adapter behavior, application profiles, storage profiles, operational guidance, registries, and other extensions built on top of this core.
+It is the foundational specification in a broader Overnet specification family. Additional Overnet specifications are expected to define adapter behavior, application profiles, Overnet program runtime behavior, storage profiles, operational guidance, registries, and other extensions built on top of this core.
 
 This document uses the key words MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD, SHOULD NOT, RECOMMENDED, NOT RECOMMENDED, MAY, and OPTIONAL as described in BCP 14.
 
@@ -17,7 +17,7 @@ This document distinguishes between:
 
 This section is reserved for references to companion Overnet specifications.
 
-This document defines only the Overnet core. Companion specifications MAY define additional normative requirements for adapters, application profiles, storage or replication profiles, registries, and operational guidance.
+This document defines only the Overnet core. Companion specifications MAY define additional normative requirements for adapters, application profiles, Overnet program runtime behavior, storage or replication profiles, registries, and operational guidance.
 
 At the time of initial publication, this section may be incomplete or contain only provisional references.
 
@@ -31,7 +31,7 @@ Overnet is a higher-level protocol and application platform for building network
 
 Overnet is built on top of Nostr. It uses Nostr as an underlying decentralized event distribution substrate while defining a higher-level application model above it. In that sense, Overnet is not a replacement for Nostr, but a system built on Nostr that adds stronger application-level structure for identity, signed operations, object and event exchange, capability discovery, interoperability, and platform semantics.
 
-This document is intentionally limited to the Overnet core. It defines the stable shared semantics that other Overnet specifications will build upon. Those future specifications are expected to cover areas such as protocol adapters, application profiles, storage profiles, operational guidance, and other specialized or domain-specific behavior.
+This document is intentionally limited to the Overnet core. It defines the stable shared semantics that other Overnet specifications will build upon. Those future specifications are expected to cover areas such as protocol adapters, application profiles, Overnet program runtime behavior, storage profiles, operational guidance, and other specialized or domain-specific behavior.
 
 It is intended to provide a common application-facing model above lower-level transports, storage systems, and existing protocols. Rather than forcing every application to directly integrate with every underlying protocol or service, Overnet defines a stable core model for identity, signed operations, object and event exchange, capability discovery, and interoperability.
 
@@ -134,6 +134,7 @@ This specification is written to be extensible. It is intended to support future
 
 - adapter specifications
 - application profile specifications
+- program runtime or program-protocol specifications
 - storage and replication profile specifications
 - operational and deployment guidance
 - registries and extension specifications
@@ -347,11 +348,17 @@ An implementation must not advertise a capability unless it actually implements 
 
 A supported profile is a profile that an implementation explicitly claims to implement and for which it satisfies all mandatory requirements.
 
-#### 3.3.6 Native Overnet Data
+#### 3.3.6 Overnet Program
+
+An Overnet program is a runnable implementation artifact that produces, consumes, stores, transports, or otherwise acts on Overnet data.
+
+An Overnet program may implement one or more Overnet roles and may support one or more companion specifications, but it is not itself a semantic companion specification merely by virtue of being runnable software.
+
+#### 3.3.7 Native Overnet Data
 
 Native Overnet data is data created and represented directly according to Overnet rules rather than being derived from an external system through an adapter.
 
-#### 3.3.7 Adapted Data
+#### 3.3.8 Adapted Data
 
 Adapted data is data that originates outside native Overnet semantics and is exposed within Overnet through an adapter.
 
@@ -373,6 +380,8 @@ Overnet adds a higher-level application model on top of Nostr. In particular, it
 - application-facing operations for publication, retrieval, querying, subscription, capability discovery, and related behavior
 - provenance, authorization, and conformance requirements beyond raw Nostr usage
 
+The Overnet core is not by itself a complete execution environment for runnable software. A separate Overnet program runtime or program-protocol specification is expected to define how Overnet programs communicate with a host runtime, receive services, and emit data through a standardized language-agnostic boundary.
+
 ### 4.2 Roles and Responsibilities
 
 The core roles are client, relay, and adapter.
@@ -380,6 +389,8 @@ The core roles are client, relay, and adapter.
 A client acts on behalf of a user, service, or automated process. A relay provides Overnet server behavior, which may be implemented atop one or more Nostr relays or equivalent relay-side infrastructure. An adapter maps external systems into Overnet semantics.
 
 A single deployment MAY implement more than one role.
+
+An Overnet program is a runnable implementation artifact that participates in one or more of these roles. Overnet programs are not themselves semantic companion specifications.
 
 ### 4.3 Trust Boundaries
 
@@ -402,6 +413,14 @@ Overnet core events use structured JSON content as the primary carrier of applic
 External protocols and systems participate in Overnet through adapters.
 
 The core specification defines baseline adapter invariants, including identity mapping, permission mapping, provenance, and disclosure of partial or lossy translation. Detailed rules for any specific adapter are expected to be defined by companion adapter specifications.
+
+### 4.5.1 Adapters Versus Programs
+
+An adapter is a semantic mapping layer. It defines how an external system is expressed within Overnet.
+
+A program is a runnable implementation artifact that produces, consumes, stores, transports, or otherwise acts on Overnet data.
+
+Adapter specifications define source-system mapping semantics. Programs implement the core and any companion specifications they claim to support. Programs do not require separate semantic companion specifications merely by virtue of being runnable software, although a future Overnet program runtime or program-protocol specification may define common execution contracts for programs.
 
 ### 4.6 Adapter Fidelity Principles
 
@@ -1240,6 +1259,7 @@ The following topics remain intentionally open or are expected to be completed b
 - stronger identity continuity, rotation, and revocation mechanisms
 - concrete reference tag conventions for revision, supersession, and removal relationships
 - detailed adapter specifications for systems such as IRC, email, and GitLab-like systems
+- a language-agnostic program runtime or program-protocol specification for Overnet programs
 - application profile specifications such as chat, email, code hosting, marketplaces, and websites
 - storage and replication profiles
 - registry governance and publication details
