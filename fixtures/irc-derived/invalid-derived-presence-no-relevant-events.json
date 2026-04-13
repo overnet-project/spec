@@ -1,0 +1,21 @@
+{
+  "description": "Invalid: derived channel presence requires at least one relevant observed event for the target channel.",
+  "input": {
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "created_at": 1744300900,
+    "events": [
+      {
+        "command": "PRIVMSG",
+        "network": "irc.libera.chat",
+        "target": "#overnet",
+        "nick": "alice",
+        "created_at": 1744300870
+      }
+    ]
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "derived presence requires at least one relevant observed event"
+  }
+}

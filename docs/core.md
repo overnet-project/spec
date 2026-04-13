@@ -577,7 +577,11 @@ When `type` is `"adapted"`, the following fields are REQUIRED:
 | `origin` | string | The specific external source (e.g., `"irc.libera.chat/#overnet"`) |
 | `limitations` | array of strings | Known translation limitations (MAY be empty) |
 
+Adapted provenance MUST also include at least one of `external_identity` or `external_scope`.
+
 The `external_identity` field is REQUIRED when the event is attributable to a specific external actor. It MUST contain the identity of the original author in the external system (e.g., an IRC nickname, an email address).
+
+The `external_scope` field is REQUIRED when the adapted data is an aggregate or derived view that is not attributable to one specific external actor. It MUST identify the external scope over which the adapted view was derived (e.g., `"channel_membership"`, `"mailing_list_thread"`).
 
 #### 6.3.4 Core Limitation Identifiers
 

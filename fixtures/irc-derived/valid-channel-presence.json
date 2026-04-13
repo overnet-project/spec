@@ -1,0 +1,57 @@
+{
+  "description": "A valid derived IRC channel presence state built from observed JOIN, PART, and NICK events.",
+  "input": {
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "created_at": 1744300900,
+    "events": [
+      {
+        "command": "JOIN",
+        "network": "irc.libera.chat",
+        "target": "#overnet",
+        "nick": "alice",
+        "user": "~alice",
+        "host": "example/alice",
+        "created_at": 1744300870
+      },
+      {
+        "command": "JOIN",
+        "network": "irc.libera.chat",
+        "target": "#overnet",
+        "nick": "bob",
+        "account": "bob",
+        "created_at": 1744300875
+      },
+      {
+        "command": "NICK",
+        "network": "irc.libera.chat",
+        "nick": "bob",
+        "new_nick": "robert",
+        "account": "bob",
+        "created_at": 1744300880
+      },
+      {
+        "command": "PART",
+        "network": "irc.libera.chat",
+        "target": "#overnet",
+        "nick": "alice",
+        "created_at": 1744300885
+      }
+    ]
+  },
+  "expected": {
+    "overnet_valid": true,
+    "event": {
+      "kind": 37800,
+      "created_at": 1744300900,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "irc.channel_presence"],
+        ["overnet_ot", "chat.channel"],
+        ["overnet_oid", "irc:irc.libera.chat:#overnet"],
+        ["d", "irc:irc.libera.chat:#overnet"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_scope\":\"channel_membership\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"irc.ephemeral_presence\",\"irc.partial_membership\"]},\"body\":{\"members\":[{\"nick\":\"robert\",\"account\":\"bob\",\"last_event_type\":\"irc.nick\"}],\"partial\":true,\"as_of\":1744300885}}"
+    }
+  }
+}

@@ -22,12 +22,12 @@ This first version is intentionally narrow. It defines:
 - adapted observed channel moderation-action mapping for `KICK`
 - adapted network-scoped identity-change mapping for `NICK`
 - adapted observed channel mode-change mapping for `MODE`
+- an optional derived channel presence state view
 - provenance and limitation requirements for adapted IRC data
 - baseline object identifiers for IRC network and channel objects
 
 This version does not yet define:
 
-- full membership-state derivation beyond observed channel presence events
 - user-scoped mode mapping
 - derived channel mode state or channel privilege state
 - IRC operator or service authority semantics
@@ -408,7 +408,54 @@ The adapter input for `MODE` MUST provide the raw mode string separately from th
 
 This mapping is observational. It records that an IRC mode change was observed. It does not by itself define canonical channel state, channel privilege state, or native Overnet moderation authority.
 
-### 8.12 Channel Message Example
+### 8.12 Derived Channel Presence State
+
+An implementation MAY publish a derived channel presence view for an IRC channel as an Overnet state event with:
+
+- `kind` `37800`
+- `overnet_et` value `irc.channel_presence`
+- `overnet_ot` value `chat.channel`
+- `overnet_oid` value equal to the mapped IRC channel object identifier
+- exactly one `d` tag whose value equals `overnet_oid`
+
+This derived state is secondary to the observed IRC event stream defined elsewhere in this specification. It MUST NOT be interpreted as canonical IRC truth beyond the adapter's observed scope.
+
+The event `body` MUST include:
+
+| Field | Type | Description |
+|---|---|---|
+| `members` | array | Current adapter-observed channel members |
+| `partial` | boolean | Whether the derived view is partial |
+| `as_of` | integer | Unix timestamp of the newest observed event included in the derivation |
+
+Each `members` entry MUST be a JSON object with:
+
+| Field | Type | Description |
+|---|---|---|
+| `nick` | string | Current IRC nick for the observed member |
+
+Each `members` entry MAY include:
+
+| Field | Type | Description |
+|---|---|---|
+| `account` | string | Latest known authenticated IRC account for the member |
+| `user` | string | Latest known IRC username for the member |
+| `host` | string | Latest known IRC host for the member |
+| `last_event_type` | string | Overnet event type of the newest observed event that affected this member's presence state |
+
+The adapted provenance on this derived state MUST:
+
+- use `provenance.type` value `"adapted"`
+- use `provenance.protocol` value `"irc"`
+- use `provenance.origin` in the `<network>/<channel>` form
+- use `provenance.external_scope` value `channel_membership`
+- include `unsigned`
+- include `irc.ephemeral_presence`
+- include `irc.partial_membership` when `body.partial` is `true`
+
+When this derived view is published, the implementation MUST derive it only from observed IRC events. At minimum, `JOIN`, `PART`, `QUIT`, `KICK`, and `NICK` MUST affect the derived membership view in the obvious IRC-semantic direction.
+
+### 8.13 Channel Message Example
 
 The following example is informative:
 
@@ -425,7 +472,7 @@ The following example is informative:
 }
 ```
 
-### 8.13 Direct-Message Example
+### 8.14 Direct-Message Example
 
 The following example is informative:
 
@@ -444,12 +491,13 @@ The following example is informative:
 
 ## 9. Provenance Requirements
 
-For every IRC-adapted message, notice, topic update, presence event, network identity-change event, or observed mode-change event defined by this specification:
+For every IRC-adapted message, notice, topic update, presence event, network identity-change event, observed mode-change event, or derived channel presence state defined by this specification:
 
 - `provenance.type` MUST be `"adapted"`
 - `provenance.protocol` MUST be `"irc"`
 - `provenance.origin` MUST identify the IRC source using the event-class-specific form defined by this specification
-- `provenance.external_identity` MUST be the IRC nick
+- `provenance.external_identity` MUST be the IRC nick when the adapted event is attributable to a specific IRC actor
+- `provenance.external_scope` MUST be `channel_membership` for derived channel presence state
 - `body.irc_identity.account`, when present, MUST be a non-empty string naming the authenticated IRC account
 - `body.irc_identity.user`, when present, MUST be a non-empty string
 - `body.irc_identity.host`, when present, MUST be a non-empty string
@@ -481,9 +529,15 @@ For network-scoped nick changes, `provenance.origin` MUST use the form:
 <network>
 ```
 
+For derived channel presence state, `provenance.origin` MUST use the form:
+
+```text
+<network>/<channel>
+```
+
 ## 10. Required Limitation Disclosure
 
-IRC-adapted messages, notices, topic updates, presence events, network identity-change events, and observed mode-change events defined by this specification MUST include:
+IRC-adapted messages, notices, topic updates, presence events, network identity-change events, observed mode-change events, and derived channel presence state defined by this specification MUST include:
 
 - `unsigned`
 - `no_edit_history`
@@ -499,6 +553,7 @@ This specification defines the following IRC-specific limitation identifier:
 | Identifier | Meaning |
 |---|---|
 | `irc.ephemeral_presence` | Presence or membership state may be partial, transient, or not represented through this adapter mapping |
+| `irc.partial_membership` | A derived membership view does not claim complete or authoritative knowledge of all current members |
 
 ## 11. Authority and Moderation
 
@@ -533,6 +588,8 @@ An implementation claiming conformance with this IRC adapter specification MUST,
 - emit adapted provenance with protocol `irc`
 - include the required limitation identifiers defined by this specification
 - preserve the distinction between adapter identity and IRC sender identity
+
+An implementation MAY additionally claim support for the optional derived channel presence state defined in section 8.12.
 
 ## 14. Open Issues
 

@@ -1,0 +1,21 @@
+{
+  "description": "Invalid: derived channel presence requires a channel target.",
+  "input": {
+    "network": "irc.libera.chat",
+    "target": "alice",
+    "created_at": 1744300900,
+    "events": [
+      {
+        "command": "JOIN",
+        "network": "irc.libera.chat",
+        "target": "#overnet",
+        "nick": "alice",
+        "created_at": 1744300870
+      }
+    ]
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "Presence target must be a channel"
+  }
+}

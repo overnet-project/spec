@@ -1,0 +1,21 @@
+{
+  "description": "Invalid: derived channel presence events must all come from the same IRC network.",
+  "input": {
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "created_at": 1744300900,
+    "events": [
+      {
+        "command": "JOIN",
+        "network": "irc.example.org",
+        "target": "#overnet",
+        "nick": "alice",
+        "created_at": 1744300870
+      }
+    ]
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "derived presence event network mismatch"
+  }
+}
