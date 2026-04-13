@@ -1,0 +1,14 @@
+{
+  "description": "Invalid: IRC channel PRIVMSG mapping requires a sender nick for provenance.external_identity.",
+  "input": {
+    "command": "PRIVMSG",
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "text": "hello",
+    "created_at": 1744300860
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "Sender nick is required"
+  }
+}

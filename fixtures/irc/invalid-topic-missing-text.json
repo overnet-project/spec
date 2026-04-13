@@ -1,0 +1,14 @@
+{
+  "description": "Invalid: IRC TOPIC mapping requires a topic value, even when the value is an empty string.",
+  "input": {
+    "command": "TOPIC",
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "nick": "alice",
+    "created_at": 1744300866
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "TOPIC text is required"
+  }
+}

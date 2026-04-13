@@ -1,0 +1,15 @@
+{
+  "description": "Invalid: IRC channel PRIVMSG mapping requires message text.",
+  "input": {
+    "command": "PRIVMSG",
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "nick": "alice",
+    "text": "",
+    "created_at": 1744300860
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "Message text is required"
+  }
+}

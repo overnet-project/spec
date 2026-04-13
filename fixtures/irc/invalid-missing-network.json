@@ -1,0 +1,14 @@
+{
+  "description": "Invalid: IRC channel PRIVMSG mapping requires a network identifier.",
+  "input": {
+    "command": "PRIVMSG",
+    "target": "#overnet",
+    "nick": "alice",
+    "text": "hello",
+    "created_at": 1744300860
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "IRC network is required"
+  }
+}

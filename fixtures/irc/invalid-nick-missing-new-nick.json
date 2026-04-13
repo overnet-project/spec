@@ -1,0 +1,13 @@
+{
+  "description": "Invalid: IRC NICK mapping requires the new IRC nick separately from the network identifier.",
+  "input": {
+    "command": "NICK",
+    "network": "irc.libera.chat",
+    "nick": "alice",
+    "created_at": 1744300879
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "NICK new_nick is required"
+  }
+}

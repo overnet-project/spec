@@ -1,0 +1,25 @@
+{
+  "description": "A valid IRC channel NOTICE mapped to an adapted Overnet chat.notice event on a chat.channel object.",
+  "input": {
+    "command": "NOTICE",
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "nick": "ChanServ",
+    "text": "Please keep on topic.",
+    "created_at": 1744300861
+  },
+  "expected": {
+    "overnet_valid": true,
+    "event": {
+      "kind": 7800,
+      "created_at": 1744300861,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.notice"],
+        ["overnet_ot", "chat.channel"],
+        ["overnet_oid", "irc:irc.libera.chat:#overnet"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"ChanServ\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"text\":\"Please keep on topic.\"}}"
+    }
+  }
+}

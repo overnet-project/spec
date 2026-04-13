@@ -109,3 +109,17 @@ This document records significant design decisions made during the development o
 - Date-based (e.g., "2026-04"). Unambiguous ordering but no semantic meaning.
 
 **Rationale:** Semver is widely understood and communicates the nature of changes. The 0.x range signals pre-stability. Breaking changes bump the major version.
+
+## D009: Delegation Uses Separate Events and Object-Scoped Removal Grants
+
+**Date:** 2026-04-13
+
+**Decision:** The baseline core delegation mechanism uses separate Overnet events with `overnet_et` value `core.delegation`. A delegation applies to exactly one object, authorizes only the `remove` action, and is referenced from a delegated removal by a dedicated `overnet_delegate` tag.
+
+**Alternatives considered:**
+
+- Inline delegation material inside removal events. Simpler one-shot validation, but duplicates grant data and makes reuse, auditability, and later revocation harder.
+- Broader delegation scopes such as object-type-wide or profile-wide grants. More operationally convenient, but too much authority for the first baseline mechanism.
+- Event-scoped grants. Precise, but too narrow to be useful as a baseline moderation/administration primitive.
+
+**Rationale:** Separate delegation events fit the event-oriented model, keep grants auditable, and leave room for later revocation and richer scope models. Object-scoped grants are narrow enough for a safe first version while still being useful. A dedicated `overnet_delegate` tag avoids ambiguity with the `e` tag already used to identify the target event being removed.

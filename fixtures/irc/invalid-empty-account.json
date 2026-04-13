@@ -1,0 +1,16 @@
+{
+  "description": "Invalid: IRC identity enrichment does not permit an empty authenticated account string.",
+  "input": {
+    "command": "PRIVMSG",
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "nick": "alice",
+    "account": "",
+    "text": "hello",
+    "created_at": 1744300869
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "IRC account must be a non-empty string"
+  }
+}

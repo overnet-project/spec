@@ -1,0 +1,14 @@
+{
+  "description": "Invalid: IRC MODE mapping requires the raw mode string separately from the channel target.",
+  "input": {
+    "command": "MODE",
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "nick": "chanop",
+    "created_at": 1744300882
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "MODE mode is required"
+  }
+}

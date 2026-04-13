@@ -403,6 +403,23 @@ External protocols and systems participate in Overnet through adapters.
 
 The core specification defines baseline adapter invariants, including identity mapping, permission mapping, provenance, and disclosure of partial or lossy translation. Detailed rules for any specific adapter are expected to be defined by companion adapter specifications.
 
+### 4.6 Adapter Fidelity Principles
+
+Adapters are required to preserve source-system semantics as faithfully as possible.
+
+An adapter specification or implementation MUST NOT reshape external data into a more convenient Overnet form when doing so would hide, weaken, or misstate the original system's actual semantics.
+
+In particular:
+
+- the scope of a mapped concept SHOULD remain the same as in the source system whenever Overnet can represent that scope directly
+- an adapter MUST NOT represent a network-scoped concept as object-scoped, channel-scoped, user-scoped, or session-scoped unless the companion specification explicitly documents that transformation and its consequences
+- an adapter MUST NOT overstate identity stability, object stability, authorship, authorization, or capability beyond what the source system actually provides
+- an observed external action MUST be distinguishable from native Overnet authority unless a companion specification explicitly defines equivalent authority semantics
+- lossy, synthetic, delayed, partial, inferred, or policy-shaped mappings MUST be disclosed through provenance, limitations, companion specification text, or a combination of those mechanisms
+- derived views, convenience projections, or implementation-local aggregations MUST NOT be treated as the canonical meaning of adapted data unless the companion specification explicitly defines them as such
+
+When a source-system concept does not cleanly fit an existing generic Overnet vocabulary, a companion specification SHOULD prefer a source-specific object or event type rather than forcing the concept into a generic shape that distorts its meaning.
+
 ## 5. Core Design Principles
 
 ### 5.1 Minimal Stable Core
@@ -459,9 +476,9 @@ Overnet defines three Nostr event kinds:
 
 **Kind 7800 (Overnet Event)** is used for immutable event log entries: messages, comments, actions, mutations, and other events that accumulate over time.
 
-**Kind 37800 (Overnet State)** is used for current state of single-author objects: profiles, settings, adapter mappings, and any object where one pubkey owns the canonical latest state. The Nostr `d` tag MUST be set to the object identifier. Because this kind is parameterized replaceable, Nostr relays will automatically retain only the latest event per pubkey and `d` tag combination.
+**Kind 37800 (Overnet State)** is used for current state of single-author objects: profiles, settings, adapter mappings, and any object where one pubkey owns the canonical latest state. The Nostr `d` tag MUST be set to the object identifier. A kind `37800` event MUST include exactly one `d` tag. Because this kind is parameterized replaceable, Nostr relays will automatically retain only the latest event per pubkey and `d` tag combination.
 
-**Kind 7801 (Overnet Removal)** is used for tombstone events that mark an object or prior event as removed.
+**Kind 7801 (Overnet Removal)** is used for tombstone events that mark an object or prior event as removed. A kind `7801` event MUST use `overnet_et` value `"core.removal"`. A kind `7801` event MUST include exactly one `e` tag identifying the Nostr event ID being tombstoned. The `body` field of a kind `7801` event MUST be an empty JSON object.
 
 These kind numbers are working values subject to change before registration with the Nostr kind registry.
 
@@ -479,13 +496,10 @@ Every Overnet core event MUST include the following tags:
 |-----|-------|-------------|
 | `overnet_v` | semver string | Core specification version (currently `"0.1.0"`) |
 | `overnet_et` | string | Event type (e.g., `"chat.message"`, `"repo.commit"`) |
-
-The following tags are REQUIRED when the event pertains to a stable object:
-
-| Tag | Value | Description |
-|-----|-------|-------------|
 | `overnet_ot` | string | Object type (e.g., `"chat.channel"`, `"repo.issue"`) |
 | `overnet_oid` | string | Object identifier |
+
+The core-defined tags `overnet_v`, `overnet_et`, `overnet_ot`, and `overnet_oid` are singular. An Overnet core event MUST NOT include more than one instance of any of those tags.
 
 Tag names use the `overnet_` prefix to avoid collision with Nostr core tags and other protocols. Nostr relays can filter on these tags without parsing the event content.
 
@@ -518,6 +532,8 @@ The Nostr event `content` field MUST be a JSON object with the following structu
 ```
 
 The `provenance` field is REQUIRED on all Overnet core events. Its structure is defined in §6.3.3.
+
+The `body` field is REQUIRED. It MUST be a JSON object.
 
 The `body` field contains profile-defined payload data. The core does not define the structure of `body`; applicable profiles define what fields appear inside it.
 
@@ -671,6 +687,8 @@ In this example:
   "tags": [
     ["overnet_v", "0.1.0"],
     ["overnet_et", "core.removal"],
+    ["overnet_ot", "chat.channel"],
+    ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"],
     ["e", "a1e2f3..."]
   ],
   "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{}}",
@@ -683,7 +701,36 @@ In this example:
 - `kind` is 7801 (Overnet Removal).
 - The `e` tag references the Nostr event ID of the event being removed, using the standard Nostr event reference tag.
 - `overnet_et` is `"core.removal"`, a core-defined event type.
+- `overnet_ot` and `overnet_oid` identify the object whose event history is being tombstoned.
 - The `body` is empty; the removal's meaning comes from the reference, not from payload data.
+
+*Example 5. An Overnet delegation event authorizing delegated removal for one object:*
+
+```json
+{
+  "id": "c7d8e9...",
+  "pubkey": "b4c5d6...",
+  "created_at": 1744300950,
+  "kind": 7800,
+  "tags": [
+    ["overnet_v", "0.1.0"],
+    ["overnet_et", "core.delegation"],
+    ["overnet_ot", "chat.channel"],
+    ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"]
+  ],
+  "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"action\":\"remove\",\"delegate_pubkey\":\"a1b2c3...\",\"expires_at\":1744304600}}",
+  "sig": "d0e1f2..."
+}
+```
+
+In this example:
+
+- `kind` is 7800 because the delegation is a normal immutable event.
+- `overnet_et` is `"core.delegation"`, a core-defined event type.
+- `overnet_ot` and `overnet_oid` scope the delegation to one object.
+- `body.action` is `"remove"`, the only delegated action defined by the baseline core.
+- `body.delegate_pubkey` identifies the native Nostr pubkey allowed to issue delegated removals for that object.
+- `body.expires_at` is optional. When present, the delegation is invalid after that timestamp.
 
 ### 6.4 Optional Fields
 
@@ -761,6 +808,47 @@ The core defines protocol-level removal semantics through tombstone or equivalen
 
 A removal event affects the derived state and visibility of an object or prior event according to core rules and applicable profile rules. Physical erasure, retention duration, and storage reclamation remain deployment policy unless otherwise required by a profile.
 
+For baseline core authorization, a kind `7801` removal MUST be authorized against the exact target event identified by its `e` tag. If the referenced target event is unavailable, or if the available target event does not match the `e` tag, authorization cannot be established and the removal MUST be rejected.
+
+Under the baseline core authorization model, a kind `7801` removal is authorized only when the removal event's Nostr `pubkey` matches the authoring `pubkey` of the target event identified by the `e` tag.
+
+A delegated removal MAY be authorized by a separate delegation event. When a kind `7801` removal uses delegation, it MUST include exactly one `overnet_delegate` tag whose value is the Nostr event ID of the delegation event being used for authorization.
+
+When a delegated removal is evaluated, the referenced delegation event MUST be available. If the referenced delegation event is unavailable, authorization cannot be established and the removal MUST be rejected.
+
+The referenced delegation event MUST:
+
+- be an Overnet event with `overnet_et` value `"core.delegation"`
+- have the same `overnet_ot` and `overnet_oid` values as the removal event
+- have a `body.action` value of `"remove"`
+- have a `body.delegate_pubkey` value equal to the removal event's authoring `pubkey`
+- have an authoring `pubkey` equal to the target event's authoring `pubkey`
+- not be expired at the removal event's `created_at` timestamp when `body.expires_at` is present
+
+If a kind `7801` removal does not use delegation, it MUST NOT include an `overnet_delegate` tag.
+
+### 6.14 Delegation Events
+
+The core defines a baseline delegation mechanism for delegated removals.
+
+A delegation event is an Overnet event with `kind` `7800` and `overnet_et` value `"core.delegation"`.
+
+A baseline core delegation event MUST:
+
+- be native Overnet data with `provenance.type` value `"native"`
+- include `overnet_ot` and `overnet_oid` identifying the single object to which the delegation applies
+- include a `body` object with required fields `action` and `delegate_pubkey`
+
+The baseline core defines exactly one delegation action:
+
+| Field | Type | Description |
+|---|---|---|
+| `action` | string | MUST be `"remove"` |
+| `delegate_pubkey` | 64-character lowercase hex string | Native Nostr pubkey allowed to issue delegated removals for the object |
+| `expires_at` | integer | OPTIONAL Unix timestamp after which the delegation is invalid |
+
+The baseline core does not define delegation revocation. Profiles or later core revisions MAY define explicit revocation behavior.
+
 ## 7. Identity, Authentication, and Trust
 
 ### 7.1 Identity Model
@@ -769,11 +857,17 @@ Nostr public keys are the baseline identity form in the Overnet core.
 
 The core also allows adapted or mapped external identities through adapters, provided that such mappings carry provenance and obey the relevant adapter and profile rules.
 
-### 7.2 Authentication Model
+### 7.2 Authentication and Baseline Authorization
 
 The baseline authentication model is Nostr-based authentication.
 
 Where interactive or session-level authentication is required, a relay or service MUST use a Nostr-compatible authenticated mechanism. Adapter-backed systems MAY additionally expose mapped external authentication context, but this does not replace the baseline identity and verification model of the core.
+
+The baseline authorization model is conservative. Unless an applicable profile or explicit delegation rule states otherwise, a native Overnet event that revises or removes prior event state is authorized only when the acting Nostr `pubkey` matches the authoring `pubkey` of the target event.
+
+For adapted data, a revision or removal is authorized only when it is issued by the same adapter `pubkey` that authored the adapted target event, unless an applicable companion specification defines a different rule.
+
+Moderator, administrative, or delegated override authority is not part of the baseline core authorization model. Implementations MUST NOT assume such override authority unless it is explicitly defined by the core or by an applicable companion specification.
 
 ### 7.3 Delegation
 

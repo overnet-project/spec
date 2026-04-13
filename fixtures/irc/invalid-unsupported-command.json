@@ -1,0 +1,15 @@
+{
+  "description": "Invalid: this version of the IRC adapter does not yet define INVITE mapping.",
+  "input": {
+    "command": "INVITE",
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "nick": "alice",
+    "text": "hello",
+    "created_at": 1744300860
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "Unsupported IRC command: INVITE"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "description": "A valid IRC direct-message NOTICE mapped to an adapted Overnet chat.dm_notice event on a chat.dm object.",
+  "input": {
+    "command": "NOTICE",
+    "network": "irc.libera.chat",
+    "target": "alice",
+    "nick": "NickServ",
+    "text": "You are now identified.",
+    "created_at": 1744300863
+  },
+  "expected": {
+    "overnet_valid": true,
+    "event": {
+      "kind": 7800,
+      "created_at": 1744300863,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.dm_notice"],
+        ["overnet_ot", "chat.dm"],
+        ["overnet_oid", "irc:irc.libera.chat:dm:alice"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/alice\",\"external_identity\":\"NickServ\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"text\":\"You are now identified.\"}}"
+    }
+  }
+}

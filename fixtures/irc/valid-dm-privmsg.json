@@ -1,0 +1,25 @@
+{
+  "description": "A valid IRC direct-message PRIVMSG mapped to an adapted Overnet chat.dm_message event on a chat.dm object.",
+  "input": {
+    "command": "PRIVMSG",
+    "network": "irc.libera.chat",
+    "target": "alice",
+    "nick": "alice",
+    "text": "hello in private",
+    "created_at": 1744300862
+  },
+  "expected": {
+    "overnet_valid": true,
+    "event": {
+      "kind": 7800,
+      "created_at": 1744300862,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.dm_message"],
+        ["overnet_ot", "chat.dm"],
+        ["overnet_oid", "irc:irc.libera.chat:dm:alice"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/alice\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"text\":\"hello in private\"}}"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "description": "Invalid: IRC JOIN mapping in this adapter version requires a channel target.",
+  "input": {
+    "command": "JOIN",
+    "network": "irc.libera.chat",
+    "target": "alice",
+    "nick": "alice",
+    "created_at": 1744300873
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "JOIN target must be a channel"
+  }
+}

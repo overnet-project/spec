@@ -1,0 +1,15 @@
+{
+  "description": "Invalid: IRC TOPIC mapping in this adapter version requires a channel target.",
+  "input": {
+    "command": "TOPIC",
+    "network": "irc.libera.chat",
+    "target": "alice",
+    "nick": "alice",
+    "text": "This should not map",
+    "created_at": 1744300867
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "TOPIC target must be a channel"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "description": "A valid IRC network-scoped NICK mapped to an adapted Overnet irc.nick event on an irc.network object.",
+  "input": {
+    "command": "NICK",
+    "network": "irc.libera.chat",
+    "nick": "alice",
+    "new_nick": "alice_",
+    "created_at": 1744300878
+  },
+  "expected": {
+    "overnet_valid": true,
+    "event": {
+      "kind": 7800,
+      "created_at": 1744300878,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "irc.nick"],
+        ["overnet_ot", "irc.network"],
+        ["overnet_oid", "irc:irc.libera.chat"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"old_nick\":\"alice\",\"new_nick\":\"alice_\"}}"
+    }
+  }
+}

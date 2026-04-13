@@ -1,0 +1,20 @@
+{
+  "description": "A valid core delegation event authorizing delegated removal for one object.",
+  "input": {
+    "id": "ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00",
+    "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+    "created_at": 1744300950,
+    "kind": 7800,
+    "tags": [
+      ["overnet_v", "0.1.0"],
+      ["overnet_et", "core.delegation"],
+      ["overnet_ot", "chat.channel"],
+      ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"]
+    ],
+    "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"action\":\"remove\",\"delegate_pubkey\":\"a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2\",\"expires_at\":1744304600}}",
+    "sig": "ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00"
+  },
+  "expected": {
+    "overnet_valid": true
+  }
+}

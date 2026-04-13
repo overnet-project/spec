@@ -1,0 +1,15 @@
+{
+  "description": "Invalid: IRC KICK mapping requires the kicked IRC nick separately from the channel target.",
+  "input": {
+    "command": "KICK",
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "nick": "chanop",
+    "text": "be civil",
+    "created_at": 1744300876
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "KICK target_nick is required"
+  }
+}

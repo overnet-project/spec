@@ -1,0 +1,15 @@
+{
+  "description": "Invalid: IRC MODE mapping in this adapter version requires a channel target.",
+  "input": {
+    "command": "MODE",
+    "network": "irc.libera.chat",
+    "target": "alice",
+    "nick": "chanop",
+    "mode": "+i",
+    "created_at": 1744300883
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "MODE target must be a channel"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "description": "A valid IRC channel MODE mapped to an adapted Overnet irc.mode event on a chat.channel object.",
+  "input": {
+    "command": "MODE",
+    "network": "irc.libera.chat",
+    "target": "#overnet",
+    "nick": "chanop",
+    "mode": "+o",
+    "mode_args": ["bob"],
+    "created_at": 1744300881
+  },
+  "expected": {
+    "overnet_valid": true,
+    "event": {
+      "kind": 7800,
+      "created_at": 1744300881,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "irc.mode"],
+        ["overnet_ot", "chat.channel"],
+        ["overnet_oid", "irc:irc.libera.chat:#overnet"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"chanop\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"mode\":\"+o\",\"mode_args\":[\"bob\"]}}"
+    }
+  }
+}

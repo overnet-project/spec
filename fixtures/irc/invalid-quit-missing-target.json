@@ -1,0 +1,14 @@
+{
+  "description": "Invalid: IRC QUIT mapping in this adapter version requires a channel target naming the observed channel context.",
+  "input": {
+    "command": "QUIT",
+    "network": "irc.libera.chat",
+    "nick": "alice",
+    "text": "Ping timeout",
+    "created_at": 1744300874
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "IRC target is required"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "description": "Invalid: IRC KICK mapping in this adapter version requires a channel target.",
+  "input": {
+    "command": "KICK",
+    "network": "irc.libera.chat",
+    "target": "alice",
+    "target_nick": "bob",
+    "nick": "chanop",
+    "text": "be civil",
+    "created_at": 1744300877
+  },
+  "expected": {
+    "overnet_valid": false,
+    "reason": "KICK target must be a channel"
+  }
+}
