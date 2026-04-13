@@ -5,15 +5,14 @@ This repository contains the draft specifications for Overnet.
 Overnet is a higher-level protocol and application platform built on top of Nostr.
 It is intended to support systems such as chat, email, code hosting, marketplaces, and websites, while emphasizing freedom, decentralization, self-hostability, and interoperability.
 
-At present, this repository is centered on the Overnet Core Specification.
-Additional companion specifications are expected over time, including adapter specifications, application profiles, storage profiles, and related conformance material.
+At present, this repository contains the Overnet Core Specification draft plus the first companion adapter specification for IRC, along with shared conformance fixtures used by the reference implementation work.
 
 ## Status
 
 This repository is in active development.
 
-The current core specification should be treated as a working draft.
-It is expected to change as implementation work proceeds and as companion specifications are developed.
+The current specifications should be treated as working drafts.
+They are being revised alongside early implementation work in the sibling `overnet-code` and `overnet-adapter-irc` repositories.
 
 The current document is useful as:
 
@@ -44,24 +43,22 @@ See [docs/status.md](docs/status.md) for more detail.
 
 ## Current Scope
 
-The current focus of this repository is the Overnet core.
+The current focus of this repository is the Overnet core plus the first real adapter pressure test.
 
-The core specification defines the shared foundation for Overnet, including:
+The current documents and fixtures cover:
 
-- architecture and terminology
-- identity, authentication, and trust
-- objects, events, references, and provenance
-- client and relay requirements
-- capability discovery and profiles
-- storage, security, and conformance foundations
+- the Overnet core event and provenance model
+- core validation rules and shared core fixtures
+- removal and delegation baseline semantics
+- generic adapter fidelity requirements
+- the first IRC adapter specification and IRC fixture corpus
 
-Detailed adapter behavior and application-specific behavior are expected to be defined in companion specifications rather than folded into the core.
+Application-specific behavior and additional adapters are still expected to be defined in companion specifications rather than folded into the core.
 
 ## Planned Companion Specifications
 
 Over time, this repository is expected to grow to include documents such as:
 
-- IRC adapter specification
 - email adapter specification
 - GitLab adapter specification
 - chat profile
@@ -81,7 +78,7 @@ This specification family is being developed through a combination of:
 - iterative revision based on real adapter and application requirements
 
 The intent is not to freeze the entire design prematurely.
-Instead, the goal is to develop a coherent core, pressure-test it through implementation, and refine it as needed.
+Instead, the goal is to develop a coherent core, pressure-test it through implementation and adapters, and refine it as needed.
 
 ## Contributing
 
