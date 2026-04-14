@@ -1,0 +1,24 @@
+{
+  "description": "After a client disconnects, the former nick is no longer treated as in use and a later client may claim it.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat",
+      "server_name": "overnet.irc.local",
+      "current_nicks": [],
+      "recently_disconnected_nicks": [
+        "alice"
+      ]
+    },
+    "client": {
+      "registered": false,
+      "received_lines": [
+        "NICK alice"
+      ]
+    }
+  },
+  "expected": {
+    "registered": false,
+    "nick": "alice",
+    "lines": []
+  }
+}

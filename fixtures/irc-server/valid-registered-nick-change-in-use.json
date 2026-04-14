@@ -1,0 +1,26 @@
+{
+  "description": "If a registered client requests a new nick that is already in use, the server rejects it with 433 and leaves the client's current nick unchanged.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat",
+      "server_name": "overnet.irc.local",
+      "current_nicks": [
+        "alice",
+        "bob"
+      ]
+    },
+    "client": {
+      "registered": true,
+      "nick": "bob",
+      "joined_channels": []
+    },
+    "line": "NICK alice"
+  },
+  "expected": {
+    "registered": true,
+    "nick": "bob",
+    "lines": [
+      ":overnet.irc.local 433 bob alice :Nickname is already in use"
+    ]
+  }
+}

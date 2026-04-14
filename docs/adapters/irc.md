@@ -23,6 +23,7 @@ This first version is intentionally narrow. It defines:
 - adapted network-scoped identity-change mapping for `NICK`
 - adapted observed channel mode-change mapping for `MODE`
 - an optional derived channel presence state view
+- an optional minimal server-side IRC presentation slice for Overnet-backed IRC clients
 - provenance and limitation requirements for adapted IRC data
 - baseline object identifiers for IRC network and channel objects
 
@@ -31,7 +32,8 @@ This version does not yet define:
 - user-scoped mode mapping
 - derived channel mode state or channel privilege state
 - IRC operator or service authority semantics
-- write-back from Overnet into IRC
+- general write-back from Overnet into arbitrary IRC networks
+- full IRC-server numerics, listing, and multi-client synchronization semantics
 
 Those areas MAY be defined by later revisions of this adapter specification.
 
@@ -57,6 +59,58 @@ The baseline conformance target is channel-oriented IRC messaging as represented
 An implementation MAY support IRCv3 features, but IRCv3 behavior is out of scope for this version unless a section of this specification explicitly defines it.
 
 Support for IRCv3-specific enhancements MAY be defined by later revisions of this specification.
+
+### 3.1 Runtime Session Configuration
+
+When the IRC adapter is exposed through the Overnet Program Runtime adapter-session service, the adapter is configured through `adapters.open_session`.
+
+The IRC adapter `config` object MAY include non-secret session parameters such as:
+
+- `network`
+- `host`
+- `port`
+- `tls`
+- `nick`
+- `username`
+- `realname`
+- `channels`
+- `sasl_mechanism`
+- `sasl_username`
+
+When this specification refers to `tls` in IRC program or adapter-session configuration, it means the baseline TLS configuration object defined by the Overnet Program Runtime specification.
+
+For an outbound IRC client implementation, `tls.mode` is `client` when present unless a more specific companion specification states otherwise.
+
+For a listening IRC server implementation, `tls.mode` is `server` when present unless a more specific companion specification states otherwise.
+
+This specification MAY require a narrower subset of baseline TLS fields for a particular IRC deployment model, but it SHOULD reuse the baseline field names unchanged.
+
+Secret-bearing connection or authentication material MUST NOT be supplied as plaintext in ordinary adapter `config`.
+
+Instead, the program MUST supply those values through `adapters.open_session.params.secret_handles`.
+
+This specification defines the following IRC adapter secret input slots:
+
+| Slot | Meaning |
+|---|---|
+| `server_password` | IRC server password or PASS value when required by the network |
+| `nickserv_password` | NickServ or similar account-service password used by the adapter session |
+| `sasl_password` | SASL password or equivalent shared secret used during authentication |
+
+If the runtime resolves a supplied IRC secret handle successfully, the runtime MAY expose the resolved value only to the adapter implementation inside the runtime or host boundary.
+
+Any component that receives resolved IRC secret plaintext becomes part of the secret trust boundary for that connection or authentication operation.
+
+An IRC adapter implementation that acts only as a semantic mapper and does not perform live connection or authentication work SHOULD declare the supported secret slots for compatibility, but SHOULD NOT persist, echo, or otherwise expose the resolved plaintext beyond the immediate privileged consumer that performs the secret-bearing operation.
+
+The program MUST NOT receive the resolved plaintext value back through:
+
+- `adapters.open_session`
+- any adapter session identifier
+- adapter result payloads
+- runtime-generated notifications
+
+If the adapter session cannot be opened because a required secret handle is invalid, expired, revoked, unauthorized, or missing, the runtime MUST reject `adapters.open_session`.
 
 ## 4. Terminology
 
@@ -569,7 +623,134 @@ This specification does not yet define mandatory backlog depth, replay semantics
 
 If history is partial or live observation begins after the adapter connects, the adapter SHOULD disclose that fact through limitations or deployment-specific capability information rather than implying a complete archive.
 
-## 13. Conformance Requirements
+## 13. Minimal Server-Side IRC Presentation
+
+This section defines an optional minimal server-side IRC presentation slice for implementations that expose Overnet-backed channel data to IRC clients.
+
+This section is intentionally narrow. It defines only the minimum behavior needed for a channel-oriented IRC presentation surface backed by Overnet data.
+
+This section does not define:
+
+- full IRC server conformance
+- complete numeric reply behavior beyond baseline registration
+- `WHO`, `LIST`, `MODE`, or operator-service behavior beyond the minimal join bootstrap defined here
+- direct-message presentation
+- write-back to an upstream IRC network
+- multi-server federation
+
+### 13.1 Registration Baseline
+
+An implementation claiming support for this section MUST accept client registration through:
+
+- `NICK <nick>`
+- `USER <username> 0 * :<realname>`
+
+The implementation MUST accept those commands in either order.
+
+For this section, a nick value is unique per current server instance.
+
+An implementation claiming support for this section MUST NOT accept a `NICK` value that is already assigned to another currently connected client connection.
+
+If an unregistered client sends `NICK <nick>` and `<nick>` is already in use, the implementation MUST reject it with:
+
+- `:<server_name> 433 * <nick> :Nickname is already in use`
+
+If a registered client sends `NICK <new_nick>` and `<new_nick>` is already in use, the implementation MUST reject it with:
+
+- `:<server_name> 433 <current_nick> <new_nick> :Nickname is already in use`
+
+For this baseline:
+
+- `<server_name>` is the same server-presentable name used for registration numerics such as `001`
+- a failed `433` collision response MUST leave the client's current nick unchanged
+- a successful nick change MUST release the client's previous nick for reuse by later clients
+- a client disconnect MUST release that client's current nick for reuse by later clients
+
+Once both commands have been accepted for a client connection, the implementation MUST treat that client as registered and MUST emit at least numeric `001` as a welcome reply.
+
+This section does not define additional required numeric replies.
+
+### 13.2 Channel Association and Join Bootstrap Baseline
+
+After registration, an implementation claiming support for this section MUST accept:
+
+- `JOIN <channel>`
+
+For the configured IRC network view served by the implementation, the channel name `<channel>` MUST map to Overnet object identifier:
+
+```text
+irc:<network>:<channel>
+```
+
+using the same object identifier rules defined elsewhere in this specification.
+
+If a registered client joins a channel name that the implementation chooses to expose, the implementation MUST treat that client connection as subscribed to the corresponding `chat.channel` object for the purpose of server-side presentation.
+
+After a successful channel join, an implementation claiming support for this section MUST emit at least the following bootstrap lines to the joining client:
+
+- `:<nick> JOIN <channel>`
+- one or more `:<server_name> 353 <nick> = <channel> :<space-separated nicks>` lines
+- one terminating `:<server_name> 366 <nick> <channel> :End of /NAMES list.` line
+
+For this baseline:
+
+- `<nick>` is the joining client's current IRC nick
+- `<server_name>` is the same server-presentable name used for registration numerics such as `001`
+- the `353` nick list MUST include at least the nicks of the client connections that the implementation currently treats as joined to that channel for presentation purposes
+- the `353` nick list MUST include the joining client's current nick
+
+If the implementation has a current `chat.topic` state available for that channel at join time, it MUST replay that topic to the joining client using the `chat.topic` render form defined in section 13.3 before the terminating `366` line.
+
+### 13.3 Outbound Presentation Baseline
+
+For a registered client, an implementation claiming support for this section MUST render the following Overnet data to IRC lines when the corresponding audience conditions in this section are satisfied:
+
+| Overnet semantic item | IRC line form |
+|---|---|
+| `chat.message` event | `:<nick> PRIVMSG <channel> :<text>` |
+| `chat.notice` event | `:<nick> NOTICE <channel> :<text>` |
+| `chat.topic` state | `:<nick> TOPIC <channel> :<topic>` |
+| `chat.join` event | `:<nick> JOIN <channel>` |
+| `chat.part` event | `:<nick> PART <channel>` or `:<nick> PART <channel> :<reason>` |
+| `chat.quit` event | `:<nick> QUIT` or `:<nick> QUIT :<reason>` |
+| `irc.nick` event | `:<old_nick> NICK :<new_nick>` |
+
+For this baseline:
+
+- `<channel>` MUST be the exact IRC channel name derived from the `irc:<network>:<channel>` object identifier
+- `chat.message` rendering uses `body.text`
+- `chat.notice` rendering uses `body.text`
+- `chat.topic` rendering uses `body.topic`
+- `chat.part` rendering uses `body.reason` as the trailing parameter when it is present and non-empty
+- `chat.quit` rendering uses `body.reason` as the trailing parameter when it is present and non-empty
+- `irc.nick` rendering uses `body.old_nick` as the prefix nick and `body.new_nick` as the new nick parameter
+- for `chat.message`, `chat.notice`, `chat.topic`, `chat.join`, `chat.part`, and `chat.quit`, the implementation MUST emit those lines only to client connections currently joined to that channel
+- for `irc.nick`, the implementation MUST emit the line only to client connections that currently share at least one joined channel with the nick change according to the implementation's current presentation membership view
+
+### 13.4 Sender Presentation Baseline
+
+When rendering `chat.message`, `chat.notice`, `chat.topic`, `chat.join`, `chat.part`, or `chat.quit` through this section, the implementation MUST derive an IRC-presentable nick string for `<nick>`.
+
+If `content.provenance.external_identity` is present and is a non-empty string, the implementation MUST use that value as the rendered IRC nick.
+
+If `content.provenance.external_identity` is not available, this version does not define a canonical nick-synthesis rule. In that case, the implementation MAY:
+
+- suppress the render for that item, or
+- use a deployment-defined presentational nick
+
+If the implementation uses a deployment-defined presentational nick, it MUST NOT imply authenticated IRC authority, stable global identity, or native IRC authorship that the Overnet data does not actually establish.
+
+When rendering `irc.nick`, the implementation MUST use `body.old_nick` and `body.new_nick` as the authoritative IRC nick values.
+
+If `content.provenance.external_identity` is present on an `irc.nick` event, it MUST equal `body.old_nick`.
+
+### 13.5 Relationship to Existing Inbound Mapping
+
+This section defines only the minimal server-side presentation of Overnet data to IRC clients.
+
+Inbound IRC client commands such as `PRIVMSG`, `NOTICE`, `TOPIC`, and `JOIN` continue to use the IRC-to-Overnet mapping rules defined earlier in this specification when the implementation chooses to expose that behavior.
+
+## 14. Conformance Requirements
 
 An implementation claiming conformance with this IRC adapter specification MUST, at minimum:
 
@@ -591,7 +772,27 @@ An implementation claiming conformance with this IRC adapter specification MUST,
 
 An implementation MAY additionally claim support for the optional derived channel presence state defined in section 8.12.
 
-## 14. Open Issues
+An implementation MAY additionally claim support for the optional minimal server-side IRC presentation slice defined in section 13.
+
+An implementation claiming support for that optional server-side slice MUST, at minimum:
+
+- accept `NICK` and `USER` registration and emit at least numeric `001`
+- enforce unique current nick values per currently connected client connection
+- emit `433` `ERR_NICKNAMEINUSE` for initial or post-registration nick collisions
+- map `JOIN <channel>` into the corresponding `irc:<network>:<channel>` object scope for client presentation
+- emit channel join bootstrap consisting of `JOIN`, `353`, and `366`
+- replay a known current `chat.topic` state to the joining client before completing the minimal join bootstrap
+- render `chat.message` events as channel `PRIVMSG`
+- render `chat.notice` events as channel `NOTICE`
+- render `chat.topic` state as channel `TOPIC`
+- render `chat.join` events as channel `JOIN`
+- render `chat.part` events as channel `PART`
+- render `chat.quit` events as `QUIT`
+- render `irc.nick` events as `NICK`
+- use `provenance.external_identity` as the rendered nick when it is available
+- use `body.old_nick` and `body.new_nick` when rendering `irc.nick`
+
+## 15. Open Issues
 
 The following IRC adapter topics remain open:
 
@@ -601,4 +802,6 @@ The following IRC adapter topics remain open:
 - user-scoped mode mapping
 - derived channel mode state or privilege state
 - representation of moderation and operator authority
-- write-back and bidirectional synchronization semantics
+- richer server numerics, listing, and channel-bootstrap semantics beyond the minimal `JOIN`/topic/`NAMES` bootstrap defined here
+- direct-message presentation semantics
+- write-back and bidirectional synchronization semantics beyond the minimal server-side presentation slice

@@ -1,0 +1,19 @@
+{
+  "description": "A registered IRC client JOIN associates the client with the corresponding chat.channel object scope for server-side presentation.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat"
+    },
+    "client": {
+      "registered": true,
+      "joined_channels": []
+    },
+    "line": "JOIN #overnet"
+  },
+  "expected": {
+    "joined_channels": [
+      "#overnet"
+    ],
+    "channel_object_id": "irc:irc.libera.chat:#overnet"
+  }
+}

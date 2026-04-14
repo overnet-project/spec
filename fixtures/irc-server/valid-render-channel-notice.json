@@ -1,0 +1,37 @@
+{
+  "description": "A chat.notice event on a joined chat.channel object renders to an IRC channel NOTICE line using body.text and provenance.external_identity.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat"
+    },
+    "client": {
+      "registered": true,
+      "joined_channels": [
+        "#overnet"
+      ]
+    },
+    "item": {
+      "item_type": "event",
+      "data": {
+        "id": "4444444444444444444444444444444444444444444444444444444444444444",
+        "pubkey": "5555555555555555555555555555555555555555555555555555555555555555",
+        "created_at": 1744300861,
+        "kind": 7800,
+        "tags": [
+          ["overnet_v", "0.1.0"],
+          ["overnet_et", "chat.notice"],
+          ["overnet_ot", "chat.channel"],
+          ["overnet_oid", "irc:irc.libera.chat:#overnet"]
+        ],
+        "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"text\":\"Server maintenance in five minutes.\"}}",
+        "sig": "66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"
+      }
+    }
+  },
+  "expected": {
+    "rendered": true,
+    "lines": [
+      ":alice NOTICE #overnet :Server maintenance in five minutes."
+    ]
+  }
+}

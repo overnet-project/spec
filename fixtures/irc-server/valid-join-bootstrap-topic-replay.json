@@ -1,0 +1,52 @@
+{
+  "description": "If a current chat.topic state is known for the channel, a successful join replays that topic before the terminating 366 line.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat",
+      "server_name": "overnet.irc.local",
+      "channel_members": {
+        "#overnet": [
+          "alice"
+        ]
+      },
+      "channel_topic": {
+        "#overnet": {
+          "item_type": "state",
+          "data": {
+            "id": "7777777777777777777777777777777777777777777777777777777777777777",
+            "pubkey": "8888888888888888888888888888888888888888888888888888888888888888",
+            "created_at": 1744300864,
+            "kind": 37800,
+            "tags": [
+              ["overnet_v", "0.1.0"],
+              ["overnet_et", "chat.topic"],
+              ["overnet_ot", "chat.channel"],
+              ["overnet_oid", "irc:irc.libera.chat:#overnet"],
+              ["d", "irc:irc.libera.chat:#overnet"]
+            ],
+            "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"topic\":\"Overnet discussion and implementation\"}}",
+            "sig": "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+          }
+        }
+      }
+    },
+    "client": {
+      "registered": true,
+      "nick": "bob",
+      "joined_channels": []
+    },
+    "line": "JOIN #overnet"
+  },
+  "expected": {
+    "joined_channels": [
+      "#overnet"
+    ],
+    "channel_object_id": "irc:irc.libera.chat:#overnet",
+    "lines": [
+      ":bob JOIN #overnet",
+      ":alice TOPIC #overnet :Overnet discussion and implementation",
+      ":overnet.irc.local 353 bob = #overnet :alice bob",
+      ":overnet.irc.local 366 bob #overnet :End of /NAMES list."
+    ]
+  }
+}

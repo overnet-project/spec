@@ -1,0 +1,32 @@
+{
+  "description": "A successful channel join emits a minimal bootstrap consisting of a JOIN echo and NAMES numerics that include the joining nick.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat",
+      "server_name": "overnet.irc.local",
+      "channel_members": {
+        "#overnet": [
+          "alice",
+          "bob"
+        ]
+      }
+    },
+    "client": {
+      "registered": true,
+      "nick": "carol",
+      "joined_channels": []
+    },
+    "line": "JOIN #overnet"
+  },
+  "expected": {
+    "joined_channels": [
+      "#overnet"
+    ],
+    "channel_object_id": "irc:irc.libera.chat:#overnet",
+    "lines": [
+      ":carol JOIN #overnet",
+      ":overnet.irc.local 353 carol = #overnet :alice bob carol",
+      ":overnet.irc.local 366 carol #overnet :End of /NAMES list."
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "description": "A minimal IRC server presentation accepts NICK and USER registration and emits at least numeric 001 once both have been received.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat",
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": false,
+      "received_lines": [
+        "NICK overnetbot",
+        "USER overnet 0 * :Overnet Bot"
+      ]
+    }
+  },
+  "expected": {
+    "registered": true,
+    "lines": [
+      ":overnet.irc.local 001 overnetbot :Welcome to Overnet IRC"
+    ]
+  }
+}

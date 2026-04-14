@@ -1,0 +1,35 @@
+{
+  "description": "A server-side IRC presentation MUST NOT emit a channel render to a client that has not joined the corresponding IRC channel.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat"
+    },
+    "client": {
+      "registered": true,
+      "joined_channels": [
+        "#other"
+      ]
+    },
+    "item": {
+      "item_type": "event",
+      "data": {
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pubkey": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "created_at": 1744300860,
+        "kind": 7800,
+        "tags": [
+          ["overnet_v", "0.1.0"],
+          ["overnet_et", "chat.message"],
+          ["overnet_ot", "chat.channel"],
+          ["overnet_oid", "irc:irc.libera.chat:#overnet"]
+        ],
+        "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"text\":\"Hello from IRC!\"}}",
+        "sig": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    }
+  },
+  "expected": {
+    "rendered": false,
+    "lines": []
+  }
+}

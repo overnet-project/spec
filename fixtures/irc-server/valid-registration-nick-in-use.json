@@ -1,0 +1,25 @@
+{
+  "description": "If an unregistered client requests a nick that is already assigned to another currently connected client connection, the server rejects it with 433 and leaves the client unregistered.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat",
+      "server_name": "overnet.irc.local",
+      "current_nicks": [
+        "alice"
+      ]
+    },
+    "client": {
+      "registered": false,
+      "received_lines": [
+        "NICK alice"
+      ]
+    }
+  },
+  "expected": {
+    "registered": false,
+    "nick": null,
+    "lines": [
+      ":overnet.irc.local 433 * alice :Nickname is already in use"
+    ]
+  }
+}

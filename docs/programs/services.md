@@ -24,6 +24,7 @@ This document defines the baseline methods, parameters, results, and service-spe
 - append-only event storage
 - subscriptions
 - timers and scheduled jobs
+- adapter sessions
 - Overnet event emission
 - Overnet state emission
 - capability advertisement emission
@@ -131,11 +132,28 @@ Successful result MAY include:
 
 ### 5.1 Overview
 
-The secrets service allows a program to resolve named or referenced secret material supplied by the runtime.
+The secrets service allows a program to obtain runtime-managed access to named secret material supplied by the runtime.
 
 The runtime MUST control which secrets are visible to each program instance.
 
-### 5.2 `secrets.get`
+The baseline program protocol MUST NOT require the runtime to return raw secret plaintext values to the program over ordinary JSON request/response messages.
+
+Instead, the baseline secrets service issues opaque secret handles that remain meaningful only inside the runtime/host trust boundary.
+
+### 5.2 Secret Handle Model
+
+A secret handle is a runtime-issued opaque capability token representing access to a specific named secret.
+
+The runtime MUST ensure that:
+
+- secret handles are opaque to the program
+- secret handles are scoped to the issuing program instance
+- secret handles have a limited lifetime and MAY be revoked earlier by runtime policy
+- services that accept secret handles resolve them inside the runtime or host boundary rather than requiring the program to receive raw secret plaintext
+
+Programs MUST treat secret handles as sensitive values and SHOULD avoid logging or persisting them unless explicitly required by the runtime contract for a later service.
+
+### 5.3 `secrets.get`
 
 Required permission:
 
@@ -152,9 +170,203 @@ Successful result:
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `name` | string | yes | Resolved secret identifier |
-| `value` | string | yes | Secret value |
+| `secret_handle` | object | yes | Runtime-issued opaque secret handle |
 
-The runtime SHOULD avoid exposing secret values that the calling program instance is not explicitly allowed to read.
+The `secret_handle` object MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | string | yes | Opaque runtime-issued handle identifier |
+| `expires_at` | integer | yes | Unix timestamp after which the handle is no longer valid |
+
+The runtime MUST NOT return the raw secret value as part of the baseline `secrets.get` response.
+
+If the runtime cannot securely issue secret handles for a given program instance, the secrets service SHOULD be unavailable for that instance rather than falling back to returning raw secret plaintext.
+
+The `params` object for `secrets.get` MAY include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `purpose` | string | no | Declared intended use for the issued handle |
+
+Production-oriented runtimes SHOULD require `purpose` so that secret handles can be bound to an explicit intended use.
+
+### 5.4 Purpose Binding and Handle Audience
+
+The runtime MUST bind issued secret handles to an intended audience.
+
+An audience MAY include:
+
+- a declared purpose string
+- one or more allowed runtime service methods
+- one or more allowed adapter identifiers
+- additional runtime-defined constraints that narrow how the handle may be consumed
+
+If the program supplies a `purpose` value and the runtime issues a handle, the runtime MUST bind that handle to the declared purpose.
+
+Any runtime-managed service that accepts secret handles MUST reject a handle presented outside its allowed audience, including mismatched purpose, method, adapter, consumer role, adapter slot, or instance binding.
+
+Service-specific specifications that accept secret handles SHOULD define the expected purpose values or equivalent audience constraints.
+
+### 5.5 Secret-Handle Inputs in Other Services
+
+Later runtime-managed service methods MAY declare one or more parameters as secret-handle inputs.
+
+Unless a later companion specification defines a more specific structure, a secret-handle input SHOULD use the same `secret_handle` object shape returned by `secrets.get`.
+
+When a runtime resolves a secret-handle input for another service, the runtime MUST validate all of the following before using the referenced secret material:
+
+- the handle exists
+- the handle is still within its valid lifetime
+- the handle has not been revoked
+- the handle was issued for the same program instance
+- the handle audience allows the consuming service and operation
+
+The program MUST NOT be able to extend the lifetime or broaden the audience of a handle by editing the object returned from `secrets.get`.
+
+The runtime remains authoritative for handle validity even if the program presents an `expires_at` value that appears current.
+
+### 5.6 Access Control and Name Enumeration
+
+The `secrets.read` permission authorizes access to the secrets service family, not unconditional access to every secret name known to the runtime.
+
+The runtime MUST enforce per-secret authorization policy in addition to coarse-grained service permission checks.
+
+Per-secret policy MAY be based on:
+
+- program identity
+- instance identity
+- environment or deployment role
+- operator policy
+- service- or adapter-specific requirements
+
+For unauthorized or unknown secret names, the runtime MUST return the same protocol error code and SHOULD avoid detail, timing, or metadata differences that allow programs to enumerate which secret names exist.
+
+Production-oriented runtimes MUST support per-secret authorization policy in addition to coarse service-family permission checks.
+
+### 5.7 Runtime-Advertised Secret Service Metadata
+
+If the runtime includes service-level details for the secrets service in `runtime.init.params.services`, the secrets service object MAY include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `mode` | string | no | Secret access mode such as `handle_only` |
+| `default_handle_ttl_ms` | integer | no | Default lifetime for issued secret handles |
+| `purpose_binding_required` | boolean | no | Whether the runtime requires an explicit purpose on `secrets.get` |
+| `supports_per_secret_acl` | boolean | no | Whether the runtime enforces per-secret authorization beyond coarse service permission |
+| `supports_audit` | boolean | no | Whether the runtime records internal audit events for secret lifecycle and access |
+| `supports_rotation` | boolean | no | Whether the runtime supports rotation of underlying secret material |
+| `supports_revocation` | boolean | no | Whether the runtime supports early handle revocation before expiry |
+
+If the runtime conforms to this handle-only model, `mode` SHOULD be `handle_only`.
+
+### 5.8 Plaintext Handling and Memory Hygiene
+
+This specification does not require or assume portable guaranteed zeroization of secret plaintext inside high-level language runtimes.
+
+Security for the baseline secrets service is achieved primarily by:
+
+- preventing plaintext exposure to programs over the ordinary protocol
+- minimizing plaintext lifetime
+- minimizing plaintext copies
+- isolating privileged secret consumers
+- enforcing revocation, rotation, auditing, and least privilege
+
+Therefore:
+
+- the runtime MUST resolve secret handles as late as practical for the consuming operation
+- the runtime MUST use resolved plaintext only for the immediate consuming operation
+- the runtime MUST NOT persist resolved plaintext in ordinary runtime-managed configuration, storage, session state, or notifications visible to programs
+- the runtime MUST discard any temporary plaintext copies as soon as practical after handoff to the privileged consumer
+- implementations MAY perform best-effort memory clearing of temporary plaintext buffers, but MUST NOT claim guaranteed destruction unless they document a concrete platform-specific secure-erasure mechanism
+
+If a runtime-managed operation requires a component to receive plaintext, that component becomes part of the secret trust boundary for the duration of that operation.
+
+### 5.9 Redaction, Logging, and Audit
+
+The runtime MUST NOT place raw secret plaintext into protocol-visible:
+
+- successful service results
+- structured error details
+- runtime-generated notifications
+- service metadata advertised during initialization
+
+The runtime SHOULD avoid placing secret-handle ids into protocol-visible errors or notifications unless a service contract explicitly requires it.
+
+If the runtime records audit data for secret access, it SHOULD record:
+
+- program or instance identity
+- requested secret name or policy identifier
+- issuance time
+- expiry time
+- purpose or audience binding when present
+- success or failure outcome
+
+Production-oriented runtimes MUST record internal audit events for at least:
+
+- handle issuance attempts
+- handle resolution attempts
+- authorization denials
+- expiry
+- revocation
+- rotation
+
+The runtime MUST NOT place raw secret plaintext into audit records.
+
+The runtime SHOULD avoid placing raw handle ids into audit records unless an implementation-specific operational requirement makes that necessary.
+
+### 5.10 Revocation and Rotation
+
+The runtime MUST be able to revoke secret handles before their nominal expiry time.
+
+At minimum, the runtime MUST revoke or invalidate all outstanding secret handles for a program instance when that instance terminates.
+
+The runtime SHOULD also revoke or invalidate outstanding secret handles when:
+
+- the relevant secret value rotates
+- operator policy changes
+- the program loses authorization for the secret
+- the runtime detects suspected handle leakage or misuse
+
+If a secret rotates behind a stable secret name, the runtime SHOULD allow the program to request a new handle without requiring the program to receive raw secret plaintext.
+
+Production-oriented runtimes MUST support both revocation and rotation.
+
+### 5.11 Host Storage Requirements
+
+For production-oriented runtimes, secret material MUST be sourced from a host-managed secret provider or equivalent secure host facility rather than ordinary program configuration or ordinary runtime-managed document storage.
+
+Examples include:
+
+- operating-system credential stores
+- dedicated secret managers
+- KMS-backed secret stores
+- HSM-backed or hardware-protected facilities where available
+
+The runtime MUST NOT persist raw secret plaintext in baseline runtime-managed:
+
+- configuration payloads delivered to programs
+- document storage
+- append-only event storage
+- subscription notifications
+- timer payloads
+
+If the runtime must materialize plaintext in memory in order to complete a runtime-managed operation, it SHOULD minimize the scope and lifetime of that plaintext as much as practical.
+
+### 5.12 Bearer-Capability and Transport Considerations
+
+Secret handles are bearer capabilities.
+
+Any program that possesses a valid handle may be able to cause the runtime to consume the associated secret within the handle's allowed audience.
+
+Therefore:
+
+- programs MUST treat secret handles as sensitive
+- runtimes SHOULD keep handle lifetimes short
+- runtimes SHOULD bind handles narrowly to audience and purpose
+- runtimes SHOULD redact handle ids from logs and debug output
+
+If a runtime transports program protocol traffic across a boundary other than a local supervised process transport, that transport MUST provide confidentiality and integrity guarantees strong enough to prevent passive disclosure or active tampering of secret handles.
 
 ## 6. Document and Object Storage Service
 
@@ -516,9 +728,139 @@ Successful result:
 |---|---|---|---|
 | `accepted` | boolean | yes | Runtime acceptance result; MUST be `true` on success |
 
-## 11. Logging and Health Services
+## 11. Adapter Session Services
 
-### 11.1 `program.log` Notification
+### 11.1 Overview
+
+The adapter service allows a program to use runtime-managed adapters through explicit adapter sessions.
+
+In the baseline model:
+
+- a program opens an adapter session for a specific adapter id
+- the runtime returns an adapter session id
+- the program uses that session to request direct mapping or derived output
+- the program closes the session when it is done
+
+This baseline surface is intentionally narrow. Later revisions MAY define richer adapter session operations.
+
+### 11.2 `adapters.open_session`
+
+Required permission:
+
+- `adapters.use`
+
+Request parameters:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `adapter_id` | string | yes | Runtime-known adapter identifier |
+| `config` | object | no | Session-specific adapter configuration |
+| `secret_handles` | object | no | Adapter-defined secret inputs as secret-handle objects |
+
+If `secret_handles` is present:
+
+- each key identifies an adapter-defined secret input slot
+- each value MUST use the baseline `secret_handle` object shape defined by the secrets service
+- the runtime MUST resolve those handles inside the runtime or host boundary before exposing the resulting secret material to the adapter
+- the runtime MUST expose resolved plaintext only to the immediate privileged adapter-side consumer for the session-opening operation
+- the runtime MUST NOT persist resolved plaintext in adapter session identifiers, adapter-visible ordinary session configuration, or program-visible runtime state
+
+The runtime MUST validate each supplied secret handle using the secret-handle rules defined for the secrets service, including:
+
+- same-instance binding
+- lifetime validity
+- revocation status
+- audience and purpose binding when applicable
+
+The runtime MUST NOT echo raw secret plaintext back to the program in the `adapters.open_session` result or in adapter-session identifiers.
+
+The runtime MUST NOT place resolved plaintext from `secret_handles` into:
+
+- adapter result payloads
+- runtime-generated notifications
+- runtime-managed document storage
+- append-only event storage
+
+After the runtime hands resolved plaintext to the privileged session-opening consumer, the runtime MUST discard its own temporary plaintext copies as soon as practical.
+
+Adapter companion specifications SHOULD define which adapter configuration slots are secret-bearing.
+
+When an adapter companion specification defines a secret-bearing input, the program MUST supply that value through `secret_handles` rather than ordinary plaintext `config`.
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `adapter_session_id` | string | yes | Runtime-assigned adapter session identifier |
+
+### 11.3 `adapters.map_input`
+
+Required permission:
+
+- `adapters.use`
+
+Request parameters:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `adapter_session_id` | string | yes | Previously opened adapter session identifier |
+| `input` | object | yes | Adapter-specific input object |
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `events` | array | no | Candidate full wire-format Overnet/Nostr events produced by the adapter |
+| `state` | array | no | Candidate full wire-format Overnet/Nostr state events produced by the adapter |
+| `capabilities` | array | no | Candidate capability advertisement objects produced by the adapter |
+
+If `capabilities` is present, each item MUST use the same baseline capability object shape defined for `overnet.emit_capabilities`.
+
+Adapter-defined `input` objects SHOULD NOT contain raw secret plaintext.
+
+If a later adapter companion specification requires secret-bearing operational input beyond session opening, it SHOULD define secret-handle input fields explicitly and MUST require runtime-side secret-handle resolution rather than plaintext transport through ordinary adapter input objects.
+
+### 11.4 `adapters.derive`
+
+Required permission:
+
+- `adapters.use`
+
+Request parameters:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `adapter_session_id` | string | yes | Previously opened adapter session identifier |
+| `operation` | string | yes | Adapter-defined derivation operation name |
+| `input` | object | yes | Adapter-defined derivation input object |
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `events` | array | no | Candidate full wire-format Overnet/Nostr events produced by the adapter |
+| `state` | array | no | Candidate full wire-format Overnet/Nostr state events produced by the adapter |
+| `capabilities` | array | no | Candidate capability advertisement objects produced by the adapter |
+
+If `capabilities` is present, each item MUST use the same baseline capability object shape defined for `overnet.emit_capabilities`.
+
+### 11.5 `adapters.close_session`
+
+Required permission:
+
+- `adapters.use`
+
+Request parameters:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `adapter_session_id` | string | yes | Previously opened adapter session identifier |
+
+Successful result MAY be an empty object.
+
+## 12. Logging and Health Services
+
+### 12.1 `program.log` Notification
 
 Programs SHOULD emit structured logs through a notification with:
 
@@ -532,7 +874,7 @@ Notification parameters:
 | `message` | string | yes | Human-readable log message |
 | `context` | object | no | Structured contextual data |
 
-### 11.2 `program.health` Notification
+### 12.2 `program.health` Notification
 
 Programs SHOULD emit structured health updates through a notification with:
 
@@ -546,25 +888,26 @@ Notification parameters:
 | `message` | string | no | Human-readable status explanation |
 | `details` | object | no | Structured health detail |
 
-## 12. Permission Identifiers
+## 13. Permission Identifiers
 
 This version defines the following baseline permission identifiers:
 
 | Permission | Meaning |
 |---|---|
 | `config.read` | Read runtime-managed configuration |
-| `secrets.read` | Resolve runtime-managed secrets |
+| `secrets.read` | Request runtime-managed secret handles |
 | `storage.read` | Read runtime-managed document storage |
 | `storage.write` | Write runtime-managed document storage |
 | `events.read` | Read runtime-managed append-only event streams |
 | `events.append` | Append to runtime-managed event streams |
 | `subscriptions.read` | Open and close runtime-managed subscriptions |
 | `timers.write` | Schedule and cancel runtime-managed timers |
+| `adapters.use` | Open, use, and close runtime-managed adapter sessions |
 | `overnet.emit_event` | Emit candidate Overnet events |
 | `overnet.emit_state` | Emit candidate Overnet state |
 | `overnet.emit_capabilities` | Emit candidate capability advertisements |
 
-## 13. Error Expectations
+## 14. Error Expectations
 
 When rejecting service requests, the runtime SHOULD use the structured error model from the program protocol specification.
 
@@ -577,7 +920,7 @@ Typical error codes include:
 
 Service-specific companion specifications MAY define additional structured error detail.
 
-## 14. Open Issues
+## 15. Open Issues
 
 The following areas remain open for later revision:
 
@@ -587,4 +930,5 @@ The following areas remain open for later revision:
 - timer persistence across runtime restarts
 - secret rotation and leasing semantics
 - more precise capability advertisement structure
+- richer adapter session operations beyond `open_session`, `map_input`, `derive`, and `close_session`
 - bulk or transactional service operations

@@ -1,0 +1,37 @@
+{
+  "description": "A chat.quit event in a joined channel context renders to an IRC QUIT line and includes the optional body.reason as the trailing parameter.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat"
+    },
+    "client": {
+      "registered": true,
+      "joined_channels": [
+        "#overnet"
+      ]
+    },
+    "item": {
+      "item_type": "event",
+      "data": {
+        "id": "7878787878787878787878787878787878787878787878787878787878787878",
+        "pubkey": "8989898989898989898989898989898989898989898989898989898989898989",
+        "created_at": 1744300867,
+        "kind": 7800,
+        "tags": [
+          ["overnet_v", "0.1.0"],
+          ["overnet_et", "chat.quit"],
+          ["overnet_ot", "chat.channel"],
+          ["overnet_oid", "irc:irc.libera.chat:#overnet"]
+        ],
+        "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"reason\":\"Quit: connection reset\"}}",
+        "sig": "90909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090"
+      }
+    }
+  },
+  "expected": {
+    "rendered": true,
+    "lines": [
+      ":alice QUIT :Quit: connection reset"
+    ]
+  }
+}

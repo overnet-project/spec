@@ -234,6 +234,7 @@ This version defines the following baseline error codes:
 | `protocol.unknown_method` | `method` is not recognized in this context |
 | `protocol.invalid_params` | `params` is missing required structure |
 | `protocol.unknown_request_id` | Response `id` does not match an in-flight request |
+| `protocol.version_mismatch` | Runtime and program do not share a compatible protocol version |
 | `runtime.permission_denied` | Runtime denied the requested operation |
 | `runtime.validation_failed` | Candidate Overnet data failed validation |
 | `runtime.service_unavailable` | Requested runtime service is unavailable |
@@ -275,7 +276,7 @@ The `params` object for `program.hello` MAY include:
 | `program_version` | string | no | Program implementation version |
 | `metadata` | object | no | Additional startup metadata |
 
-If the runtime and program share no compatible protocol version, the runtime MUST send a fatal protocol error response or notification if it can do so safely, and then MUST terminate the session.
+If the runtime and program share no compatible protocol version, the runtime MUST send a `runtime.fatal` notification if it can do so safely, and then MUST terminate the session.
 
 ### 9.3 Runtime `runtime.init` Request
 
@@ -293,6 +294,8 @@ The `params` object for `runtime.init` MUST include:
 | `config` | object | yes | Host-managed configuration payload |
 | `permissions` | array | yes | Granted permission identifiers |
 | `services` | object | yes | Runtime-advertised service availability and service-level details |
+
+The `program_id` field identifies the supervised program instance, not the runtime.
 
 ### 9.4 Program `runtime.init` Response
 
@@ -322,8 +325,31 @@ This version defines the following baseline notifications:
 | program -> runtime | `program.ready` | Program completed initialization |
 | program -> runtime | `program.log` | Structured log entry |
 | program -> runtime | `program.health` | Structured health or readiness update |
+| runtime -> program | `runtime.fatal` | Fatal runtime or protocol condition after which the session will terminate |
 
 Additional notifications MAY be defined by the runtime service specifications.
+
+### 10.1 `runtime.fatal`
+
+The runtime MAY emit a notification with:
+
+- `method` value `runtime.fatal`
+
+When the runtime emits `runtime.fatal`, it MUST terminate the session after sending the notification if it can do so safely.
+
+The `params` object for `runtime.fatal` MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `code` | string | yes | Stable fatal error code |
+| `message` | string | yes | Human-readable fatal error message |
+
+The `params` object for `runtime.fatal` MAY include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `phase` | string | no | Session phase such as `handshake` |
+| `details` | object | no | Structured fatal-error detail |
 
 ## 11. Baseline Request Families
 
@@ -378,7 +404,6 @@ In particular:
 
 The following areas remain open for later revision:
 
-- the exact shape of service-specific request and response methods
 - manifest or package metadata for programs
 - session resumption semantics
 - whether alternative transport bindings such as HTTP should be defined later

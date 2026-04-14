@@ -71,6 +71,7 @@ The runtime is responsible for:
 - delivering configuration and permissions
 - validating Overnet data emitted by programs
 - exposing runtime-managed services
+- brokering runtime-managed adapter access
 - enforcing runtime policy and access control
 
 The program is responsible for:
@@ -211,6 +212,7 @@ This version defines the following runtime-managed service families:
 - storage
 - subscriptions
 - timers and scheduled jobs
+- adapters
 - event, state, and capability emission
 - health and status reporting
 
@@ -229,6 +231,22 @@ Programs MUST receive configuration through the runtime interface rather than re
 The runtime MUST provide a host-managed secrets service.
 
 Programs SHOULD obtain credentials and other sensitive material through runtime services rather than requiring raw secret material to be embedded directly in ordinary program configuration.
+
+In the baseline model, the runtime SHOULD issue short-lived, instance-scoped secret handles rather than returning raw secret plaintext over the ordinary program protocol.
+
+Runtime-managed services that consume secret material SHOULD resolve secret handles inside the runtime or host boundary.
+
+Production-oriented runtimes MUST back the secrets service with an external or isolated host-managed secret provider rather than ordinary configuration files or ordinary runtime-managed storage.
+
+Examples include:
+
+- operating-system credential stores
+- dedicated secret managers
+- KMS-backed secret stores
+- HSM-backed or hardware-protected facilities where available
+- isolated helper processes or sidecars whose primary trust role is secret consumption
+
+For production-oriented runtimes, the general-purpose high-level language runtime that supervises programs SHOULD NOT be the long-term system of record for raw secret plaintext.
 
 ### 8.3 Storage
 
@@ -250,6 +268,18 @@ The runtime MUST provide runtime-managed subscription services so that programs 
 The runtime MUST provide host-managed timers or scheduled job facilities.
 
 These are required for periodic work, retries, delayed actions, maintenance tasks, and similar operational behavior.
+
+### 8.6 Adapters
+
+The runtime MUST provide runtime-managed adapter access as a first-class service family.
+
+In the baseline model:
+
+- adapters are identified explicitly by adapter id
+- programs access adapters through runtime-managed adapter sessions
+- the runtime owns adapter session lifecycle
+
+The baseline adapter-session service surface is intentionally narrow. Later revisions are expected to define richer adapter operations while preserving a coherent baseline for program authors.
 
 ## 9. Data Emission Model
 
@@ -297,6 +327,8 @@ Permissions MAY govern access to:
 - emission of specific classes of output
 - other runtime services defined by later specifications
 
+For secrets, coarse service-family permission is not sufficient by itself for a production-oriented runtime. A runtime SHOULD also enforce per-secret authorization policy.
+
 ### 10.3 Least Privilege
 
 A runtime SHOULD grant programs only the permissions needed for their declared purpose.
@@ -309,6 +341,42 @@ This specification does not require the runtime to proxy or mediate all outbound
 
 Later specifications MAY define optional runtime-managed networking services, but such services are not part of the required baseline.
 
+### 11.1 TLS for Program-Owned Networking
+
+A program MAY use TLS for outbound or listening application sockets when its application protocol or deployment requires transport confidentiality, integrity, peer authentication, or all three.
+
+The baseline Overnet Program Runtime does not require the runtime to terminate, proxy, inspect, or mediate that TLS session.
+
+Unless a later companion specification defines a runtime-managed networking facility, TLS for program-owned networking is the responsibility of the program together with host-managed runtime configuration.
+
+Companion specifications that define network-facing behavior SHOULD reuse the baseline TLS configuration object defined below rather than inventing protocol-specific TLS field names.
+
+### 11.2 Baseline TLS Configuration Object
+
+When a program configuration requires TLS, the configuration SHOULD use a `tls` object with the following baseline field names:
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| `enabled` | boolean | yes | Whether TLS is enabled for the relevant socket or listener. |
+| `mode` | string | no | Either `client` or `server`. Companion specifications MAY make this implicit from context. |
+| `verify_peer` | boolean | no | Whether the peer certificate is verified. |
+| `server_name` | string | no | Expected server name for client-mode TLS hostname verification and SNI, when applicable. |
+| `cert_chain_file` | string | no | Host-managed path to the local certificate or certificate chain file. |
+| `private_key_file` | string | no | Host-managed path to the local private key file. |
+| `ca_file` | string | no | Host-managed path to a CA bundle or trust anchor file. |
+| `min_version` | string | no | Minimum permitted TLS version, such as `TLSv1.2` or `TLSv1.3`. |
+
+This section standardizes baseline field names and meanings only.
+
+A companion specification remains responsible for defining:
+
+- whether TLS is optional or required for that program behavior
+- which subset of fields is required
+- whether `mode` is implicit
+- any protocol-specific verification requirements
+
+Implementations MAY support additional TLS configuration fields, but they SHOULD preserve the baseline field names above for the common semantics they cover.
+
 ## 12. Security Considerations
 
 The runtime is a trust and policy boundary.
@@ -317,6 +385,18 @@ Therefore:
 
 - a program MUST NOT be trusted to self-validate Overnet output
 - secret access MUST be mediated by the runtime
+- raw secret plaintext SHOULD NOT be returned over the baseline program protocol
+- issued secret handles SHOULD be short-lived and narrowly scoped
+- per-secret authorization SHOULD be enforced in addition to coarse service-family permissions
+- raw secret plaintext MUST NOT be stored in ordinary runtime-managed configuration or storage surfaces exposed to programs
+- this specification does not require or assume portable guaranteed zeroization of plaintext inside high-level runtime implementations
+- production-oriented runtimes MUST rely primarily on plaintext avoidance, least privilege, isolation of secret consumers, revocation, rotation, and audit rather than on assumed memory scrubbing guarantees
+- if plaintext must be materialized in memory to complete a runtime-managed operation, the runtime MUST minimize the lifetime and number of plaintext copies as much as practical
+- production-oriented deployments SHOULD restrict crash dumps, debugger access, swap exposure, and log disclosure for processes that may transiently handle plaintext secrets
+- if a program owns a TLS endpoint, that program and its execution environment are part of the trust boundary for the corresponding certificate and private key material
+- raw certificate PEM, raw private key PEM, and TLS passphrases MUST NOT be transported through ordinary Overnet program protocol request or response payloads
+- production-oriented runtimes SHOULD supply TLS asset references through host-managed configuration or host-managed secret facilities rather than inline plaintext values
+- companion specifications SHOULD define TLS configuration in terms of host-managed references such as certificate files, key files, trust bundles, or equivalent host-provided identities rather than embedding secret material directly in ordinary configuration objects
 - permissions MUST be enforced by the runtime
 - transport framing errors MUST be treated as protocol errors
 - a runtime SHOULD impose limits on message size, resource use, and service consumption
@@ -325,12 +405,11 @@ Therefore:
 
 The following areas remain open for later companion documents or later revisions:
 
-- the exact framing wire format
-- the exact runtime protocol message envelope
 - manifest and program package metadata
 - detailed storage operations
 - detailed subscription semantics
-- secret-reference and rotation semantics
+- implementation-specific secret-provider integration interfaces
+- platform-specific secure-erasure guarantees, where available
 - timers and job scheduling semantics
 - capability advertisement semantics at runtime
 - compatibility and upgrade strategy across runtime versions

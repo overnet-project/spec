@@ -1,0 +1,35 @@
+{
+  "description": "The minimal server-side IRC presentation slice does not define direct-message rendering, so a chat.dm_message item is not rendered through the channel presentation path.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat"
+    },
+    "client": {
+      "registered": true,
+      "joined_channels": [
+        "#overnet"
+      ]
+    },
+    "item": {
+      "item_type": "event",
+      "data": {
+        "id": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "pubkey": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "created_at": 1744300862,
+        "kind": 7800,
+        "tags": [
+          ["overnet_v", "0.1.0"],
+          ["overnet_et", "chat.dm_message"],
+          ["overnet_ot", "chat.dm"],
+          ["overnet_oid", "irc:irc.libera.chat:dm:bob"]
+        ],
+        "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/bob\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"text\":\"Hello in DM\"}}",
+        "sig": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    }
+  },
+  "expected": {
+    "rendered": false,
+    "lines": []
+  }
+}
