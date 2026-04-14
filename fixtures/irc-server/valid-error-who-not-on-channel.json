@@ -1,0 +1,21 @@
+{
+  "description": "A registered WHO query for an unjoined channel is rejected with ERR_NOTONCHANNEL.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice",
+      "joined_channels": [
+        "#Elsewhere"
+      ]
+    },
+    "line": "WHO #overnet"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 442 alice #overnet :You're not on that channel"
+    ]
+  }
+}

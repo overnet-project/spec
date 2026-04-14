@@ -1,0 +1,25 @@
+{
+  "description": "A registered client may query USERHOST for its own nick and receives a minimal 302 reply.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "Alice"
+    },
+    "known_nicks": [
+      {
+        "nick": "Alice",
+        "username": "alice",
+        "host": "127.0.0.1"
+      }
+    ],
+    "line": "USERHOST aLiCe"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 302 Alice :Alice=+alice@127.0.0.1"
+    ]
+  }
+}

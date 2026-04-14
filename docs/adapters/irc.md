@@ -637,7 +637,7 @@ This section does not define:
 
 - full IRC server conformance
 - complete numeric reply behavior beyond baseline registration
-- `WHO`, `LIST`, mode changes, or operator-service behavior beyond the minimal compatibility query behavior defined here
+- `LIST`, mode changes, or operator-service behavior beyond the minimal compatibility query behavior defined here
 - write-back to an upstream IRC network
 - multi-server federation
 
@@ -681,8 +681,8 @@ An implementation claiming support for this section MUST emit at least the follo
 |---|---|---|
 | `421` | `ERR_UNKNOWNCOMMAND` | A command name is not recognized by this section's baseline server behavior. |
 | `431` | `ERR_NONICKNAMEGIVEN` | A client sends `NICK` without a nickname parameter. |
-| `451` | `ERR_NOTREGISTERED` | A client sends `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, or `MODE` before registration completes. |
-| `461` | `ERR_NEEDMOREPARAMS` | A client sends `USER`, `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, or `CAP REQ` without the required parameter set for that command. |
+| `451` | `ERR_NOTREGISTERED` | A client sends `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, or `WHO` before registration completes. |
+| `461` | `ERR_NEEDMOREPARAMS` | A client sends `USER`, `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, or `CAP REQ` without the required parameter set for that command. |
 | `401` | `ERR_NOSUCHNICK` | A client sends direct-message `PRIVMSG` or `NOTICE` to a nick target that does not match any currently connected nick under the comparison rules in section 13.1.3. |
 | `403` | `ERR_NOSUCHCHANNEL` | A command in this section requires a channel target but the supplied target is not syntactically a valid IRC channel name. |
 | `442` | `ERR_NOTONCHANNEL` | A registered client sends channel `PART`, channel-targeted `PRIVMSG`, channel-targeted `NOTICE`, channel `TOPIC`, or channel `MODE` for a channel that the implementation does not currently treat as joined for that client under the comparison rules in section 13.1.3. |
@@ -756,6 +756,37 @@ This baseline does not require support for:
 
 - any channel mode change command carrying mode arguments
 - any additional mode numerics such as topic-lock or creation-time reporting
+
+#### 13.1.5 Minimal USERHOST and WHO Query Compatibility
+
+After registration completes, an implementation claiming support for this section MUST accept:
+
+- `USERHOST <nick> [<nick> ...]`
+- `WHO <channel>`
+
+For this baseline:
+
+- `USERHOST` nick matching MUST use the comparison rules in section 13.1.3
+- for each nick in the request that matches a currently connected nick, the implementation MUST include one reply fragment of the form:
+  - `<display_nick>=+<username>@<host>`
+- the implementation MUST reply to `USERHOST` with:
+  - `:<server_name> 302 <requesting_nick> :<fragment> [<fragment> ...]`
+- if none of the requested nicks match a currently connected nick, the implementation MAY reply with an empty `302` trailing parameter
+- `WHO <channel>` channel matching MUST use the comparison rules in section 13.1.3
+- the client MUST already be joined to that channel under the comparison rules in section 13.1.3
+- for each currently visible nick on the channel, the implementation MUST emit one `352` reply of the form:
+  - `:<server_name> 352 <requesting_nick> <channel> <username> <host> <server_name> <display_nick> H :0 <realname>`
+- after the `352` replies, the implementation MUST emit:
+  - `:<server_name> 315 <requesting_nick> <channel> :End of /WHO list.`
+- `<channel>` in `352` and `315` SHOULD use the implementation's current presentational channel spelling for the joined channel
+- when the implementation does not have authoritative IRC-side values for `<username>`, `<host>`, or `<realname>`, it MAY use stable implementation-defined presentational placeholder values
+
+This baseline does not require support for:
+
+- `WHO` against non-channel masks
+- `WHOX`
+- away-state reporting
+- hopcount semantics beyond the literal `0` used in this section
 
 ### 13.2 Channel Association and Join Bootstrap Baseline
 

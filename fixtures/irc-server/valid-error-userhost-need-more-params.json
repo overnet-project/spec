@@ -1,0 +1,18 @@
+{
+  "description": "A registered USERHOST command without a nick parameter is rejected with ERR_NEEDMOREPARAMS.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice"
+    },
+    "line": "USERHOST"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 461 alice USERHOST :Not enough parameters"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "description": "A registered client may query WHO for a joined channel and receives minimal 352 and 315 replies.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "Alice",
+      "joined_channels": [
+        "#OverNet"
+      ]
+    },
+    "visible_channel_members": [
+      {
+        "channel": "#OverNet",
+        "nick": "Alice",
+        "username": "alice",
+        "host": "127.0.0.1",
+        "realname": "Alice Example"
+      }
+    ],
+    "line": "WHO #oVERnEt"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 352 Alice #OverNet alice 127.0.0.1 overnet.irc.local Alice H :0 Alice Example",
+      ":overnet.irc.local 315 Alice #OverNet :End of /WHO list."
+    ]
+  }
+}

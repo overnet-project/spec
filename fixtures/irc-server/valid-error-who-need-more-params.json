@@ -1,0 +1,18 @@
+{
+  "description": "A registered WHO command without a target parameter is rejected with ERR_NEEDMOREPARAMS.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice"
+    },
+    "line": "WHO"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 461 alice WHO :Not enough parameters"
+    ]
+  }
+}
