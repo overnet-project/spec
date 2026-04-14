@@ -1,0 +1,27 @@
+{
+  "description": "A registered client may query TOPIC for a joined channel and receives 332 when a topic is known.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice",
+      "joined_channels": [
+        "#OverNet"
+      ]
+    },
+    "channel_topics": [
+      {
+        "channel": "#OverNet",
+        "topic": "Overnet discussion and implementation"
+      }
+    ],
+    "line": "TOPIC #oVERnEt"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 332 alice #OverNet :Overnet discussion and implementation"
+    ]
+  }
+}

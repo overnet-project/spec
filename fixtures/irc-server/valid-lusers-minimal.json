@@ -1,0 +1,25 @@
+{
+  "description": "A registered client may query LUSERS and receives a minimal numeric reply set.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local",
+      "registered_users": 2,
+      "connected_clients": 2,
+      "channels": 1
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice"
+    },
+    "line": "LUSERS"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 251 alice :There are 2 users and 0 services on 1 server",
+      ":overnet.irc.local 252 alice 0 :operator(s) online",
+      ":overnet.irc.local 253 alice 0 :unknown connection(s)",
+      ":overnet.irc.local 254 alice 1 :channels formed",
+      ":overnet.irc.local 255 alice :I have 2 clients and 1 server"
+    ]
+  }
+}

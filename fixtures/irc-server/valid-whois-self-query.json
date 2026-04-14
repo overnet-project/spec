@@ -1,0 +1,29 @@
+{
+  "description": "A registered client may query WHOIS for a connected nick and receives minimal 311, 312, and 318 replies.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local",
+      "server_description": "Overnet IRC"
+    },
+    "client": {
+      "registered": true,
+      "nick": "Alice"
+    },
+    "known_nicks": [
+      {
+        "nick": "Alice",
+        "username": "alice",
+        "host": "127.0.0.1",
+        "realname": "Alice Example"
+      }
+    ],
+    "line": "WHOIS aLiCe"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 311 Alice Alice alice 127.0.0.1 * :Alice Example",
+      ":overnet.irc.local 312 Alice Alice overnet.irc.local :Overnet IRC",
+      ":overnet.irc.local 318 Alice Alice :End of /WHOIS list."
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "description": "A registered client may query TOPIC for a joined channel and receives 331 when no topic is known.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice",
+      "joined_channels": [
+        "#OverNet"
+      ]
+    },
+    "line": "TOPIC #oVERnEt"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 331 alice #OverNet :No topic is set"
+    ]
+  }
+}

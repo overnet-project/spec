@@ -1,0 +1,20 @@
+{
+  "description": "After registration completes, the server emits 001, a minimal 005 ISUPPORT line, and 422 ERR_NOMOTD.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local",
+      "network": "local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice"
+    }
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 001 alice :Welcome to Overnet IRC",
+      ":overnet.irc.local 005 alice CASEMAPPING=rfc1459 CHANTYPES=#& NETWORK=local :are supported by this server",
+      ":overnet.irc.local 422 alice :MOTD File is missing"
+    ]
+  }
+}

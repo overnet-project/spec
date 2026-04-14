@@ -681,9 +681,9 @@ An implementation claiming support for this section MUST emit at least the follo
 |---|---|---|
 | `421` | `ERR_UNKNOWNCOMMAND` | A command name is not recognized by this section's baseline server behavior. |
 | `431` | `ERR_NONICKNAMEGIVEN` | A client sends `NICK` without a nickname parameter. |
-| `451` | `ERR_NOTREGISTERED` | A client sends `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, or `WHO` before registration completes. |
-| `461` | `ERR_NEEDMOREPARAMS` | A client sends `USER`, `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, or `CAP REQ` without the required parameter set for that command. |
-| `401` | `ERR_NOSUCHNICK` | A client sends direct-message `PRIVMSG` or `NOTICE` to a nick target that does not match any currently connected nick under the comparison rules in section 13.1.3. |
+| `451` | `ERR_NOTREGISTERED` | A client sends `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, or `LUSERS` before registration completes. |
+| `461` | `ERR_NEEDMOREPARAMS` | A client sends `USER`, `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, or `CAP REQ` without the required parameter set for that command. |
+| `401` | `ERR_NOSUCHNICK` | A client sends direct-message `PRIVMSG`, direct-message `NOTICE`, or `WHOIS` for a nick target that does not match any currently connected nick under the comparison rules in section 13.1.3. |
 | `403` | `ERR_NOSUCHCHANNEL` | A command in this section requires a channel target but the supplied target is not syntactically a valid IRC channel name. |
 | `442` | `ERR_NOTONCHANNEL` | A registered client sends channel `PART`, channel-targeted `PRIVMSG`, channel-targeted `NOTICE`, channel `TOPIC`, or channel `MODE` for a channel that the implementation does not currently treat as joined for that client under the comparison rules in section 13.1.3. |
 
@@ -734,7 +734,23 @@ For this baseline:
 
 Once both commands have been accepted for a client connection, the implementation MUST treat that client as registered and MUST emit at least numeric `001` as a welcome reply.
 
-#### 13.1.4 Minimal Channel MODE Query Compatibility
+#### 13.1.4 Registration Reply Prelude Compatibility
+
+After registration completes, an implementation claiming support for this section MUST emit at least the following numeric reply prelude in this order:
+
+- `:<server_name> 001 <nick> :Welcome to Overnet IRC`
+- `:<server_name> 005 <nick> CASEMAPPING=rfc1459 CHANTYPES=#& NETWORK=<network> :are supported by this server`
+- `:<server_name> 422 <nick> :MOTD File is missing`
+
+For this baseline:
+
+- `<server_name>` is the same server-presentable name used elsewhere in this section
+- `<nick>` is the client's current registered nick
+- `<network>` is the current IRC network identifier presented by the implementation
+- this section standardizes only the listed `005` tokens; implementations MAY advertise additional compatible tokens
+- this baseline uses `422 ERR_NOMOTD` rather than requiring a full `375` / `372` / `376` MOTD sequence
+
+#### 13.1.5 Minimal Channel MODE Query Compatibility
 
 After registration completes, an implementation claiming support for this section MUST accept the following read-only `MODE` queries:
 
@@ -757,12 +773,13 @@ This baseline does not require support for:
 - any channel mode change command carrying mode arguments
 - any additional mode numerics such as topic-lock or creation-time reporting
 
-#### 13.1.5 Minimal USERHOST and WHO Query Compatibility
+#### 13.1.6 Minimal USERHOST, WHO, and WHOIS Query Compatibility
 
 After registration completes, an implementation claiming support for this section MUST accept:
 
 - `USERHOST <nick> [<nick> ...]`
 - `WHO <channel>`
+- `WHOIS <nick>`
 
 For this baseline:
 
@@ -780,13 +797,64 @@ For this baseline:
   - `:<server_name> 315 <requesting_nick> <channel> :End of /WHO list.`
 - `<channel>` in `352` and `315` SHOULD use the implementation's current presentational channel spelling for the joined channel
 - when the implementation does not have authoritative IRC-side values for `<username>`, `<host>`, or `<realname>`, it MAY use stable implementation-defined presentational placeholder values
+- `WHOIS` nick matching MUST use the comparison rules in section 13.1.3
+- for a `WHOIS <nick>` query whose nick matches a currently connected nick, the implementation MUST emit:
+  - `:<server_name> 311 <requesting_nick> <display_nick> <username> <host> * :<realname>`
+  - `:<server_name> 312 <requesting_nick> <display_nick> <server_name> :<server_description>`
+  - `:<server_name> 318 <requesting_nick> <display_nick> :End of /WHOIS list.`
+- `<display_nick>` in those replies SHOULD use the implementation's current presentational nick spelling for the matched nick
+- when the implementation does not have authoritative IRC-side values for `<username>`, `<host>`, or `<realname>`, it MAY use stable implementation-defined presentational placeholder values for `WHOIS` in the same way as for `WHO`
+- `<server_description>` MAY be a stable implementation-defined presentational description string
 
 This baseline does not require support for:
 
 - `WHO` against non-channel masks
 - `WHOX`
+- multi-target `WHOIS`
 - away-state reporting
 - hopcount semantics beyond the literal `0` used in this section
+- additional `WHOIS` numerics such as channel membership, idle time, account status, secure transport, or operator state
+
+#### 13.1.7 Minimal LUSERS Compatibility
+
+After registration completes, an implementation claiming support for this section MUST accept:
+
+- `LUSERS`
+
+For this baseline, the implementation MUST emit at least the following numeric replies:
+
+- `:<server_name> 251 <nick> :There are <users> users and 0 services on 1 server`
+- `:<server_name> 252 <nick> 0 :operator(s) online`
+- `:<server_name> 253 <nick> 0 :unknown connection(s)`
+- `:<server_name> 254 <nick> <channels> :channels formed`
+- `:<server_name> 255 <nick> :I have <clients> clients and 1 server`
+
+For this baseline:
+
+- `<users>` is the number of currently registered IRC clients
+- `<clients>` is the number of currently connected IRC clients
+- `<channels>` is the number of channels the implementation currently exposes in its server-side presentation state
+- this section does not require support for additional LUSERS numerics such as `265` or `266`
+
+#### 13.1.8 Minimal TOPIC Query Compatibility
+
+After registration completes, an implementation claiming support for this section MUST accept:
+
+- `TOPIC <channel>`
+
+For this baseline:
+
+- `<channel>` MUST be treated as a channel target using the comparison rules in section 13.1.3
+- the client MUST already be joined to that channel under the comparison rules in section 13.1.3
+- if the implementation has a current `chat.topic` state available for that channel, it MUST reply with:
+  - `:<server_name> 332 <nick> <channel> :<topic>`
+- if the implementation does not have a current topic for that channel, it MUST reply with:
+  - `:<server_name> 331 <nick> <channel> :No topic is set`
+- `<channel>` in those replies SHOULD use the implementation's current presentational channel spelling for the joined channel
+
+This baseline does not require support for:
+
+- topic-setter metadata numerics such as `333`
 
 ### 13.2 Channel Association and Join Bootstrap Baseline
 
