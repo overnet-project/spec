@@ -1,0 +1,17 @@
+{
+  "description": "A client that sends JOIN before registration completes is rejected with ERR_NOTREGISTERED.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": false
+    },
+    "line": "JOIN #overnet"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 451 * :You have not registered"
+    ]
+  }
+}

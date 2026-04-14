@@ -1,0 +1,20 @@
+{
+  "description": "Nick uniqueness in the baseline server slice uses RFC1459-style case-folding, so differently cased spellings of the same nick collide.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local",
+      "current_nicks": [
+        "Alice"
+      ]
+    },
+    "client": {
+      "registered": false
+    },
+    "line": "NICK aLICE"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 433 * aLICE :Nickname is already in use"
+    ]
+  }
+}

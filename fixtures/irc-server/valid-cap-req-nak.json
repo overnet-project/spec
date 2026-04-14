@@ -1,0 +1,17 @@
+{
+  "description": "A pre-registration CAP REQ request is rejected with CAP NAK when the baseline server advertises no optional capabilities.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": false
+    },
+    "line": "CAP REQ :multi-prefix sasl"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local CAP * NAK :multi-prefix sasl"
+    ]
+  }
+}

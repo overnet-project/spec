@@ -1,0 +1,18 @@
+{
+  "description": "A command in this slice that requires a channel target rejects a non-channel target with ERR_NOSUCHCHANNEL.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice"
+    },
+    "line": "JOIN alice"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 403 alice alice :No such channel"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "description": "An inbound direct-message NOTICE routes to the directional chat.dm object keyed by the target nick.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat"
+    },
+    "client": {
+      "registered": true,
+      "nick": "bob",
+      "joined_channels": []
+    },
+    "line": "NOTICE alice :private notice"
+  },
+  "expected": {
+    "mapped_overnet_et": "chat.dm_notice",
+    "mapped_overnet_ot": "chat.dm",
+    "mapped_overnet_oid": "irc:irc.libera.chat:dm:alice"
+  }
+}

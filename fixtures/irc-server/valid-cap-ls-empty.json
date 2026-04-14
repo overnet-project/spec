@@ -1,0 +1,17 @@
+{
+  "description": "A pre-registration CAP LS request receives an empty capability advertisement reply.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": false
+    },
+    "line": "CAP LS 302"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local CAP * LS :"
+    ]
+  }
+}

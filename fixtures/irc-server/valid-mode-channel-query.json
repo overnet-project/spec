@@ -1,0 +1,21 @@
+{
+  "description": "A registered client may query MODE for a joined channel and receives a minimal RPL_CHANNELMODEIS reply.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice",
+      "joined_channels": [
+        "#OverNet"
+      ]
+    },
+    "line": "MODE #oVERnEt"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 324 alice #OverNet +n"
+    ]
+  }
+}

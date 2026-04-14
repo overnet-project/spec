@@ -422,6 +422,17 @@ A program is a runnable implementation artifact that produces, consumes, stores,
 
 Adapter specifications define source-system mapping semantics. Programs implement the core and any companion specifications they claim to support. Programs do not require separate semantic companion specifications merely by virtue of being runnable software, although a future Overnet program runtime or program-protocol specification may define common execution contracts for programs.
 
+### 4.5.2 Adapter Directionality
+
+Where the external system, trust model, and deployment scope permit semantically honest two-way interoperability, an adapter specification SHOULD aim to define both directions of the mapping:
+
+- how external-system observations or actions are expressed through Overnet semantics
+- how appropriate Overnet actions, state, or presentation are expressed back toward the external system
+
+Bi-directionality is not required when a reverse mapping would be misleading, unsafe, materially lossy, operationally out of scope, or unsupported by the source system.
+
+If a companion adapter specification intentionally defines only one direction, or only a partial reverse mapping, it SHOULD say so explicitly and identify the omitted direction or class of operations.
+
 ### 4.6 Adapter Fidelity Principles
 
 Adapters are required to preserve source-system semantics as faithfully as possible.

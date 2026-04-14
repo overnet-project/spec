@@ -1,0 +1,17 @@
+{
+  "description": "A client that sends USER without all required parameters is rejected with ERR_NEEDMOREPARAMS.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": false
+    },
+    "line": "USER alice 0 *"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 461 * USER :Not enough parameters"
+    ]
+  }
+}

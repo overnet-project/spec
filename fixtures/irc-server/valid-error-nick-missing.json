@@ -1,0 +1,17 @@
+{
+  "description": "A client that sends NICK without a nickname parameter is rejected with ERR_NONICKNAMEGIVEN.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": false
+    },
+    "line": "NICK"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 431 * :No nickname given"
+    ]
+  }
+}

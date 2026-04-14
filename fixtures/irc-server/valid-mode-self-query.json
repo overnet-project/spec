@@ -1,0 +1,18 @@
+{
+  "description": "A registered client may query MODE for its own nick and receives a minimal RPL_UMODEIS reply.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice"
+    },
+    "line": "MODE aLiCe"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 221 alice +"
+    ]
+  }
+}

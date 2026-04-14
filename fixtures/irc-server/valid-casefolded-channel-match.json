@@ -1,0 +1,26 @@
+{
+  "description": "Channel membership matching in the baseline server slice uses RFC1459-style case-folding, so a client joined to #OverNet may address #oVERnEt as the same current channel.",
+  "input": {
+    "server_view": {
+      "network": "irc.libera.chat",
+      "channel_members": {
+        "#OverNet": [
+          "alice"
+        ]
+      }
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice",
+      "joined_channels": [
+        "#OverNet"
+      ]
+    },
+    "line": "PRIVMSG #oVERnEt :Hello with mixed case"
+  },
+  "expected": {
+    "mapped_overnet_et": "chat.message",
+    "mapped_overnet_ot": "chat.channel",
+    "mapped_overnet_oid": "irc:irc.libera.chat:#OverNet"
+  }
+}

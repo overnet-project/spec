@@ -1,0 +1,18 @@
+{
+  "description": "An unknown command is rejected with ERR_UNKNOWNCOMMAND.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice"
+    },
+    "line": "FROB :payload"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 421 alice FROB :Unknown command"
+    ]
+  }
+}

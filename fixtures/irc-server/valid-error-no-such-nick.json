@@ -1,0 +1,21 @@
+{
+  "description": "A direct-message target that does not match any current nick under baseline case-folding is rejected with ERR_NOSUCHNICK.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local",
+      "current_nicks": [
+        "alice"
+      ]
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice"
+    },
+    "line": "PRIVMSG bob :hello"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 401 alice bob :No such nick/channel"
+    ]
+  }
+}

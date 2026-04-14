@@ -35,6 +35,10 @@ This version does not yet define:
 - general write-back from Overnet into arbitrary IRC networks
 - full IRC-server numerics, listing, and multi-client synchronization semantics
 
+Consistent with the core adapter directionality guidance, an IRC adapter SHOULD aim for bi-directional interoperability where that can be defined honestly and safely.
+
+This version remains intentionally partial in that respect. It defines the IRC-to-Overnet observation mapping in detail and defines only a narrow Overnet-to-IRC presentation slice for IRC clients. It does not yet define general write-back to upstream IRC networks or broader bidirectional synchronization behavior.
+
 Those areas MAY be defined by later revisions of this adapter specification.
 
 ## 2. Relationship to the Overnet Core
@@ -633,8 +637,7 @@ This section does not define:
 
 - full IRC server conformance
 - complete numeric reply behavior beyond baseline registration
-- `WHO`, `LIST`, `MODE`, or operator-service behavior beyond the minimal join bootstrap defined here
-- direct-message presentation
+- `WHO`, `LIST`, mode changes, or operator-service behavior beyond the minimal compatibility query behavior defined here
 - write-back to an upstream IRC network
 - multi-server federation
 
@@ -646,6 +649,69 @@ An implementation claiming support for this section MUST accept client registrat
 - `USER <username> 0 * :<realname>`
 
 The implementation MUST accept those commands in either order.
+
+#### 13.1.1 Capability Negotiation Compatibility Baseline
+
+Before registration completes, an implementation claiming support for this section MUST accept:
+
+- `CAP LS`
+- `CAP LS <version>`
+- `CAP REQ :<capabilities>`
+- `CAP END`
+
+For this baseline, the implementation advertises no optional IRC capabilities.
+
+When the client sends `CAP LS` or `CAP LS <version>`, the implementation MUST reply with:
+
+- `:<server_name> CAP * LS :`
+
+When the client sends `CAP REQ :<capabilities>`, the implementation MUST reject the request with:
+
+- `:<server_name> CAP * NAK :<capabilities>`
+
+When the client sends `CAP END`, the implementation MAY emit no reply.
+
+This section does not require support for `CAP LIST`, `CAP CLEAR`, or capability enablement.
+
+#### 13.1.2 Baseline Command Validation and Error Numerics
+
+An implementation claiming support for this section MUST emit at least the following IRC error numerics in the listed situations:
+
+| Numeric | Name | Required situation |
+|---|---|---|
+| `421` | `ERR_UNKNOWNCOMMAND` | A command name is not recognized by this section's baseline server behavior. |
+| `431` | `ERR_NONICKNAMEGIVEN` | A client sends `NICK` without a nickname parameter. |
+| `451` | `ERR_NOTREGISTERED` | A client sends `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, or `MODE` before registration completes. |
+| `461` | `ERR_NEEDMOREPARAMS` | A client sends `USER`, `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, or `CAP REQ` without the required parameter set for that command. |
+| `401` | `ERR_NOSUCHNICK` | A client sends direct-message `PRIVMSG` or `NOTICE` to a nick target that does not match any currently connected nick under the comparison rules in section 13.1.3. |
+| `403` | `ERR_NOSUCHCHANNEL` | A command in this section requires a channel target but the supplied target is not syntactically a valid IRC channel name. |
+| `442` | `ERR_NOTONCHANNEL` | A registered client sends channel `PART`, channel-targeted `PRIVMSG`, channel-targeted `NOTICE`, channel `TOPIC`, or channel `MODE` for a channel that the implementation does not currently treat as joined for that client under the comparison rules in section 13.1.3. |
+
+For this baseline:
+
+- `<server_name>` is the same server-presentable name used for numeric `001`
+- the target parameter before the command-specific argument SHOULD be the client's current nick when available, or `*` before the client has a registered nick
+- `401` uses the form `:<server_name> 401 <target> <nick> :No such nick/channel`
+- `403` uses the form `:<server_name> 403 <target> <channel> :No such channel`
+- `442` uses the form `:<server_name> 442 <target> <channel> :You're not on that channel`
+- `461` uses the form `:<server_name> 461 <target> <command> :Not enough parameters`
+
+#### 13.1.3 RFC1459-Style Comparison Baseline
+
+For this section, implementations MUST compare IRC nick and channel names using the following baseline RFC1459-style case-folding rules:
+
+- ASCII `A-Z` compare equal to `a-z`
+- `[` compares equal to `{`
+- `]` compares equal to `}`
+- `\` compares equal to `|`
+- `^` compares equal to `~`
+
+For this baseline:
+
+- nick uniqueness MUST be enforced using that folded comparison
+- a nick target used for direct-message delivery or direct-message validation MUST be matched using that folded comparison
+- channel membership matching for `JOIN`, `PART`, channel-targeted `PRIVMSG`, channel-targeted `NOTICE`, `TOPIC`, and `NAMES` MUST be performed using that folded comparison
+- an implementation MAY preserve a presentational nick spelling or channel spelling for rendered IRC lines, but it MUST NOT treat spellings that compare equal under this section as distinct current IRC identities or distinct current joined channels
 
 For this section, a nick value is unique per current server instance.
 
@@ -668,13 +734,35 @@ For this baseline:
 
 Once both commands have been accepted for a client connection, the implementation MUST treat that client as registered and MUST emit at least numeric `001` as a welcome reply.
 
-This section does not define additional required numeric replies.
+#### 13.1.4 Minimal Channel MODE Query Compatibility
+
+After registration completes, an implementation claiming support for this section MUST accept the following read-only `MODE` queries:
+
+- `MODE <nick>`
+- `MODE <channel>`
+
+For this baseline:
+
+- when the client sends `MODE <nick>`, `<nick>` MUST match the client's current nick under the comparison rules in section 13.1.3
+- for a self `MODE <nick>` query, the implementation MUST reply with:
+  - `:<server_name> 221 <nick> +`
+- `<channel>` MUST be treated as a channel target using the comparison rules in section 13.1.3
+- the client MUST already be joined to that channel under the comparison rules in section 13.1.3
+- for a joined-channel `MODE <channel>` query, the implementation MUST reply with:
+  - `:<server_name> 324 <nick> <channel> +n`
+- `<channel>` in that reply SHOULD use the implementation's current presentational channel spelling for the joined channel
+
+This baseline does not require support for:
+
+- any channel mode change command carrying mode arguments
+- any additional mode numerics such as topic-lock or creation-time reporting
 
 ### 13.2 Channel Association and Join Bootstrap Baseline
 
 After registration, an implementation claiming support for this section MUST accept:
 
 - `JOIN <channel>`
+- `NAMES <channel>`
 
 For the configured IRC network view served by the implementation, the channel name `<channel>` MUST map to Overnet object identifier:
 
@@ -701,6 +789,8 @@ For this baseline:
 
 If the implementation has a current `chat.topic` state available for that channel at join time, it MUST replay that topic to the joining client using the `chat.topic` render form defined in section 13.3 before the terminating `366` line.
 
+When a registered client sends `NAMES <channel>` for a valid IRC channel name, the implementation MUST emit one or more `353` lines followed by one terminating `366` line using the same minimal name-list rules defined above.
+
 ### 13.3 Outbound Presentation Baseline
 
 For a registered client, an implementation claiming support for this section MUST render the following Overnet data to IRC lines when the corresponding audience conditions in this section are satisfied:
@@ -709,6 +799,8 @@ For a registered client, an implementation claiming support for this section MUS
 |---|---|
 | `chat.message` event | `:<nick> PRIVMSG <channel> :<text>` |
 | `chat.notice` event | `:<nick> NOTICE <channel> :<text>` |
+| `chat.dm_message` event | `:<nick> PRIVMSG <target_nick> :<text>` |
+| `chat.dm_notice` event | `:<nick> NOTICE <target_nick> :<text>` |
 | `chat.topic` state | `:<nick> TOPIC <channel> :<topic>` |
 | `chat.join` event | `:<nick> JOIN <channel>` |
 | `chat.part` event | `:<nick> PART <channel>` or `:<nick> PART <channel> :<reason>` |
@@ -718,18 +810,22 @@ For a registered client, an implementation claiming support for this section MUS
 For this baseline:
 
 - `<channel>` MUST be the exact IRC channel name derived from the `irc:<network>:<channel>` object identifier
+- `<target_nick>` MUST be the exact IRC nick suffix derived from the `irc:<network>:dm:<target_nick>` object identifier
 - `chat.message` rendering uses `body.text`
 - `chat.notice` rendering uses `body.text`
+- `chat.dm_message` rendering uses `body.text`
+- `chat.dm_notice` rendering uses `body.text`
 - `chat.topic` rendering uses `body.topic`
 - `chat.part` rendering uses `body.reason` as the trailing parameter when it is present and non-empty
 - `chat.quit` rendering uses `body.reason` as the trailing parameter when it is present and non-empty
 - `irc.nick` rendering uses `body.old_nick` as the prefix nick and `body.new_nick` as the new nick parameter
 - for `chat.message`, `chat.notice`, `chat.topic`, `chat.join`, `chat.part`, and `chat.quit`, the implementation MUST emit those lines only to client connections currently joined to that channel
+- for `chat.dm_message` and `chat.dm_notice`, the implementation MUST emit those lines only to client connections whose current registered nick exactly equals `<target_nick>`
 - for `irc.nick`, the implementation MUST emit the line only to client connections that currently share at least one joined channel with the nick change according to the implementation's current presentation membership view
 
 ### 13.4 Sender Presentation Baseline
 
-When rendering `chat.message`, `chat.notice`, `chat.topic`, `chat.join`, `chat.part`, or `chat.quit` through this section, the implementation MUST derive an IRC-presentable nick string for `<nick>`.
+When rendering `chat.message`, `chat.notice`, `chat.dm_message`, `chat.dm_notice`, `chat.topic`, `chat.join`, `chat.part`, or `chat.quit` through this section, the implementation MUST derive an IRC-presentable nick string for `<nick>`.
 
 If `content.provenance.external_identity` is present and is a non-empty string, the implementation MUST use that value as the rendered IRC nick.
 
@@ -749,6 +845,14 @@ If `content.provenance.external_identity` is present on an `irc.nick` event, it 
 This section defines only the minimal server-side presentation of Overnet data to IRC clients.
 
 Inbound IRC client commands such as `PRIVMSG`, `NOTICE`, `TOPIC`, and `JOIN` continue to use the IRC-to-Overnet mapping rules defined earlier in this specification when the implementation chooses to expose that behavior.
+
+For this baseline:
+
+- an inbound channel-targeted `PRIVMSG` or `NOTICE` continues to map to the corresponding `chat.channel` object
+- an inbound non-channel `PRIVMSG` or `NOTICE` MUST map to the corresponding directional `chat.dm` object
+- for an inbound non-channel `PRIVMSG <target_nick> :<text>`, the mapped `overnet_oid` MUST be `irc:<network>:dm:<target_nick>`
+- for an inbound non-channel `NOTICE <target_nick> :<text>`, the mapped `overnet_oid` MUST be `irc:<network>:dm:<target_nick>`
+- when the target nick matches a currently connected client nick only under the comparison rules in section 13.1.3, the implementation SHOULD use that client's current presentational nick spelling as the mapped direct-message target
 
 ## 14. Conformance Requirements
 
@@ -777,13 +881,19 @@ An implementation MAY additionally claim support for the optional minimal server
 An implementation claiming support for that optional server-side slice MUST, at minimum:
 
 - accept `NICK` and `USER` registration and emit at least numeric `001`
+- accept `CAP LS`, `CAP REQ`, and `CAP END` before registration and emit the baseline `CAP` replies defined in section 13.1.1
 - enforce unique current nick values per currently connected client connection
 - emit `433` `ERR_NICKNAMEINUSE` for initial or post-registration nick collisions
+- emit baseline validation numerics `421`, `431`, `451`, `461`, `401`, `403`, and `442` in the situations defined in section 13.1.2
+- compare nick and channel names using the baseline RFC1459-style case-folding rules defined in section 13.1.3
 - map `JOIN <channel>` into the corresponding `irc:<network>:<channel>` object scope for client presentation
+- accept `NAMES <channel>` and emit the minimal `353`/`366` sequence
 - emit channel join bootstrap consisting of `JOIN`, `353`, and `366`
 - replay a known current `chat.topic` state to the joining client before completing the minimal join bootstrap
 - render `chat.message` events as channel `PRIVMSG`
 - render `chat.notice` events as channel `NOTICE`
+- render `chat.dm_message` events as direct-message `PRIVMSG`
+- render `chat.dm_notice` events as direct-message `NOTICE`
 - render `chat.topic` state as channel `TOPIC`
 - render `chat.join` events as channel `JOIN`
 - render `chat.part` events as channel `PART`
@@ -798,10 +908,10 @@ The following IRC adapter topics remain open:
 
 - account-aware identity mapping beyond nicknames
 - IRCv3-specific enhancements such as message tags, server-time, and account-aware identity refinement
-- canonical case-folding rules for IRC network and channel identifiers
+- broader network-specific case-mapping negotiation beyond the baseline RFC1459-style comparison defined in section 13.1.3
 - user-scoped mode mapping
 - derived channel mode state or privilege state
 - representation of moderation and operator authority
 - richer server numerics, listing, and channel-bootstrap semantics beyond the minimal `JOIN`/topic/`NAMES` bootstrap defined here
-- direct-message presentation semantics
+- richer direct-message session semantics beyond target-directed `PRIVMSG` and `NOTICE` presentation
 - write-back and bidirectional synchronization semantics beyond the minimal server-side presentation slice

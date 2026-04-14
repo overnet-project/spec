@@ -1,0 +1,19 @@
+{
+  "description": "A registered client that queries MODE for a valid channel it has not joined is rejected with ERR_NOTONCHANNEL.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice",
+      "joined_channels": []
+    },
+    "line": "MODE #overnet"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 442 alice #overnet :You're not on that channel"
+    ]
+  }
+}

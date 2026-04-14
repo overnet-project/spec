@@ -1,14 +1,13 @@
 {
-  "description": "The minimal server-side IRC presentation slice does not define direct-message rendering, so a chat.dm_message item is not rendered through the channel presentation path.",
+  "description": "A chat.dm_message event renders to an IRC direct-message PRIVMSG line for the registered client whose current nick matches the directional chat.dm object suffix.",
   "input": {
     "server_view": {
       "network": "irc.libera.chat"
     },
     "client": {
       "registered": true,
-      "joined_channels": [
-        "#overnet"
-      ]
+      "nick": "bob",
+      "joined_channels": []
     },
     "item": {
       "item_type": "event",
@@ -29,7 +28,9 @@
     }
   },
   "expected": {
-    "rendered": false,
-    "lines": []
+    "rendered": true,
+    "lines": [
+      ":alice PRIVMSG bob :Hello in DM"
+    ]
   }
 }

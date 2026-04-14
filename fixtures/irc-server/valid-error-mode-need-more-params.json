@@ -1,0 +1,18 @@
+{
+  "description": "A registered client that sends MODE without a target is rejected with ERR_NEEDMOREPARAMS.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice"
+    },
+    "line": "MODE"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 461 alice MODE :Not enough parameters"
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "description": "A pre-registration MODE query is rejected with ERR_NOTREGISTERED.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": false
+    },
+    "line": "MODE #overnet"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 451 * :You have not registered"
+    ]
+  }
+}
