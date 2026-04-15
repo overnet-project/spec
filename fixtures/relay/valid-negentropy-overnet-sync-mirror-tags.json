@@ -1,0 +1,32 @@
+{
+  "description": "A generic relay supports interoperable Overnet negentropy reconciliation by using the core-defined single-letter compatibility mirror tags in the NEG-OPEN filter.",
+  "input": {
+    "neg_open": [
+      "NEG-OPEN",
+      "neg-1",
+      {
+        "kinds": [7800, 37800, 7801],
+        "#t": ["chat.message"],
+        "#o": ["chat.channel"],
+        "#d": ["irc:local:#overnet"]
+      },
+      "61"
+    ]
+  },
+  "expected": {
+    "assertions": [
+      {
+        "path": "neg_open.2.#t.0",
+        "equals": "chat.message"
+      },
+      {
+        "path": "neg_open.2.#o.0",
+        "equals": "chat.channel"
+      },
+      {
+        "path": "neg_open.2.#d.0",
+        "equals": "irc:local:#overnet"
+      }
+    ]
+  }
+}

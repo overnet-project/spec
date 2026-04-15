@@ -561,6 +561,23 @@ The core-defined tags `overnet_v`, `overnet_et`, `overnet_ot`, and `overnet_oid`
 
 Tag names use the `overnet_` prefix to avoid collision with Nostr core tags and other protocols. Nostr relays can filter on these tags without parsing the event content.
 
+Every Overnet core event MUST also include the following single-letter compatibility mirror tags:
+
+| Tag | Mirror Of | Description |
+|-----|-----------|-------------|
+| `v` | `overnet_v` | Compatibility mirror of the Overnet core version |
+| `t` | `overnet_et` | Compatibility mirror of the Overnet event type |
+| `o` | `overnet_ot` | Compatibility mirror of the Overnet object type |
+| `d` | `overnet_oid` | Compatibility mirror of the Overnet object identifier |
+
+These single-letter tags exist to provide an interoperable mapping onto standard NIP-01 filter and NIP-77 negentropy filter semantics without requiring nonstandard `#overnet_*` filter keys in transports that only standardize single-letter tag filters.
+
+The `v`, `t`, `o`, and `d` mirror tags are singular. An Overnet core event MUST NOT include more than one instance of any of those tags.
+
+The mirror tags MUST exactly match the corresponding canonical `overnet_*` tag values.
+
+For kind `37800`, the required `d` tag for parameterized replaceable semantics and the `d` compatibility mirror are the same tag. Its value MUST equal `overnet_oid`.
+
 The following fields are carried by the Nostr event structure itself and MUST NOT be duplicated in tags or content:
 
 - **Authoring identity**: the Nostr event `pubkey`
@@ -574,7 +591,11 @@ The following fields are carried by the Nostr event structure itself and MUST NO
   ["overnet_v", "0.1.0"],
   ["overnet_et", "chat.message"],
   ["overnet_ot", "chat.channel"],
-  ["overnet_oid", "a1b2c3d4"]
+  ["overnet_oid", "a1b2c3d4"],
+  ["v", "0.1.0"],
+  ["t", "chat.message"],
+  ["o", "chat.channel"],
+  ["d", "a1b2c3d4"]
 ]
 ```
 
@@ -670,7 +691,11 @@ This section is informative. It shows complete Nostr events conforming to the Ov
     ["overnet_v", "0.1.0"],
     ["overnet_et", "chat.message"],
     ["overnet_ot", "chat.channel"],
-    ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"]
+    ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"],
+    ["v", "0.1.0"],
+    ["t", "chat.message"],
+    ["o", "chat.channel"],
+    ["d", "f47ac10b-58cc-4372-a567-0e02b2c3d479"]
   ],
   "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"text\":\"Hello, world!\"}}",
   "sig": "e7f8a9..."
@@ -698,7 +723,11 @@ In this example:
     ["overnet_v", "0.1.0"],
     ["overnet_et", "chat.message"],
     ["overnet_ot", "chat.channel"],
-    ["overnet_oid", "irc:libera.chat:#overnet"]
+    ["overnet_oid", "irc:libera.chat:#overnet"],
+    ["v", "0.1.0"],
+    ["t", "chat.message"],
+    ["o", "chat.channel"],
+    ["d", "irc:libera.chat:#overnet"]
   ],
   "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\"]},\"body\":{\"text\":\"Hello from IRC!\"}}",
   "sig": "d5e6f7..."
@@ -725,7 +754,10 @@ In this example:
     ["overnet_v", "0.1.0"],
     ["overnet_et", "identity.profile"],
     ["overnet_ot", "identity.profile"],
-    ["overnet_oid", "b4c5d6..."]
+    ["overnet_oid", "b4c5d6..."],
+    ["v", "0.1.0"],
+    ["t", "identity.profile"],
+    ["o", "identity.profile"]
   ],
   "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"display_name\":\"Alice\",\"bio\":\"Overnet early adopter\"}}",
   "sig": "f8a9b0..."
@@ -751,6 +783,10 @@ In this example:
     ["overnet_et", "core.removal"],
     ["overnet_ot", "chat.channel"],
     ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"],
+    ["v", "0.1.0"],
+    ["t", "core.removal"],
+    ["o", "chat.channel"],
+    ["d", "f47ac10b-58cc-4372-a567-0e02b2c3d479"],
     ["e", "a1e2f3..."]
   ],
   "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{}}",
@@ -778,7 +814,11 @@ In this example:
     ["overnet_v", "0.1.0"],
     ["overnet_et", "core.delegation"],
     ["overnet_ot", "chat.channel"],
-    ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"]
+    ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"],
+    ["v", "0.1.0"],
+    ["t", "core.delegation"],
+    ["o", "chat.channel"],
+    ["d", "f47ac10b-58cc-4372-a567-0e02b2c3d479"]
   ],
   "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"action\":\"remove\",\"delegate_pubkey\":\"a1b2c3...\",\"expires_at\":1744304600}}",
   "sig": "d0e1f2..."

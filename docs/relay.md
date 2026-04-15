@@ -25,6 +25,7 @@ This document defines:
 - baseline event publication behavior
 - the first concrete event query filter surface
 - baseline subscription behavior
+- baseline negentropy reconciliation support
 - a narrow derived-object read surface
 - baseline relay outcome codes
 
@@ -53,6 +54,7 @@ In this version:
 
 - event publication uses the NIP-01 `EVENT` message
 - event queries and subscriptions use the NIP-01 `REQ` and `CLOSE` messages
+- event-set reconciliation uses the NIP-77 `NEG-OPEN`, `NEG-MSG`, and `NEG-CLOSE` messages
 - relay-to-client event delivery uses the NIP-01 `EVENT`, `EOSE`, `OK`, `NOTICE`, and `CLOSED` messages
 - machine-readable relay metadata extends the NIP-11 relay information document
 - the narrow derived-object read surface uses a companion HTTP endpoint on the same relay origin
@@ -73,6 +75,7 @@ A generic relay under this specification MUST support all of the following:
 - validation and structured acceptance or rejection of published events
 - retrieval of matching visible events through the baseline query surface
 - replay plus live-update subscriptions through the baseline subscription surface
+- NIP-77 negentropy reconciliation sessions for matching visible events
 - retrieval of a narrow derived object view by direct object reference
 - machine-readable metadata describing relay capabilities, limits, and service policy
 
@@ -82,7 +85,7 @@ This version does not define:
 - replication-count guarantees
 - peer-assisted large-data distribution behavior
 - pricing or payment execution flows
-- relay-to-relay federation or peering protocols
+- relay peering policy, topology, scheduling, or filter selection strategy
 - advanced subscription resume semantics
 - broad object-list queries or object subscriptions
 
@@ -137,9 +140,12 @@ The `capabilities` array for a generic relay MUST include all of:
 - `overnet.events.publish`
 - `overnet.events.query`
 - `overnet.events.subscribe`
+- `overnet.events.sync`
 - `overnet.objects.read`
 
 Optional capability names MAY be advertised for behavior beyond this specification.
+
+If the relay information document includes the standard NIP-11 `supported_nips` field, a generic relay MUST include `77`.
 
 The `limits` object MUST include:
 
@@ -149,6 +155,7 @@ The `limits` object MUST include:
 | `max_event_bytes` | integer | yes | Maximum accepted event size in bytes |
 | `max_filter_limit` | integer | yes | Maximum accepted `limit` value for one filter |
 | `max_subscriptions` | integer | yes | Maximum concurrent subscriptions per client connection |
+| `max_negentropy_sessions` | integer | yes | Maximum concurrent NIP-77 negentropy sessions per client connection |
 
 The `service_policies` object MUST include:
 
@@ -157,6 +164,7 @@ The `service_policies` object MUST include:
 | `publish` | string | yes | One of `open`, `auth`, `paid`, `closed` |
 | `query` | string | yes | One of `open`, `auth`, `paid`, `closed` |
 | `subscribe` | string | yes | One of `open`, `auth`, `paid`, `closed` |
+| `sync` | string | yes | One of `open`, `auth`, `paid`, `closed` |
 | `object_read` | string | yes | One of `open`, `auth`, `paid`, `closed` |
 
 ### 5.2 Example Relay Information Document
@@ -167,7 +175,7 @@ The following example is informative.
 {
   "name": "Volunteer Relay 01",
   "description": "Bounded community Overnet relay",
-  "supported_nips": [1, 11, 42],
+  "supported_nips": [1, 11, 42, 77],
   "overnet": {
     "core_version": "0.1.0",
     "relay_profile": "volunteer-basic",
@@ -175,18 +183,21 @@ The following example is informative.
       "overnet.events.publish",
       "overnet.events.query",
       "overnet.events.subscribe",
+      "overnet.events.sync",
       "overnet.objects.read"
     ],
     "limits": {
       "retention_seconds": 604800,
       "max_event_bytes": 65536,
       "max_filter_limit": 100,
-      "max_subscriptions": 32
+      "max_subscriptions": 32,
+      "max_negentropy_sessions": 8
     },
     "service_policies": {
       "publish": "open",
       "query": "open",
       "subscribe": "open",
+      "sync": "open",
       "object_read": "open"
     }
   }
@@ -337,15 +348,69 @@ Clients close a subscription using the NIP-01 `CLOSE` message.
 
 If a relay rejects a `REQ` request or terminates a request early, it MUST send `CLOSED` with a reason beginning with one of the prefixes defined in §6.2.
 
-## 10. Derived Object Reads
+## 10. Negentropy Reconciliation
 
-### 10.1 Scope
+### 10.1 Required Support
+
+A generic relay MUST support NIP-77 negentropy reconciliation using:
+
+- `NEG-OPEN`
+- `NEG-MSG`
+- `NEG-CLOSE`
+
+Negentropy reconciliation is a set-reconciliation surface over currently visible events. It does not itself transfer events. Event upload and download continue to use the ordinary NIP-01 `EVENT` and `REQ` flows described by NIP-77.
+
+The accepted negentropy session filter defines the visible event set being reconciled for that session.
+
+### 10.2 Filter Compatibility
+
+NIP-77 defines the `NEG-OPEN` filter as a NIP-01 filter object.
+
+Accordingly, this version of the Overnet Relay Specification requires generic relays to support negentropy sessions for:
+
+- standard NIP-01 filter fields such as `ids`, `authors`, `kinds`, `since`, and `until`
+- the Overnet compatibility mirror tag filters `#v`, `#t`, `#o`, and `#d`
+
+The Overnet compatibility mirror tags are defined by the Overnet core as exact mirrors of:
+
+- `#v` -> `overnet_v`
+- `#t` -> `overnet_et`
+- `#o` -> `overnet_ot`
+- `#d` -> `overnet_oid`
+
+For interoperable Overnet object and tag synchronization over negentropy, clients and relays SHOULD use `#v`, `#t`, `#o`, and `#d` instead of nonstandard `#overnet_*` negentropy filters.
+
+This version does not require `#overnet_v`, `#overnet_et`, `#overnet_ot`, or `#overnet_oid` inside `NEG-OPEN` filters.
+
+An implementation MAY support additional negentropy filter keys, but such support is implementation-specific unless and until a later Overnet companion specification standardizes a broader interoperable mapping.
+
+### 10.3 Example Negentropy Filter
+
+The following example is informative.
+
+```json
+[
+  "NEG-OPEN",
+  "neg-1",
+  {
+    "kinds": [7800, 37800, 7801],
+    "#t": ["chat.message"],
+    "#o": ["chat.channel"],
+    "#d": ["irc:local:#overnet"]
+  },
+  "61"
+]
+```
+
+## 11. Derived Object Reads
+
+### 11.1 Scope
 
 This version defines only a narrow derived-object read surface by direct object reference.
 
 This version does not define object search, object subscriptions, or broad object-list queries.
 
-### 10.2 Endpoint
+### 11.2 Endpoint
 
 A generic relay MUST provide the following HTTP endpoint:
 
@@ -357,7 +422,7 @@ The `type` parameter is the Overnet object type.
 
 The `id` parameter is the Overnet object identifier.
 
-### 10.3 Successful Response
+### 11.3 Successful Response
 
 On success, the relay MUST return HTTP `200` with a JSON object containing:
 
@@ -375,7 +440,7 @@ For this version:
 - `removal_event` MUST be the latest visible matching kind `7801` event by `created_at` then `id`
 - the response MUST reflect current relay visibility after policy filtering
 
-### 10.4 Error Responses
+### 11.4 Error Responses
 
 If the relay cannot fulfill the object read, it MUST return one of the following HTTP status codes with a JSON body containing `error.code` set to the corresponding relay outcome code:
 
@@ -389,7 +454,7 @@ If the relay cannot fulfill the object read, it MUST return one of the following
 | `501` | `unsupported` |
 | `503` | `unavailable` |
 
-### 10.5 Example Object Read Response
+### 11.5 Example Object Read Response
 
 The following example is informative.
 
@@ -406,7 +471,7 @@ The following example is informative.
 }
 ```
 
-## 11. Optional Storage and Replication Profiles
+## 12. Optional Storage and Replication Profiles
 
 This specification does not define the full Overnet storage and replication model.
 
@@ -423,9 +488,9 @@ Where large-object distribution is defined later, Overnet MAY reuse `NIP-35` rat
 
 Encrypted relay-carried private direct messages defined by the [Overnet Private Messaging Specification](private-messaging.md) are outside the public event query and generic derived-object read guarantees defined by this specification.
 
-## 12. Conformance
+## 13. Conformance
 
-### 12.1 Generic Relay Conformance
+### 13.1 Generic Relay Conformance
 
 A relay claiming conformance to this specification as a generic relay MUST:
 
@@ -433,11 +498,12 @@ A relay claiming conformance to this specification as a generic relay MUST:
 - support event publication as defined in §7
 - support event queries and subscriptions with the filter keys from §8
 - support replay plus live subscriptions as defined in §9
-- support the object-read endpoint from §10
+- support negentropy reconciliation as defined in §10
+- support the object-read endpoint from §11
 
 Support for storage, replication, archive, payment, or other optional behavior is not implied unless explicitly advertised.
 
-## 13. Open Issues and Future Work
+## 14. Open Issues and Future Work
 
 This section is informative.
 
@@ -448,4 +514,7 @@ The following topics remain open for later relay-related work:
 - concrete pricing and payment execution flows
 - broader object query and object subscription behavior
 - subscription resume and continuation semantics
-- relay-to-relay peering or federation behavior
+- relay-to-relay peering policy, topology, scheduling, and filter selection behavior
+- whether ordinary event queries should standardize the `#v`, `#t`, `#o`, and `#d` compatibility mirror filters in addition to the canonical `#overnet_*` filter keys
+
+NIP-77 negentropy is expected to be the baseline foundation for later relay-to-relay peering work.

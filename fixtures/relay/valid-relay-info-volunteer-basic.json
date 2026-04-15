@@ -3,7 +3,7 @@
   "input": {
     "relay_info_document": {
       "name": "Volunteer Relay 01",
-      "supported_nips": [1, 11, 42],
+      "supported_nips": [1, 11, 42, 77],
       "overnet": {
         "core_version": "0.1.0",
         "relay_profile": "volunteer-basic",
@@ -11,18 +11,21 @@
           "overnet.events.publish",
           "overnet.events.query",
           "overnet.events.subscribe",
+          "overnet.events.sync",
           "overnet.objects.read"
         ],
         "limits": {
           "retention_seconds": 604800,
           "max_event_bytes": 65536,
           "max_filter_limit": 100,
-          "max_subscriptions": 32
+          "max_subscriptions": 32,
+          "max_negentropy_sessions": 8
         },
         "service_policies": {
           "publish": "open",
           "query": "open",
           "subscribe": "open",
+          "sync": "open",
           "object_read": "open"
         }
       }
@@ -49,6 +52,10 @@
       {
         "path": "overnet.capabilities",
         "contains": "overnet.events.subscribe"
+      },
+      {
+        "path": "overnet.capabilities",
+        "contains": "overnet.events.sync"
       },
       {
         "path": "overnet.capabilities",
