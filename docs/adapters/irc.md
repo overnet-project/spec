@@ -640,9 +640,136 @@ This specification defines the following IRC-specific limitation identifier:
 
 ## 11. Authority and Moderation
 
-This version of the IRC adapter specification does not define IRC operator, channel mode, or service authority as Overnet delegation or moderation authority.
+In the baseline observational mapping defined by this specification, IRC operator, channel mode, and service authority are not automatically reinterpreted as native Overnet delegation or moderation authority.
 
-Observed IRC moderation actions such as `KICK` and observed channel mode changes such as `MODE` MAY be represented as adapted events, but they MUST NOT be treated as native Overnet authority unless a later revision defines explicit mapping rules.
+Observed IRC moderation actions such as `KICK` and observed channel mode changes such as `MODE` MAY be represented as adapted events, but they MUST NOT be treated as native Overnet authority unless an implementation also claims support for the optional authoritative moderated-channel profile defined in section 11.1.
+
+### 11.1 Optional `NIP-29`-Backed Authoritative Moderated-Channel Profile
+
+This specification also defines an optional profile for implementations that are authoritative for a set of natively hosted IRC channels rather than merely observing an external IRC network.
+
+This profile MUST reuse `NIP-29` group authority as the source of truth for membership, moderation, and channel-flag state. It MUST NOT define a separate generic Overnet-native channel-governance model for those channels.
+
+This profile applies only to channels that the implementation itself hosts authoritatively. It does not apply to IRC channels that are merely adapted from an external IRC network.
+
+### 11.2 Authenticated Actor Binding
+
+For a channel using the profile in section 11.1, each registered IRC client connection participating in authoritative membership, moderation, or channel-mode changes MUST be bound to one authenticated Nostr pubkey.
+
+For this profile:
+
+- IRC nick values remain presentational identifiers for the IRC surface
+- authoritative membership, roles, invitations, and moderation permissions are determined by the bound Nostr pubkey rather than by nick alone
+- an implementation MUST NOT grant authoritative channel privilege based only on an IRC nick string or on RFC1459-style nick comparison
+
+This section does not define one mandatory IRC-side authentication mechanism for establishing that pubkey binding. The required property is that the implementation can reliably associate each authoritative IRC client connection with one authenticated Nostr identity.
+
+### 11.3 Channel-to-Group Binding
+
+For each IRC channel using the profile in section 11.1, the implementation MUST maintain one stable binding between:
+
+- the IRC-facing channel object identifier `irc:<network>:<channel>`
+- one authoritative `NIP-29` group identifier
+
+For this profile:
+
+- the IRC channel object identifier remains the Overnet-side channel identifier used by this specification
+- the bound `NIP-29` group identifier is the authoritative group-control identifier used by the underlying `NIP-29` events
+- the bound `NIP-29` group identifier MAY equal the IRC channel name, but it is not required to do so
+- all `NIP-29` events used as authoritative input for that channel MUST refer to the same bound group identifier
+
+### 11.4 Authoritative Source and Derived State
+
+For a channel using the profile in section 11.1, current channel membership, role assignment, and authoritative channel-mode state MUST be derived from the accepted authoritative `NIP-29` event stream rather than from observed IRC `MODE` or `KICK` lines.
+
+At minimum, an implementation claiming this profile MUST be able to derive current authoritative state from the relevant accepted `NIP-29` control events and relay snapshots, including:
+
+- `9000` put-user
+- `9001` remove-user
+- `9002` edit-metadata
+- `9009` create-invite when invite-mediated admission is in use
+- `9021` join-request when request-mediated admission is in use
+- `9022` leave-request
+- the latest relevant relay-signed `39000`, `39001`, `39002`, and `39003` events when they are available
+
+For this profile:
+
+- relay-signed `39001`, `39002`, and `39003` events are authoritative snapshots of current relay state, but they MUST NOT be interpreted as creating a separate non-`NIP-29` authority model
+- if accepted control-event history and relay-signed snapshots disagree, the implementation MUST prefer the authoritative relay state it actually enforces; a stale or partial snapshot MUST NOT silently widen authority
+- `39002` membership snapshots MAY be partial and therefore MUST NOT be treated as exhaustive unless the implementation explicitly knows they are exhaustive for that deployment
+- the channel-mode mapping defined in section 11.5 MUST be derived from the current authoritative group metadata and role state, not from nick-local heuristics
+
+### 11.5 Canonical IRC Role and Channel-Mode Mapping
+
+To provide interoperable IRC behavior without defining a second generic moderation model, this profile reserves the following `NIP-29` role labels for IRC presentation:
+
+- `irc.operator`
+- `irc.voice`
+
+For this profile:
+
+- `irc.operator` maps to IRC channel privilege `+o` and presentational prefix `@`
+- `irc.voice` maps to IRC channel privilege `+v` and presentational prefix `+`
+- if a user has both roles, `@` takes precedence over `+` in IRC presentational contexts such as `353`
+- `irc.operator` grants authority to issue `KICK`, to manage `+o`, `+v`, `+i`, `+m`, and `+t`, and to set the channel topic even when `+t` is active
+- `irc.voice` grants authority to speak in a `+m` channel but does not by itself grant moderation authority
+
+The following channel-flag mappings are defined by this profile:
+
+- `NIP-29` group metadata flag `closed` maps to IRC channel mode `+i`
+- a profile-defined `39000` metadata tag `["mode", "moderated"]` maps to IRC channel mode `+m`
+- a profile-defined `39000` metadata tag `["mode", "topic-restricted"]` maps to IRC channel mode `+t`
+
+For this profile:
+
+- `+n` is treated as an implicit presentational mode for authoritative hosted channels; an implementation MAY include it in `MODE <channel>` replies, but this profile does not define a writable toggle for `+n`
+- this profile does not define authoritative mappings for bans, ban exceptions, invite exceptions, keys, user limits, secret/private visibility, or other IRC channel modes beyond `+o`, `+v`, `+i`, `+m`, and `+t`
+
+### 11.6 Authoritative Command Mapping and Enforcement
+
+For a channel using the profile in section 11.1, the following IRC commands are defined authoritatively rather than observationally:
+
+- `KICK <channel> <nick> [:reason]`
+- `MODE <channel> +o <nick>`
+- `MODE <channel> -o <nick>`
+- `MODE <channel> +v <nick>`
+- `MODE <channel> -v <nick>`
+- `MODE <channel> +i`
+- `MODE <channel> -i`
+- `MODE <channel> +m`
+- `MODE <channel> -m`
+- `MODE <channel> +t`
+- `MODE <channel> -t`
+
+For this profile:
+
+- an authoritative `KICK` MUST be accepted only from a client whose bound pubkey currently has role `irc.operator`
+- an authoritative `KICK` MUST map to the corresponding `NIP-29` remove-user action for the targeted current member
+- the target of `MODE +o`, `MODE -o`, `MODE +v`, and `MODE -v` MUST already be a current member of the authoritative channel
+- `MODE +o` and `MODE -o` MUST add or remove role `irc.operator` for the targeted current member using the corresponding `NIP-29` user-update surface
+- `MODE +v` and `MODE -v` MUST add or remove role `irc.voice` for the targeted current member using the corresponding `NIP-29` user-update surface
+- `MODE +i` and `MODE -i` MUST add or remove the authoritative `NIP-29` `closed` metadata flag
+- `MODE +m` and `MODE -m` MUST add or remove profile metadata tag `["mode", "moderated"]`
+- `MODE +t` and `MODE -t` MUST add or remove profile metadata tag `["mode", "topic-restricted"]`
+- unsupported writable mode letters MUST be rejected rather than silently ignored
+- when a client lacks the required operator privilege for `KICK`, writable `MODE`, or a topic change blocked by `+t`, the implementation MUST return `482 ERR_CHANOPRIVSNEEDED`
+- when a channel is currently `+m` and a client lacking both `irc.operator` and `irc.voice` attempts channel-targeted `PRIVMSG` or `NOTICE`, the implementation MUST reject that send with `404 ERR_CANNOTSENDTOCHAN`
+- a `closed` / `+i` channel MUST NOT grant new authoritative membership through ordinary local IRC `JOIN` alone without an invite or other authorized `NIP-29` admission path
+
+This profile does not yet require one exact IRC numeric or request/response sequence for pending join requests, invite-code workflows, or asynchronous moderation review.
+
+### 11.7 Authoritative IRC Presentation Extensions
+
+An implementation claiming support for the profile in section 11.1 MUST extend the minimal IRC presentation slice in section 13 as follows:
+
+- `353` name-list output for an authoritative channel SHOULD prefix nicks with `@` or `+` according to the current authoritative role mapping defined in section 11.5
+- `MODE <channel>` query replies for an authoritative channel SHOULD reflect the currently active derived channel flags from section 11.5 in a stable deterministic order
+- a successful authoritative change to `+o`, `+v`, `+i`, `+m`, or `+t` MUST be rendered back to joined IRC clients as a corresponding IRC `MODE` line
+- an authoritative membership removal caused by moderator action SHOULD be rendered back to joined IRC clients as IRC `KICK`
+- an authoritative membership removal that is known to correspond to the target user's own accepted leave request SHOULD be rendered as `PART` rather than `KICK`
+- when rendering an authoritative `MODE` or `KICK` line, the prefix nick SHOULD use the current presentational nick of the acting authenticated user when the implementation has one; otherwise the implementation MAY use the server name or another stable implementation-defined authoritative prefix
+
+This profile does not require every authoritative moderation-state transition to be re-emitted as a generic Overnet core event. The authoritative source remains the `NIP-29` group state and its accepted control events.
 
 ## 12. Query and Subscription Expectations
 
@@ -765,6 +892,11 @@ For this baseline:
 - `442` uses the form `:<server_name> 442 <target> <channel> :You're not on that channel`
 - `461` uses the form `:<server_name> 461 <target> <command> :Not enough parameters`
 
+An implementation claiming support for the authoritative moderated-channel profile in section 11.1 MUST additionally support:
+
+- `404 ERR_CANNOTSENDTOCHAN` for the `+m` enforcement case defined in section 11.6
+- `482 ERR_CHANOPRIVSNEEDED` for the privilege-denial cases defined in section 11.6
+
 #### 13.1.3 RFC1459-Style Comparison Baseline
 
 For this section, implementations MUST compare IRC nick and channel names using the following baseline RFC1459-style case-folding rules:
@@ -841,6 +973,8 @@ This baseline does not require support for:
 
 - any channel mode change command carrying mode arguments
 - any additional mode numerics such as topic-lock or creation-time reporting
+
+The authoritative moderated-channel profile in section 11.1 extends this baseline with the writable `MODE` surface defined in section 11.6.
 
 #### 13.1.6 Minimal USERHOST, WHO, and WHOIS Query Compatibility
 
@@ -982,6 +1116,8 @@ For this baseline:
 - the `353` nick list MUST include at least the nicks of the client connections that the implementation currently treats as joined to that channel for presentation purposes
 - the `353` nick list MUST include the joining client's current nick
 
+For a channel using the authoritative moderated-channel profile in section 11.1, the `353` nick list SHOULD additionally apply the prefix rules defined in section 11.7.
+
 If the implementation has a current `chat.topic` state available for that channel at join time, it MUST replay that topic to the joining client using the `chat.topic` render form defined in section 13.3 before the terminating `366` line.
 
 When a registered client sends `NAMES <channel>` for a valid IRC channel name, the implementation MUST emit one or more `353` lines followed by one terminating `366` line using the same minimal name-list rules defined above.
@@ -1017,6 +1153,8 @@ For this baseline:
 - for `chat.message`, `chat.notice`, `chat.topic`, `chat.join`, `chat.part`, and `chat.quit`, the implementation MUST emit those lines only to client connections currently joined to that channel
 - for `chat.dm_message` and `chat.dm_notice`, the implementation MUST emit those lines only to client connections whose current registered nick exactly equals `<target_nick>`
 - for `irc.nick`, the implementation MUST emit the line only to client connections that currently share at least one joined channel with the nick change according to the implementation's current presentation membership view
+
+The authoritative moderated-channel profile in section 11.1 adds the `MODE`, `KICK`, and prefixed-`353` presentation rules defined in section 11.7.
 
 #### 13.3.1 Optional Endpoint-Blind E2E DM Presentation
 
@@ -1056,6 +1194,8 @@ If `content.provenance.external_identity` is present on an `irc.nick` event, it 
 This section defines only the minimal server-side presentation of Overnet data to IRC clients.
 
 Inbound IRC client commands such as `PRIVMSG`, `NOTICE`, `TOPIC`, and `JOIN` continue to use the IRC-to-Overnet mapping rules defined earlier in this specification when the implementation chooses to expose that behavior.
+
+For a channel using the authoritative moderated-channel profile in section 11.1, inbound `KICK` and the writable `MODE` commands defined in section 11.6 MUST use the authoritative `NIP-29` mappings from section 11.6 rather than the observational adapted-event mapping defined earlier in this specification.
 
 For this baseline:
 
@@ -1111,6 +1251,23 @@ An implementation MAY additionally claim support for the optional derived channe
 
 An implementation MAY additionally claim support for the optional minimal server-side IRC presentation slice defined in section 13.
 
+An implementation MAY additionally claim support for the optional `NIP-29`-backed authoritative moderated-channel profile defined in section 11.1.
+
+An implementation claiming that support MUST, at minimum:
+
+- bind each authoritative IRC channel to one stable `NIP-29` group identifier as defined in section 11.3
+- bind each authoritative participating IRC client connection to one authenticated Nostr pubkey as defined in section 11.2
+- derive authoritative membership, roles, and channel-mode state from the authoritative `NIP-29` group state rather than from nick-local heuristics
+- support reserved role labels `irc.operator` and `irc.voice` with the semantics defined in section 11.5
+- map authoritative metadata flag `closed` to IRC channel mode `+i`
+- support profile metadata tags `["mode", "moderated"]` and `["mode", "topic-restricted"]` for IRC channel modes `+m` and `+t`
+- accept authoritative `KICK`
+- accept authoritative writable `MODE` for `+o`, `-o`, `+v`, `-v`, `+i`, `-i`, `+m`, `-m`, `+t`, and `-t`
+- enforce `+m` against senders lacking both `irc.operator` and `irc.voice`
+- enforce `+t` against topic changes from senders lacking `irc.operator`
+- emit `404` and `482` in the situations defined in section 11.6
+- render authoritative `MODE` and `KICK` changes back out through the IRC presentation surface according to section 11.7
+
 An implementation MAY additionally claim support for relay-carried private direct messaging through the [Overnet Private Messaging Specification](../private-messaging.md).
 
 An implementation claiming that support MUST apply the binding rules defined in section 8.4.1.
@@ -1159,11 +1316,14 @@ An implementation claiming support for that optional server-side slice MUST, at 
 The following IRC adapter topics remain open:
 
 - account-aware identity mapping beyond nicknames
+- the exact IRC-side authentication and session-binding mechanism used to associate an authoritative IRC client connection with one authenticated Nostr pubkey
 - IRCv3-specific enhancements such as message tags, server-time, and account-aware identity refinement
 - broader network-specific case-mapping negotiation beyond the baseline RFC1459-style comparison defined in section 13.1.3
-- user-scoped mode mapping
-- derived channel mode state or privilege state
-- representation of moderation and operator authority
+- additional user-scoped mode mapping beyond `+o` and `+v`
+- additional authoritative channel-mode mapping beyond `+i`, `+m`, and `+t`
+- join-request, invite-code, and invite-list UX and numerics for `NIP-29`-backed authoritative channels
+- presentation and visibility mapping for `NIP-29` `private`, `hidden`, and `restricted` semantics
+- ban lists, exception lists, keyed channels, user limits, and other richer IRC channel-control surfaces
 - richer server numerics, listing, and channel-bootstrap semantics beyond the minimal `JOIN`/topic/`NAMES` bootstrap defined here
 - richer direct-message session semantics beyond target-directed `PRIVMSG` and `NOTICE` presentation
 - interaction between relay-carried encrypted direct-message transport and richer IRC direct-message session semantics

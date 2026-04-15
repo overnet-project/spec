@@ -87,6 +87,8 @@ Overnet is designed to coexist with existing protocols and services rather than 
 
 Some systems are already distributed by nature. Others are widely deployed and difficult to replace. Others still provide user communities, archives, or workflows that remain valuable. For these reasons, Overnet treats adapters as part of the architecture.
 
+As a general design rule, Overnet companion specifications SHOULD reuse existing Nostr NIPs where they are semantically adequate for the required behavior. Overnet-specific semantics SHOULD be defined only when existing NIPs are insufficient, misleading, or incompatible with required Overnet invariants. When a companion specification chooses not to reuse a relevant existing NIP, it SHOULD explain that choice explicitly.
+
 An adapter may expose external systems through Overnet semantics by mapping identities, objects, events, permissions, and errors into the Overnet model. Some adapters are protocol bridges that provide ongoing interoperability between systems. That mapping must be explicit. Where translation is lossy, synthetic, delayed, partial, or security-sensitive, the implementation must expose that fact rather than hiding it.
 
 This design is important for two reasons. First, it reduces the amount of migration required to make Overnet useful. Second, it allows applications and operators to reason about provenance and trust when information originates outside a native Overnet environment.

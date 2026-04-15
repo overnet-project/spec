@@ -170,3 +170,18 @@ The logical Overnet item types remain `chat.dm_message` and `chat.dm_notice`, bu
 - Continue treating all direct messages as local-only semantics with no relay-carried private transport. Too limiting once direct messages need to cross relay or instance boundaries.
 
 **Rationale:** The Overnet core event model is intentionally public and relay-queryable. Private direct messages have different requirements. Using `NIP-17` keeps Overnet aligned with existing Nostr private-messaging mechanisms while preserving Overnet application semantics in the decrypted payload. It also lets generic relays store and forward opaque encrypted messages without pretending they can derive public objects or inspect private content.
+
+## D012: Companion Specifications Prefer Existing NIPs Over New Overnet-Specific Semantics
+
+**Date:** 2026-04-15
+
+**Decision:** Overnet companion specifications SHOULD reuse existing Nostr NIPs where they are semantically adequate for the required behavior.
+
+Overnet-specific semantics SHOULD be defined only when existing NIPs are insufficient, misleading, or incompatible with required Overnet invariants. When a companion specification chooses not to reuse a relevant existing NIP, it SHOULD explain that choice explicitly.
+
+**Alternatives considered:**
+
+- Treat each companion specification as free to define new Overnet-specific semantics whenever that seems convenient. Too much protocol sprawl and too little ecosystem reuse.
+- Require reuse of every potentially relevant existing NIP. Too rigid when an existing NIP is too loose, too differently scoped, or otherwise a poor fit for the invariants Overnet needs.
+
+**Rationale:** Overnet is intended to build on Nostr, not to shadow it with a parallel specification stack. Reusing existing NIPs where they already solve the problem keeps Overnet aligned with the wider ecosystem, reduces duplication, and makes companion specifications easier to justify and review. Making the rule preference-based rather than absolute preserves room for narrower profiles, stricter mappings, and genuinely new semantics when existing NIPs do not provide the required guarantees.
