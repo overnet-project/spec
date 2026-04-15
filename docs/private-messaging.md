@@ -63,6 +63,8 @@ For this version, that means:
 
 This specification does not redefine generic relay event queries or generic relay object reads for encrypted private-message contents.
 
+The Overnet Program Services specification defines the baseline runtime-visible service method and notification shape used when a trusted runtime accepts and redistributes encrypted private direct messages between programs.
+
 ## 3. Scope of This Version
 
 This version defines only one-to-one private direct messaging.
@@ -105,6 +107,20 @@ The sender identity for a relay-carried private direct message is the rumor `pub
 The message timestamp is the rumor `created_at`.
 
 The decrypted payload defined by this specification MUST NOT duplicate either of those values.
+
+### 4.4 Runtime-Visible Candidate and Accepted Shapes
+
+When a trusted Overnet runtime accepts an encrypted private direct message through a baseline program service method, the program-supplied candidate object MUST include:
+
+- `transport`, containing the candidate relay-visible wrapped event object
+- `transport.decrypted_rumor`, containing the paired decrypted rumor object used for trusted validation
+
+The accepted runtime notification or stored-item shape MAY expose:
+
+- `transport`, containing only the visible wrapped event object
+- `decrypted_rumor`, containing the runtime-validated decrypted rumor object
+
+The program services specification MAY define additional runtime-visible convenience fields derived from the decrypted payload.
 
 ## 5. Decrypted Payload Format
 

@@ -27,6 +27,7 @@ This document defines the baseline methods, parameters, results, and service-spe
 - adapter sessions
 - Overnet event emission
 - Overnet state emission
+- encrypted private-message emission
 - capability advertisement emission
 - logs and health reporting
 
@@ -551,6 +552,13 @@ The baseline `query` object MAY include:
 
 If `query` is an empty object, it MUST mean "all visible baseline subscription items available to this program instance".
 
+For `private_message` subscription items defined by section 10:
+
+- `query.kind`, when present, MUST match the visible transport event kind
+- `query.overnet_et`, when present, MUST match the logical decrypted payload `private_type`
+- `query.overnet_ot`, when present, MUST match the logical decrypted payload `object_type`
+- `query.overnet_oid`, when present, MUST match the logical decrypted payload `object_id`
+
 If `query` contains fields other than the baseline fields defined here, the runtime MUST reject the request with `protocol.invalid_params`.
 
 Successful result:
@@ -589,9 +597,20 @@ The baseline `item_type` values are:
 
 - `event`
 - `state`
+- `private_message`
 - `capability`
 
 When `item_type` is `capability`, the `data` object MUST use the same baseline capability advertisement object shape defined for `overnet.emit_capabilities`.
+
+When `item_type` is `private_message`, the `data` object MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `transport` | object | yes | Relay-visible wrapped private-message transport object |
+| `decrypted_rumor` | object | yes | Runtime-validated decrypted rumor object |
+| `private_type` | string | yes | Logical private-message item type |
+| `object_type` | string | yes | Logical private-message object type |
+| `object_id` | string | yes | Logical private-message object identifier |
 
 ## 9. Timers and Scheduled Jobs Service
 
@@ -695,7 +714,41 @@ Successful result:
 | `accepted` | boolean | yes | Runtime acceptance result; MUST be `true` on success |
 | `event_id` | string | no | Runtime-known event identifier when available |
 
-### 10.4 `overnet.emit_capabilities`
+### 10.4 `overnet.emit_private_message`
+
+Required permission:
+
+- `overnet.emit_private_message`
+
+Request parameters:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `message` | object | yes | Candidate encrypted private-message transport object |
+
+The `message` object MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `transport` | object | yes | Candidate visible wrapped transport object |
+
+The `message.transport` object MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `decrypted_rumor` | object | yes | Candidate decrypted rumor object paired with the wrapped transport |
+
+The runtime MUST treat `message.transport` as the candidate visible wrapped event object, except that `message.transport.decrypted_rumor` is runtime-visible validation context and is not part of the relay-visible wrapped event itself.
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `accepted` | boolean | yes | Runtime acceptance result; MUST be `true` on success |
+| `event_id` | string | no | Runtime-known visible wrapped event identifier when available |
+| `rumor_id` | string | no | Runtime-known decrypted rumor identifier when available |
+
+### 10.5 `overnet.emit_capabilities`
 
 Required permission:
 
@@ -721,6 +774,8 @@ Each capability advertisement object MAY include:
 | `details` | object | no | Structured capability-specific metadata |
 
 For `overnet.emit_event` and `overnet.emit_state`, the runtime MUST interpret the supplied object as the full candidate wire-format event to validate, not as a partial draft requiring runtime completion.
+
+For `overnet.emit_private_message`, the runtime MUST interpret the supplied object as the full candidate private-message transport object to validate, not as a partial draft requiring runtime completion.
 
 Successful result:
 
@@ -905,6 +960,7 @@ This version defines the following baseline permission identifiers:
 | `adapters.use` | Open, use, and close runtime-managed adapter sessions |
 | `overnet.emit_event` | Emit candidate Overnet events |
 | `overnet.emit_state` | Emit candidate Overnet state |
+| `overnet.emit_private_message` | Emit encrypted private-message transport items |
 | `overnet.emit_capabilities` | Emit candidate capability advertisements |
 
 ## 14. Error Expectations
