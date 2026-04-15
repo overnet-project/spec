@@ -1,0 +1,17 @@
+{
+  "description": "A client must register before issuing LIST.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": false
+    },
+    "line": "LIST"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 451 * :You have not registered"
+    ]
+  }
+}

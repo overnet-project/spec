@@ -1,0 +1,29 @@
+{
+  "description": "A registered client may request LIST and receives the currently exposed channel with its visible user count and topic.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "Alice"
+    },
+    "channels": [
+      {
+        "channel": "#OverNet",
+        "visible_nicks": [
+          "Alice"
+        ],
+        "topic": "Compatibility topic"
+      }
+    ],
+    "line": "LIST"
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local 321 Alice Channel :Users Name",
+      ":overnet.irc.local 322 Alice #OverNet 1 :Compatibility topic",
+      ":overnet.irc.local 323 Alice :End of /LIST"
+    ]
+  }
+}

@@ -637,7 +637,7 @@ This section does not define:
 
 - full IRC server conformance
 - complete numeric reply behavior beyond baseline registration
-- `LIST`, mode changes, or operator-service behavior beyond the minimal compatibility query behavior defined here
+- operator-service behavior beyond the minimal compatibility query behavior defined here
 - write-back to an upstream IRC network
 - multi-server federation
 
@@ -681,7 +681,7 @@ An implementation claiming support for this section MUST emit at least the follo
 |---|---|---|
 | `421` | `ERR_UNKNOWNCOMMAND` | A command name is not recognized by this section's baseline server behavior. |
 | `431` | `ERR_NONICKNAMEGIVEN` | A client sends `NICK` without a nickname parameter. |
-| `451` | `ERR_NOTREGISTERED` | A client sends `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, or `LUSERS` before registration completes. |
+| `451` | `ERR_NOTREGISTERED` | A client sends `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, `LUSERS`, or `LIST` before registration completes. |
 | `461` | `ERR_NEEDMOREPARAMS` | A client sends `USER`, `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, or `CAP REQ` without the required parameter set for that command. |
 | `401` | `ERR_NOSUCHNICK` | A client sends direct-message `PRIVMSG`, direct-message `NOTICE`, or `WHOIS` for a nick target that does not match any currently connected nick under the comparison rules in section 13.1.3. |
 | `403` | `ERR_NOSUCHCHANNEL` | A command in this section requires a channel target but the supplied target is not syntactically a valid IRC channel name. |
@@ -855,6 +855,33 @@ For this baseline:
 This baseline does not require support for:
 
 - topic-setter metadata numerics such as `333`
+
+#### 13.1.9 Minimal LIST Compatibility
+
+After registration completes, an implementation claiming support for this section MUST accept:
+
+- `LIST`
+- `LIST <target>`
+
+For this baseline:
+
+- the implementation MUST emit:
+  - `:<server_name> 321 <nick> Channel :Users Name`
+- for each currently exposed channel in the server-side IRC presentation state that matches the request, the implementation MUST emit:
+  - `:<server_name> 322 <nick> <channel> <visible_users> :<topic>`
+- after the `322` replies, the implementation MUST emit:
+  - `:<server_name> 323 <nick> :End of /LIST`
+- `<visible_users>` is the number of currently visible nicks that the implementation currently presents for that channel
+- `<topic>` MAY be empty when the implementation does not have a current topic for that channel
+- when `LIST <target>` is used and `<target>` is syntactically a channel name, matching MUST use the comparison rules in section 13.1.3
+- when `LIST <target>` is used with a non-channel target or implementation-defined filter syntax, the implementation MAY ignore the filter and behave like bare `LIST`
+- `<channel>` in `322` SHOULD use the implementation's current presentational channel spelling
+
+This baseline does not require support for:
+
+- channel masks or numeric filters beyond the optional behavior above
+- secret/private channel visibility rules
+- channel creation time or topic-setter metadata
 
 ### 13.2 Channel Association and Join Bootstrap Baseline
 
