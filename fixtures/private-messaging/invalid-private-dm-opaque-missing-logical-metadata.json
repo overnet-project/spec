@@ -1,0 +1,17 @@
+{
+  "description": "An opaque endpoint-blind private direct message is invalid when it omits the logical routing metadata required outside the ciphertext.",
+  "input": {
+    "transport": {
+      "kind": 1059,
+      "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "tags": [
+        ["p", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"]
+      ],
+      "content": "opaque-ciphertext"
+    }
+  },
+  "expected": {
+    "private_transport_valid": false,
+    "reason": "Opaque private-message transport requires private_type, object_type, and object_id metadata"
+  }
+}

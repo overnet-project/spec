@@ -1,0 +1,18 @@
+{
+  "description": "A server claiming support for the optional endpoint-blind E2E profile advertises overnet-e2ee in CAP LS and ACKs CAP REQ for that token.",
+  "input": {
+    "client": {
+      "registered": false
+    },
+    "commands": [
+      "CAP LS 302",
+      "CAP REQ :overnet-e2ee"
+    ]
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local CAP * LS :overnet-e2ee",
+      ":overnet.irc.local CAP * ACK :overnet-e2ee"
+    ]
+  }
+}

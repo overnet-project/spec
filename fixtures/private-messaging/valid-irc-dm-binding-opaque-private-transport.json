@@ -1,0 +1,39 @@
+{
+  "description": "An endpoint-blind IRC direct message may bind IRC sender and target metadata to an opaque NIP-17 transport without exposing decrypted_rumor.",
+  "input": {
+    "source": {
+      "protocol": "irc",
+      "network": "local",
+      "line": ":Alice PRIVMSG Bob :+overnet-e2ee-v1 eyJraW5kIjoxMDU5fQ=="
+    },
+    "private_type": "chat.dm_message",
+    "object_type": "chat.dm",
+    "object_id": "irc:local:dm:Bob",
+    "sender_identity": "Alice",
+    "transport": {
+      "kind": 1059,
+      "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "tags": [
+        ["p", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"]
+      ],
+      "content": "opaque-ciphertext"
+    }
+  },
+  "expected": {
+    "private_transport_valid": true,
+    "assertions": [
+      {
+        "path": "private_type",
+        "equals": "chat.dm_message"
+      },
+      {
+        "path": "object_id",
+        "equals": "irc:local:dm:Bob"
+      },
+      {
+        "path": "sender_identity",
+        "equals": "Alice"
+      }
+    ]
+  }
+}

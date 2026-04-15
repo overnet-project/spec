@@ -113,14 +113,49 @@ The decrypted payload defined by this specification MUST NOT duplicate either of
 When a trusted Overnet runtime accepts an encrypted private direct message through a baseline program service method, the program-supplied candidate object MUST include:
 
 - `transport`, containing the candidate relay-visible wrapped event object
+
+This specification defines two runtime-visible candidate forms:
+
+- trusted-decrypted candidate form
+- opaque endpoint-blind candidate form
+
+#### 4.4.1 Trusted-Decrypted Candidate Form
+
+In the trusted-decrypted form, the candidate object MUST also include:
+
 - `transport.decrypted_rumor`, containing the paired decrypted rumor object used for trusted validation
 
-The accepted runtime notification or stored-item shape MAY expose:
+This form is appropriate only when the program or runtime component is intentionally part of the plaintext trust boundary.
+
+#### 4.4.2 Opaque Endpoint-Blind Candidate Form
+
+In the opaque endpoint-blind form, the candidate object MUST omit `transport.decrypted_rumor`.
+
+Instead, the candidate object MUST include the following logical routing metadata outside the ciphertext:
+
+- `private_type`
+- `object_type`
+- `object_id`
+
+The candidate object MAY additionally include:
+
+- `sender_identity`, containing a cleartext presentational sender identity string used by a boundary component such as an IRC server to render or route the item without decrypting the message body
+
+The opaque endpoint-blind form is intended for transports where the sending endpoint performs encryption locally and the runtime or gateway routes the resulting wrapped event without access to the decrypted payload.
+
+The accepted runtime notification or stored-item shape MUST expose:
 
 - `transport`, containing only the visible wrapped event object
-- `decrypted_rumor`, containing the runtime-validated decrypted rumor object
+- `private_type`
+- `object_type`
+- `object_id`
 
-The program services specification MAY define additional runtime-visible convenience fields derived from the decrypted payload.
+The accepted runtime notification or stored-item shape MAY additionally expose:
+
+- `decrypted_rumor`, containing the runtime-validated decrypted rumor object when the trusted-decrypted form was used
+- `sender_identity`, containing cleartext routing or presentation metadata supplied by the trusted ingress boundary
+
+The program services specification MAY define additional runtime-visible convenience fields derived from the decrypted payload when the runtime has access to that payload.
 
 ## 5. Decrypted Payload Format
 
@@ -227,6 +262,20 @@ An implementation claiming support for relay-carried private IRC direct messagin
 
 This binding does not require a local-only IRC server implementation to use relay-carried encrypted transport for direct messages that never leave the local trust boundary.
 
+### 8.1 Opaque IRC Endpoint-Blind Binding
+
+An implementation MAY also support an endpoint-blind IRC private-message profile in which an E2E-aware IRC client sends the visible wrapped `NIP-17` transport directly and the IRC server or gateway does not decrypt it.
+
+When an implementation uses that endpoint-blind IRC profile:
+
+- the runtime-visible candidate MUST use the opaque endpoint-blind form defined in section 4.4.2
+- `private_type` MUST still be `chat.dm_message` for IRC `PRIVMSG` and `chat.dm_notice` for IRC `NOTICE`
+- `object_type` MUST still be `chat.dm`
+- `object_id` MUST still be `irc:<network>:dm:<target_nick>`
+- `sender_identity`, when exposed, MUST be the IRC nick presented by the gateway for the sending IRC client
+- the implementation MUST NOT require decryption of the message body in order to derive the logical direct-message routing metadata above
+- the implementation MUST treat `sender_identity` and the IRC target nick as observable metadata, not as encrypted body content
+
 ## 9. Conformance
 
 An implementation claiming support for this specification MUST, at minimum:
@@ -239,6 +288,12 @@ An implementation claiming support for this specification MUST, at minimum:
 - use `object_type` value `chat.dm`
 - preserve Overnet provenance in the decrypted payload
 - avoid publishing the plaintext direct-message body as an ordinary public Overnet core event when the intent is a relay-carried private direct message
+
+If an implementation claims support for the opaque endpoint-blind runtime form defined in section 4.4.2, it MUST also:
+
+- accept `private_type`, `object_type`, and `object_id` as the logical metadata for that wrapped message without requiring `decrypted_rumor`
+- preserve the relay-visible kind `1059` transport object
+- avoid exposing plaintext body content to components that are intended to remain outside the plaintext trust boundary
 
 ## 10. Open Issues
 

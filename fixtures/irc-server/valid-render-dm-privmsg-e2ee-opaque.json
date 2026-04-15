@@ -1,0 +1,38 @@
+{
+  "description": "An opaque endpoint-blind chat.dm_message item renders to a PRIVMSG line carrying the overnet-e2ee-v1 transport body for the target nick only.",
+  "input": {
+    "server_view": {
+      "network": "local"
+    },
+    "client": {
+      "registered": true,
+      "nick": "Bob",
+      "capabilities": [
+        "overnet-e2ee"
+      ]
+    },
+    "item": {
+      "item_type": "private_message",
+      "data": {
+        "private_type": "chat.dm_message",
+        "object_type": "chat.dm",
+        "object_id": "irc:local:dm:Bob",
+        "sender_identity": "Alice",
+        "transport": {
+          "kind": 1059,
+          "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "tags": [
+            ["p", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"]
+          ],
+          "content": "opaque-ciphertext"
+        }
+      }
+    }
+  },
+  "expected": {
+    "rendered": true,
+    "lines": [
+      ":Alice PRIVMSG Bob :+overnet-e2ee-v1 <base64_json_transport>"
+    ]
+  }
+}

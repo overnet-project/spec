@@ -115,6 +115,7 @@ Overnet is intended to provide the following properties:
 
 - a minimal stable core for application interoperability
 - strong identity, provenance, and auditability
+- first-class support for end-to-end encrypted application data through companion specifications
 - self-hostability and operator choice
 - first-class support for adapters, including protocol bridges where needed
 - application-facing consistency despite backend diversity
@@ -409,6 +410,8 @@ The relay trust boundary is where validation, policy enforcement, storage policy
 
 The adapter trust boundary is where external identities, permissions, objects, and events are mapped into Overnet semantics. Adapters MUST disclose provenance and any known translation limitations.
 
+When an applicable companion specification defines end-to-end encrypted content, plaintext trust is limited to the authorized endpoints that hold the required decryption keys. Relays, generic transport services, and ordinary storage nodes MUST be treated as opaque ciphertext carriers unless the applicable companion specification explicitly defines a trusted-decryption role.
+
 ### 4.4 Relationship to Nostr
 
 Overnet relies on Nostr for baseline event transport, event identity, event signing, and event verification.
@@ -492,6 +495,22 @@ The core SHOULD enable future growth through profiles, capabilities, namespaces,
 ### 5.8 Operator Choice
 
 The core MUST allow independent operators to apply local policy, retention, and deployment choices so long as they do not violate core interoperability requirements.
+
+### 5.9 End-to-End Encryption as a First-Class Capability
+
+Overnet fully supports end-to-end encryption as a first-class capability.
+
+This means the core MUST allow companion specifications to define encrypted application data and encrypted workflows without breaking:
+
+- core identity and signature semantics
+- provenance requirements
+- relay interoperability
+- capability discovery
+- conformance reporting
+
+The core does not require all Overnet data to be end-to-end encrypted. Public and intentionally shared data remain valid core use cases.
+
+A core-compliant implementation MUST NOT assume that relays, generic queries, derived-object reads, moderation systems, adapters, or other intermediaries can inspect or derive encrypted payload contents unless an applicable companion specification explicitly defines such access as part of the trusted model.
 
 ## 6. Core Object and Event Model
 
@@ -1229,11 +1248,17 @@ Implementations SHOULD minimize unnecessary exposure of identity, mapping, capab
 
 Capability discovery MAY be scoped, but when disclosed it MUST remain accurate for the current context.
 
+When an implementation claims support for an end-to-end encrypted companion specification, only authorized endpoints MAY access the protected plaintext for that specification.
+
+Relay acceptance, storage, forwarding, capability exposure, query support, or subscription support MUST NOT be interpreted as authorization to inspect decrypted encrypted content.
+
 ### 13.5 Metadata Exposure
 
 A relay or service MAY limit metadata disclosure according to policy, provided that it does not misrepresent protocol state.
 
 An implementation SHOULD make clear when information is hidden due to policy rather than nonexistent.
+
+End-to-end encryption does not by itself eliminate metadata exposure. Companion specifications SHOULD identify which routing, timing, identity, or policy metadata remain observable even when content confidentiality is preserved.
 
 ### 13.6 Abuse, Spam, and Resource Exhaustion
 

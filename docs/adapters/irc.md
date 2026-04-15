@@ -24,6 +24,7 @@ This first version is intentionally narrow. It defines:
 - adapted observed channel mode-change mapping for `MODE`
 - an optional derived channel presence state view
 - an optional minimal server-side IRC presentation slice for Overnet-backed IRC clients
+- an optional endpoint-blind E2E direct-message profile for E2E-aware IRC clients
 - provenance and limitation requirements for adapted IRC data
 - baseline object identifiers for IRC network and channel objects
 
@@ -327,6 +328,15 @@ An implementation claiming support for relay-carried private IRC direct messagin
 - preserve IRC provenance according to this specification
 
 A local-only implementation MAY represent those same logical items internally without using the relay-carried private transport defined by that companion specification.
+
+An implementation MAY additionally support an endpoint-blind E2E IRC client profile in which:
+
+- the sending IRC client performs the `NIP-17` encryption locally
+- the server receives only the visible kind `1059` wrapped transport plus cleartext routing metadata
+- the server or gateway routes that message without decrypting the body
+- the receiving IRC client decrypts the body locally
+
+When an implementation supports that endpoint-blind E2E IRC client profile, the implementation MUST apply the opaque endpoint-blind candidate rules defined by the [Overnet Private Messaging Specification](../private-messaging.md).
 
 ### 8.5 Channel `TOPIC`
 
@@ -674,19 +684,63 @@ Before registration completes, an implementation claiming support for this secti
 - `CAP REQ :<capabilities>`
 - `CAP END`
 
-For this baseline, the implementation advertises no optional IRC capabilities.
+For the empty-capability baseline, the implementation advertises no optional IRC capabilities.
 
-When the client sends `CAP LS` or `CAP LS <version>`, the implementation MUST reply with:
+When the client sends `CAP LS` or `CAP LS <version>`, an implementation with no optional capabilities enabled MUST reply with:
 
 - `:<server_name> CAP * LS :`
 
-When the client sends `CAP REQ :<capabilities>`, the implementation MUST reject the request with:
+When the client sends `CAP REQ :<capabilities>`, an implementation with no matching optional capabilities enabled MUST reject the request with:
 
 - `:<server_name> CAP * NAK :<capabilities>`
 
 When the client sends `CAP END`, the implementation MAY emit no reply.
 
 This section does not require support for `CAP LIST`, `CAP CLEAR`, or capability enablement.
+
+An implementation MAY advertise additional optional capabilities beyond the empty baseline above when another section of this specification defines them.
+
+#### 13.1.1.1 Optional `overnet-e2ee` Capability
+
+An implementation claiming support for the endpoint-blind E2E IRC client profile defined by this specification MUST advertise IRC capability token:
+
+- `overnet-e2ee`
+
+When such an implementation receives:
+
+- `CAP LS`
+- `CAP LS <version>`
+
+it MUST include `overnet-e2ee` in the advertised capability list.
+
+When such an implementation receives:
+
+- `CAP REQ :overnet-e2ee`
+
+it MUST reply with:
+
+- `:<server_name> CAP * ACK :overnet-e2ee`
+
+If a `CAP REQ` request mixes `overnet-e2ee` with any unsupported capability token, the implementation MAY reject the entire request with:
+
+- `:<server_name> CAP * NAK :<capabilities>`
+
+#### 13.1.1.2 Optional `OVERNETKEY` Registration and Lookup
+
+An implementation claiming support for the endpoint-blind E2E IRC client profile defined by this specification MUST accept the following registered-client commands after `overnet-e2ee` capability negotiation succeeds:
+
+- `OVERNETKEY SET <pubkey>`
+- `OVERNETKEY GET <nick>`
+
+For this profile:
+
+- `<pubkey>` MUST be a 64-character lowercase hex public key string used by the client for `NIP-17` private direct messaging
+- `OVERNETKEY SET <pubkey>` associates that public key with the currently registered client nick
+- `OVERNETKEY GET <nick>` returns the currently associated public key for that nick when available
+- an implementation MAY return the `GET` result using a server `NOTICE` or another implementation-defined non-error reply form
+- an implementation MAY allow later `OVERNETKEY SET` commands to rotate the associated public key for the current client
+
+This section does not require persistent long-term key directories, trust-on-first-use policy, or global identity verification beyond the explicit per-client key advertisement described here.
 
 #### 13.1.2 Baseline Command Validation and Error Numerics
 
@@ -696,8 +750,8 @@ An implementation claiming support for this section MUST emit at least the follo
 |---|---|---|
 | `421` | `ERR_UNKNOWNCOMMAND` | A command name is not recognized by this section's baseline server behavior. |
 | `431` | `ERR_NONICKNAMEGIVEN` | A client sends `NICK` without a nickname parameter. |
-| `451` | `ERR_NOTREGISTERED` | A client sends `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, `LUSERS`, or `LIST` before registration completes. |
-| `461` | `ERR_NEEDMOREPARAMS` | A client sends `USER`, `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, or `CAP REQ` without the required parameter set for that command. |
+| `451` | `ERR_NOTREGISTERED` | A client sends `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, `LUSERS`, `LIST`, or `OVERNETKEY` before registration completes. |
+| `461` | `ERR_NEEDMOREPARAMS` | A client sends `USER`, `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, `OVERNETKEY`, or `CAP REQ` without the required parameter set for that command. |
 | `401` | `ERR_NOSUCHNICK` | A client sends direct-message `PRIVMSG`, direct-message `NOTICE`, or `WHOIS` for a nick target that does not match any currently connected nick under the comparison rules in section 13.1.3. |
 | `403` | `ERR_NOSUCHCHANNEL` | A command in this section requires a channel target but the supplied target is not syntactically a valid IRC channel name. |
 | `442` | `ERR_NOTONCHANNEL` | A registered client sends channel `PART`, channel-targeted `PRIVMSG`, channel-targeted `NOTICE`, channel `TOPIC`, or channel `MODE` for a channel that the implementation does not currently treat as joined for that client under the comparison rules in section 13.1.3. |
@@ -964,6 +1018,22 @@ For this baseline:
 - for `chat.dm_message` and `chat.dm_notice`, the implementation MUST emit those lines only to client connections whose current registered nick exactly equals `<target_nick>`
 - for `irc.nick`, the implementation MUST emit the line only to client connections that currently share at least one joined channel with the nick change according to the implementation's current presentation membership view
 
+#### 13.3.1 Optional Endpoint-Blind E2E DM Presentation
+
+An implementation claiming support for the endpoint-blind E2E IRC client profile defined by this specification MAY render a relay-carried private direct message without decrypting it.
+
+For this profile:
+
+- the runtime-visible private-message item MUST use the opaque endpoint-blind form defined by the [Overnet Private Messaging Specification](../private-messaging.md)
+- the rendered IRC line MUST use the same `PRIVMSG` or `NOTICE` command that corresponds to `private_type`
+- the trailing parameter MUST use the form:
+  - `+overnet-e2ee-v1 <base64_json_transport>`
+- `<base64_json_transport>` MUST decode to the visible wrapped transport event object only
+- the sender nick used in the IRC prefix MUST come from cleartext presentational metadata such as `sender_identity`, not from decrypted message content
+- the implementation MUST NOT decrypt the message body in order to produce that IRC line
+
+This profile is intended for E2E-aware IRC clients or local proxies that decrypt the wrapped event after receipt.
+
 ### 13.4 Sender Presentation Baseline
 
 When rendering `chat.message`, `chat.notice`, `chat.dm_message`, `chat.dm_notice`, `chat.topic`, `chat.join`, `chat.part`, or `chat.quit` through this section, the implementation MUST derive an IRC-presentable nick string for `<nick>`.
@@ -997,6 +1067,26 @@ For this baseline:
 
 If the implementation carries that direct-message item across relays as a private message, it SHOULD apply the [Overnet Private Messaging Specification](../private-messaging.md) rather than publishing the plaintext direct-message body as an ordinary public Overnet core event.
 
+#### 13.5.1 Optional Endpoint-Blind E2E Inbound DM Profile
+
+An implementation claiming support for the endpoint-blind E2E IRC client profile defined by this specification MUST additionally recognize the following IRC direct-message body form:
+
+- `+overnet-e2ee-v1 <base64_json_transport>`
+
+For this profile:
+
+- the command MUST be an inbound non-channel `PRIVMSG` or `NOTICE`
+- the sending client and target client MUST both have successfully negotiated `overnet-e2ee`
+- the sending client and target client MUST both have an active `OVERNETKEY` association
+- `<base64_json_transport>` MUST decode to the visible kind `1059` wrapped transport event object
+- the implementation MUST derive `private_type` from the IRC command rather than from decrypted message content
+- the implementation MUST derive `object_id` from the IRC target nick using `irc:<network>:dm:<target_nick>`
+- the implementation MUST validate the visible wrapped transport against the target client's advertised key and against the sending client's negotiated E2E session state
+- the implementation MUST emit the resulting relay-carried private message using the opaque endpoint-blind candidate form defined by the [Overnet Private Messaging Specification](../private-messaging.md)
+- the implementation MUST NOT decrypt the wrapped message body in order to accept, route, or relay it
+
+If any of those conditions are not met, the implementation MUST reject or suppress the E2E delivery attempt using an implementation-defined error or notice path rather than silently treating the ciphertext body as ordinary plaintext chat content.
+
 ## 14. Conformance Requirements
 
 An implementation claiming conformance with this IRC adapter specification MUST, at minimum:
@@ -1024,6 +1114,21 @@ An implementation MAY additionally claim support for the optional minimal server
 An implementation MAY additionally claim support for relay-carried private direct messaging through the [Overnet Private Messaging Specification](../private-messaging.md).
 
 An implementation claiming that support MUST apply the binding rules defined in section 8.4.1.
+
+An implementation MAY additionally claim support for the optional endpoint-blind E2E IRC client profile defined in sections 13.1.1.1, 13.1.1.2, 13.3.1, and 13.5.1.
+
+An implementation claiming that support MUST, at minimum:
+
+- advertise IRC capability token `overnet-e2ee`
+- acknowledge `CAP REQ :overnet-e2ee`
+- accept `OVERNETKEY SET <pubkey>`
+- accept `OVERNETKEY GET <nick>`
+- associate one current `NIP-17` recipient pubkey with each E2E-capable registered client connection
+- accept inbound non-channel `PRIVMSG` and `NOTICE` bodies in the `+overnet-e2ee-v1 <base64_json_transport>` form
+- validate the visible wrapped transport against the target client's advertised key and the sending client's negotiated E2E session state
+- emit relay-carried private direct messages using the opaque endpoint-blind private-message candidate form rather than decrypting them
+- render opaque relay-carried private direct messages back to E2E-aware IRC clients using the same `+overnet-e2ee-v1 <base64_json_transport>` trailing parameter form
+- avoid decrypting the wrapped message body merely to route or present that message through the IRC server surface
 
 An implementation claiming support for that optional server-side slice MUST, at minimum:
 

@@ -1,0 +1,38 @@
+{
+  "description": "A relay-carried private direct message may use the opaque endpoint-blind runtime form when it supplies logical routing metadata outside the ciphertext and omits decrypted_rumor.",
+  "input": {
+    "private_type": "chat.dm_message",
+    "object_type": "chat.dm",
+    "object_id": "example:dm:alice:bob",
+    "sender_identity": "alice",
+    "transport": {
+      "kind": 1059,
+      "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "tags": [
+        ["p", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"]
+      ],
+      "content": "opaque-ciphertext"
+    }
+  },
+  "expected": {
+    "private_transport_valid": true,
+    "assertions": [
+      {
+        "path": "private_type",
+        "equals": "chat.dm_message"
+      },
+      {
+        "path": "object_type",
+        "equals": "chat.dm"
+      },
+      {
+        "path": "object_id",
+        "equals": "example:dm:alice:bob"
+      },
+      {
+        "path": "sender_identity",
+        "equals": "alice"
+      }
+    ]
+  }
+}

@@ -555,9 +555,9 @@ If `query` is an empty object, it MUST mean "all visible baseline subscription i
 For `private_message` subscription items defined by section 10:
 
 - `query.kind`, when present, MUST match the visible transport event kind
-- `query.overnet_et`, when present, MUST match the logical decrypted payload `private_type`
-- `query.overnet_ot`, when present, MUST match the logical decrypted payload `object_type`
-- `query.overnet_oid`, when present, MUST match the logical decrypted payload `object_id`
+- `query.overnet_et`, when present, MUST match the logical private-message `private_type`
+- `query.overnet_ot`, when present, MUST match the logical private-message `object_type`
+- `query.overnet_oid`, when present, MUST match the logical private-message `object_id`
 
 If `query` contains fields other than the baseline fields defined here, the runtime MUST reject the request with `protocol.invalid_params`.
 
@@ -607,10 +607,16 @@ When `item_type` is `private_message`, the `data` object MUST include:
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `transport` | object | yes | Relay-visible wrapped private-message transport object |
-| `decrypted_rumor` | object | yes | Runtime-validated decrypted rumor object |
 | `private_type` | string | yes | Logical private-message item type |
 | `object_type` | string | yes | Logical private-message object type |
 | `object_id` | string | yes | Logical private-message object identifier |
+
+When `item_type` is `private_message`, the `data` object MAY additionally include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `decrypted_rumor` | object | no | Runtime-validated decrypted rumor object when the trusted-decrypted candidate form was used |
+| `sender_identity` | string | no | Cleartext routing or presentational sender identity supplied by the ingress boundary |
 
 ## 9. Timers and Scheduled Jobs Service
 
@@ -732,13 +738,31 @@ The `message` object MUST include:
 |---|---|---|---|
 | `transport` | object | yes | Candidate visible wrapped transport object |
 
-The `message.transport` object MUST include:
+The `message` object MAY also include:
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `decrypted_rumor` | object | yes | Candidate decrypted rumor object paired with the wrapped transport |
+| `private_type` | string | no | Required when the candidate uses the opaque endpoint-blind form |
+| `object_type` | string | no | Required when the candidate uses the opaque endpoint-blind form |
+| `object_id` | string | no | Required when the candidate uses the opaque endpoint-blind form |
+| `sender_identity` | string | no | Optional cleartext routing or presentational sender identity |
 
-The runtime MUST treat `message.transport` as the candidate visible wrapped event object, except that `message.transport.decrypted_rumor` is runtime-visible validation context and is not part of the relay-visible wrapped event itself.
+The candidate private-message object MUST use one of the following forms:
+
+- trusted-decrypted candidate form
+- opaque endpoint-blind candidate form
+
+For the trusted-decrypted candidate form:
+
+- `message.transport.decrypted_rumor` MUST be present and MUST be an object
+- the runtime MUST treat `message.transport` as the candidate visible wrapped event object, except that `message.transport.decrypted_rumor` is runtime-visible validation context and is not part of the relay-visible wrapped event itself
+
+For the opaque endpoint-blind candidate form:
+
+- `message.transport.decrypted_rumor` MUST be absent
+- `message.private_type`, `message.object_type`, and `message.object_id` MUST be present
+- the runtime MUST validate and store those logical metadata fields without assuming access to the decrypted message body
+- `message.sender_identity`, when present, is cleartext routing or presentational metadata rather than decrypted message content
 
 Successful result:
 

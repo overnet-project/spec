@@ -1,0 +1,19 @@
+{
+  "description": "An opaque endpoint-blind private direct message is invalid when the visible wrapped transport does not contain exactly one recipient p tag.",
+  "input": {
+    "private_type": "chat.dm_notice",
+    "object_type": "chat.dm",
+    "object_id": "example:dm:alice:bob",
+    "sender_identity": "alice",
+    "transport": {
+      "kind": 1059,
+      "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "tags": [],
+      "content": "opaque-ciphertext"
+    }
+  },
+  "expected": {
+    "private_transport_valid": false,
+    "reason": "Opaque private direct messages require exactly one visible transport p tag"
+  }
+}
