@@ -1,0 +1,59 @@
+{
+  "description": "A generic volunteer-basic relay exposes machine-readable Overnet relay metadata through its relay information document.",
+  "input": {
+    "relay_info_document": {
+      "name": "Volunteer Relay 01",
+      "supported_nips": [1, 11, 42],
+      "overnet": {
+        "core_version": "0.1.0",
+        "relay_profile": "volunteer-basic",
+        "capabilities": [
+          "overnet.events.publish",
+          "overnet.events.query",
+          "overnet.events.subscribe",
+          "overnet.objects.read"
+        ],
+        "limits": {
+          "retention_seconds": 604800,
+          "max_event_bytes": 65536,
+          "max_filter_limit": 100,
+          "max_subscriptions": 32
+        },
+        "service_policies": {
+          "publish": "open",
+          "query": "open",
+          "subscribe": "open",
+          "object_read": "open"
+        }
+      }
+    }
+  },
+  "expected": {
+    "assertions": [
+      {
+        "path": "overnet.core_version",
+        "equals": "0.1.0"
+      },
+      {
+        "path": "overnet.relay_profile",
+        "equals": "volunteer-basic"
+      },
+      {
+        "path": "overnet.capabilities",
+        "contains": "overnet.events.publish"
+      },
+      {
+        "path": "overnet.capabilities",
+        "contains": "overnet.events.query"
+      },
+      {
+        "path": "overnet.capabilities",
+        "contains": "overnet.events.subscribe"
+      },
+      {
+        "path": "overnet.capabilities",
+        "contains": "overnet.objects.read"
+      }
+    ]
+  }
+}

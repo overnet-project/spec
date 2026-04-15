@@ -15,11 +15,17 @@ This document distinguishes between:
 
 ## Companion Specifications
 
-This section is reserved for references to companion Overnet specifications.
+This document defines only the Overnet core.
 
-This document defines only the Overnet core. Companion specifications MAY define additional normative requirements for adapters, application profiles, Overnet program runtime behavior, storage or replication profiles, registries, and operational guidance.
+The following companion specifications are especially relevant to the current draft:
 
-At the time of initial publication, this section may be incomplete or contain only provisional references.
+- [Overnet Relay Specification](relay.md), which defines the first concrete relay metadata, query, subscription, and derived-object read surface
+- [Overnet Program Runtime Specification](programs/runtime.md), which defines the runtime/program boundary for runnable Overnet programs
+- [Overnet Program Protocol Specification](programs/protocol.md), which defines the framed program/runtime wire protocol
+- [Overnet Program Services Specification](programs/services.md), which defines the baseline runtime-managed service methods
+- [IRC Adapter Specification](adapters/irc.md), which defines the first concrete adapter mapping
+
+Companion specifications MAY define additional normative requirements for adapters, application profiles, storage or replication profiles, registries, and operational guidance.
 
 ## 1. Introduction
 
@@ -217,6 +223,8 @@ A relay is an Overnet server-side component that accepts, validates, stores, for
 An Overnet relay may be built on top of one or more Nostr relays, may embed Nostr relay behavior directly, or may combine Overnet-specific logic with underlying Nostr infrastructure.
 
 In this specification, relay refers to the Overnet-side server role unless a section explicitly says Nostr relay.
+
+The Overnet core defines the relay role and minimum responsibilities. The [Overnet Relay Specification](relay.md) defines the first concrete relay metadata, query, subscription, and derived-object read surface.
 
 #### 3.1.4 Node
 
@@ -1018,6 +1026,8 @@ At minimum, a core-compliant relay MUST support:
 - baseline error semantics
 - protocol-level handling of revision, supersession, and removal semantics
 
+The [Overnet Relay Specification](relay.md) defines the first concrete companion surface for satisfying those responsibilities.
+
 ### 9.2 Capability Advertisement
 
 A relay MUST advertise its supported core capabilities accurately for the current client or policy context.
@@ -1264,8 +1274,8 @@ This section is informative.
 
 The following topics remain intentionally open or are expected to be completed by companion specifications or later revisions:
 
-- the exact query and filter surface for relay operations
-- the exact subscription resume and continuation rules
+- advanced query and filter behavior beyond the current relay companion specification
+- subscription resume and continuation rules
 - the exact session-oriented authentication handshake details where used
 - stronger identity continuity, rotation, and revocation mechanisms
 - concrete reference tag conventions for revision, supersession, and removal relationships

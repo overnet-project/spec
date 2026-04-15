@@ -1,0 +1,38 @@
+{
+  "description": "A relay serves a narrow current object view by direct object reference, including the latest visible state event.",
+  "input": {
+    "relay": {
+      "visible_events": [
+        {
+          "id": "state-1",
+          "created_at": 1700000000,
+          "kind": 37800,
+          "tags": [
+            ["overnet_v", "0.1.0"],
+            ["overnet_et", "chat.topic"],
+            ["overnet_ot", "chat.channel"],
+            ["overnet_oid", "irc:local:#overnet"],
+            ["d", "irc:local:#overnet"]
+          ]
+        }
+      ]
+    },
+    "request": {
+      "method": "GET",
+      "path": "/.well-known/overnet/v1/object?type=chat.channel&id=irc%3Alocal%3A%23overnet"
+    }
+  },
+  "expected": {
+    "status": 200,
+    "json": {
+      "object_type": "chat.channel",
+      "object_id": "irc:local:#overnet",
+      "removed": false,
+      "state_event": {
+        "id": "state-1",
+        "kind": 37800
+      },
+      "removal_event": null
+    }
+  }
+}

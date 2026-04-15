@@ -1,0 +1,57 @@
+{
+  "description": "A relay serves matching visible stored events for a REQ filter using Overnet tag fields and ends the stored phase with EOSE.",
+  "input": {
+    "relay": {
+      "stored_events": [
+        {
+          "id": "evt-1",
+          "created_at": 1700000000,
+          "kind": 7800,
+          "tags": [
+            ["overnet_v", "0.1.0"],
+            ["overnet_et", "chat.message"],
+            ["overnet_ot", "chat.channel"],
+            ["overnet_oid", "irc:local:#overnet"]
+          ]
+        },
+        {
+          "id": "evt-2",
+          "created_at": 1700000001,
+          "kind": 7800,
+          "tags": [
+            ["overnet_v", "0.1.0"],
+            ["overnet_et", "chat.message"],
+            ["overnet_ot", "chat.channel"],
+            ["overnet_oid", "irc:local:#other"]
+          ]
+        }
+      ]
+    },
+    "message": [
+      "REQ",
+      "sub-1",
+      {
+        "kinds": [7800],
+        "#overnet_et": ["chat.message"],
+        "#overnet_ot": ["chat.channel"],
+        "#overnet_oid": ["irc:local:#overnet"],
+        "limit": 50
+      }
+    ]
+  },
+  "expected": {
+    "responses": [
+      [
+        "EVENT",
+        "sub-1",
+        {
+          "id": "evt-1"
+        }
+      ],
+      [
+        "EOSE",
+        "sub-1"
+      ]
+    ]
+  }
+}

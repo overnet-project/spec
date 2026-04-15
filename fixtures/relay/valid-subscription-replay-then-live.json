@@ -1,0 +1,63 @@
+{
+  "description": "A relay subscription first replays matching visible stored events, then sends EOSE, then sends matching newly accepted live events.",
+  "input": {
+    "relay": {
+      "stored_events": [
+        {
+          "id": "evt-stored",
+          "created_at": 1700000000,
+          "kind": 7800,
+          "tags": [
+            ["overnet_v", "0.1.0"],
+            ["overnet_et", "chat.message"],
+            ["overnet_ot", "chat.channel"],
+            ["overnet_oid", "irc:local:#overnet"]
+          ]
+        }
+      ],
+      "live_events": [
+        {
+          "id": "evt-live",
+          "created_at": 1700000100,
+          "kind": 7800,
+          "tags": [
+            ["overnet_v", "0.1.0"],
+            ["overnet_et", "chat.message"],
+            ["overnet_ot", "chat.channel"],
+            ["overnet_oid", "irc:local:#overnet"]
+          ]
+        }
+      ]
+    },
+    "message": [
+      "REQ",
+      "sub-2",
+      {
+        "#overnet_ot": ["chat.channel"],
+        "#overnet_oid": ["irc:local:#overnet"]
+      }
+    ]
+  },
+  "expected": {
+    "responses": [
+      [
+        "EVENT",
+        "sub-2",
+        {
+          "id": "evt-stored"
+        }
+      ],
+      [
+        "EOSE",
+        "sub-2"
+      ],
+      [
+        "EVENT",
+        "sub-2",
+        {
+          "id": "evt-live"
+        }
+      ]
+    ]
+  }
+}

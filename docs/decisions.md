@@ -123,3 +123,27 @@ This document records significant design decisions made during the development o
 - Event-scoped grants. Precise, but too narrow to be useful as a baseline moderation/administration primitive.
 
 **Rationale:** Separate delegation events fit the event-oriented model, keep grants auditable, and leave room for later revocation and richer scope models. Object-scoped grants are narrow enough for a safe first version while still being useful. A dedicated `overnet_delegate` tag avoids ambiguity with the `e` tag already used to identify the target event being removed.
+
+## D010: Relay Semantics Use a Nostr-Native Generic Relay Baseline with Optional Profiles
+
+**Date:** 2026-04-14
+
+**Decision:** Overnet relay semantics are defined in a companion relay specification that keeps the baseline relay role Nostr-native for event publication, event queries, and event subscriptions, while allowing optional advertised profiles for storage, replication, pricing, and related operator policy.
+
+The first relay companion specification covers:
+
+- generic relay metadata
+- event publication
+- a narrow event query filter surface
+- replay-plus-live subscriptions
+- a narrow by-reference derived-object read surface
+
+The first relay companion specification does not attempt to define the full storage and replication model. Large-data distribution is expected to be addressed later, potentially by reusing NIP-35 rather than inventing a separate torrent metadata format.
+
+**Alternatives considered:**
+
+- Put all relay, storage, replication, and pricing semantics into one first relay specification. Too much scope for a first concrete relay draft.
+- Define a new Overnet-specific relay transport immediately. Unnecessary protocol sprawl while Overnet remains Nostr-native.
+- Define only raw event relay behavior and defer derived objects entirely. Too weak for the baseline generic relay role already chosen for Overnet.
+
+**Rationale:** A generic relay needs to be useful immediately without forcing every volunteer-operated relay to become a full archive or large-object storage node. Keeping the first relay companion specification narrow makes it implementable and testable. Keeping event publication and subscription behavior Nostr-native preserves alignment with the Overnet core and with existing Nostr infrastructure. Optional profiles leave room for volunteer, archive, paid, and storage-heavy relay roles without overloading the baseline.

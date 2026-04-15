@@ -1,0 +1,42 @@
+{
+  "description": "A relay accepts a valid Overnet core event publish and returns an accepted-prefixed OK result.",
+  "input": {
+    "relay": {
+      "service_policies": {
+        "publish": "open"
+      }
+    },
+    "message": [
+      "EVENT",
+      {
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pubkey": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "created_at": 1700000000,
+        "kind": 7800,
+        "tags": [
+          ["overnet_v", "0.1.0"],
+          ["overnet_et", "chat.message"],
+          ["overnet_ot", "chat.channel"],
+          ["overnet_oid", "irc:local:#overnet"]
+        ],
+        "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"text\":\"hello\"}}",
+        "sig": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    ],
+    "validation": {
+      "nostr_valid": true,
+      "overnet_valid": true,
+      "profile_valid": true
+    }
+  },
+  "expected": {
+    "responses": [
+      [
+        "OK",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        true,
+        "accepted: stored"
+      ]
+    ]
+  }
+}
