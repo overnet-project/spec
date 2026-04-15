@@ -1,0 +1,30 @@
+{
+  "description": "A relay-carried one-to-one private direct message is invalid when the decrypted rumor does not contain exactly one recipient p tag.",
+  "input": {
+    "transport": {
+      "kind": 1059,
+      "decrypted_rumor": {
+        "kind": 14,
+        "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "created_at": 1700000000,
+        "tags": [],
+        "content": {
+          "overnet_v": "0.1.0",
+          "private_type": "chat.dm_message",
+          "object_type": "chat.dm",
+          "object_id": "example:dm:alice:bob",
+          "provenance": {
+            "type": "native"
+          },
+          "body": {
+            "text": "hello"
+          }
+        }
+      }
+    }
+  },
+  "expected": {
+    "private_transport_valid": false,
+    "reason": "relay-carried one-to-one private direct messages require exactly one rumor p tag"
+  }
+}

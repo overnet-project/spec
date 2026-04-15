@@ -20,6 +20,7 @@ This document defines only the Overnet core.
 The following companion specifications are especially relevant to the current draft:
 
 - [Overnet Relay Specification](relay.md), which defines the first concrete relay metadata, query, subscription, and derived-object read surface
+- [Overnet Private Messaging Specification](private-messaging.md), which defines encrypted relay-carried private direct messaging
 - [Overnet Program Runtime Specification](programs/runtime.md), which defines the runtime/program boundary for runnable Overnet programs
 - [Overnet Program Protocol Specification](programs/protocol.md), which defines the framed program/runtime wire protocol
 - [Overnet Program Services Specification](programs/services.md), which defines the baseline runtime-managed service methods

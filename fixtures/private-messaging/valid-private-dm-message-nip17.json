@@ -1,0 +1,45 @@
+{
+  "description": "A relay-carried private direct message uses a kind 14 rumor with exactly one recipient tag and a decrypted Overnet private-message payload.",
+  "input": {
+    "transport": {
+      "kind": 1059,
+      "decrypted_rumor": {
+        "kind": 14,
+        "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "created_at": 1700000000,
+        "tags": [
+          ["p", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"]
+        ],
+        "content": {
+          "overnet_v": "0.1.0",
+          "private_type": "chat.dm_message",
+          "object_type": "chat.dm",
+          "object_id": "example:dm:alice:bob",
+          "provenance": {
+            "type": "native"
+          },
+          "body": {
+            "text": "hello"
+          }
+        }
+      }
+    }
+  },
+  "expected": {
+    "private_transport_valid": true,
+    "assertions": [
+      {
+        "path": "decrypted_rumor.kind",
+        "equals": 14
+      },
+      {
+        "path": "decrypted_rumor.content.private_type",
+        "equals": "chat.dm_message"
+      },
+      {
+        "path": "decrypted_rumor.content.object_type",
+        "equals": "chat.dm"
+      }
+    ]
+  }
+}

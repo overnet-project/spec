@@ -313,6 +313,21 @@ The event `body` MUST include:
 
 The event `body` MAY include `irc_identity` as defined in section 6.1.
 
+### 8.4.1 Relationship to Private Messaging Transport
+
+Sections 8.3 and 8.4 define the logical Overnet semantics of IRC direct messages and notices.
+
+If an implementation carries those direct-message semantics across relays or across any boundary where generic relay operators are not intended to read the message body, the implementation SHOULD use the [Overnet Private Messaging Specification](../private-messaging.md).
+
+An implementation claiming support for relay-carried private IRC direct messaging MUST:
+
+- encode the logical item using the private direct-message transport defined by that companion specification
+- use `private_type` value `chat.dm_message` or `chat.dm_notice` as appropriate
+- use `object_id` value `irc:<network>:dm:<target_nick>`
+- preserve IRC provenance according to this specification
+
+A local-only implementation MAY represent those same logical items internally without using the relay-carried private transport defined by that companion specification.
+
 ### 8.5 Channel `TOPIC`
 
 An IRC `TOPIC` command sent to a channel target MUST be mapped to an Overnet state event with:
@@ -980,6 +995,8 @@ For this baseline:
 - for an inbound non-channel `NOTICE <target_nick> :<text>`, the mapped `overnet_oid` MUST be `irc:<network>:dm:<target_nick>`
 - when the target nick matches a currently connected client nick only under the comparison rules in section 13.1.3, the implementation SHOULD use that client's current presentational nick spelling as the mapped direct-message target
 
+If the implementation carries that direct-message item across relays as a private message, it SHOULD apply the [Overnet Private Messaging Specification](../private-messaging.md) rather than publishing the plaintext direct-message body as an ordinary public Overnet core event.
+
 ## 14. Conformance Requirements
 
 An implementation claiming conformance with this IRC adapter specification MUST, at minimum:
@@ -1003,6 +1020,10 @@ An implementation claiming conformance with this IRC adapter specification MUST,
 An implementation MAY additionally claim support for the optional derived channel presence state defined in section 8.12.
 
 An implementation MAY additionally claim support for the optional minimal server-side IRC presentation slice defined in section 13.
+
+An implementation MAY additionally claim support for relay-carried private direct messaging through the [Overnet Private Messaging Specification](../private-messaging.md).
+
+An implementation claiming that support MUST apply the binding rules defined in section 8.4.1.
 
 An implementation claiming support for that optional server-side slice MUST, at minimum:
 
@@ -1040,4 +1061,5 @@ The following IRC adapter topics remain open:
 - representation of moderation and operator authority
 - richer server numerics, listing, and channel-bootstrap semantics beyond the minimal `JOIN`/topic/`NAMES` bootstrap defined here
 - richer direct-message session semantics beyond target-directed `PRIVMSG` and `NOTICE` presentation
+- interaction between relay-carried encrypted direct-message transport and richer IRC direct-message session semantics
 - write-back and bidirectional synchronization semantics beyond the minimal server-side presentation slice

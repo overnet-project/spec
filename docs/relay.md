@@ -61,6 +61,8 @@ This specification does not define a new transport for event publication, event 
 
 This specification also does not define the full Overnet storage and replication profile. A later companion specification is expected to define large-data storage and replication behavior, potentially reusing `NIP-35` where appropriate.
 
+Encrypted relay-carried private direct messages are defined separately in the [Overnet Private Messaging Specification](private-messaging.md).
+
 ## 3. Scope of This Version
 
 This version defines the first generic relay profile.
@@ -418,6 +420,8 @@ A relay MAY advertise additional capabilities beyond this specification for:
 A later companion specification is expected to define that behavior concretely.
 
 Where large-object distribution is defined later, Overnet MAY reuse `NIP-35` rather than defining a separate torrent metadata format.
+
+Encrypted relay-carried private direct messages defined by the [Overnet Private Messaging Specification](private-messaging.md) are outside the public event query and generic derived-object read guarantees defined by this specification.
 
 ## 12. Conformance
 

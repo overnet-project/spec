@@ -1,0 +1,53 @@
+{
+  "description": "A relay-carried private IRC direct message binds the IRC target nick into the encrypted payload object_id and preserves IRC provenance.",
+  "input": {
+    "source": {
+      "protocol": "irc",
+      "network": "local",
+      "line": ":Alice PRIVMSG Bob :hello"
+    },
+    "transport": {
+      "kind": 1059,
+      "decrypted_rumor": {
+        "kind": 14,
+        "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tags": [
+          ["p", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"]
+        ],
+        "content": {
+          "overnet_v": "0.1.0",
+          "private_type": "chat.dm_message",
+          "object_type": "chat.dm",
+          "object_id": "irc:local:dm:Bob",
+          "provenance": {
+            "type": "adapted",
+            "protocol": "irc",
+            "origin": "local/Bob",
+            "external_identity": "Alice",
+            "limitations": ["unsigned"]
+          },
+          "body": {
+            "text": "hello"
+          }
+        }
+      }
+    }
+  },
+  "expected": {
+    "private_transport_valid": true,
+    "assertions": [
+      {
+        "path": "decrypted_rumor.content.object_id",
+        "equals": "irc:local:dm:Bob"
+      },
+      {
+        "path": "decrypted_rumor.content.private_type",
+        "equals": "chat.dm_message"
+      },
+      {
+        "path": "decrypted_rumor.content.provenance.protocol",
+        "equals": "irc"
+      }
+    ]
+  }
+}

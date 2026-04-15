@@ -147,3 +147,26 @@ The first relay companion specification does not attempt to define the full stor
 - Define only raw event relay behavior and defer derived objects entirely. Too weak for the baseline generic relay role already chosen for Overnet.
 
 **Rationale:** A generic relay needs to be useful immediately without forcing every volunteer-operated relay to become a full archive or large-object storage node. Keeping the first relay companion specification narrow makes it implementable and testable. Keeping event publication and subscription behavior Nostr-native preserves alignment with the Overnet core and with existing Nostr infrastructure. Optional profiles leave room for volunteer, archive, paid, and storage-heavy relay roles without overloading the baseline.
+
+## D011: Relay-Carried Private Direct Messages Use NIP-17 Rather Than Public Overnet Core Events
+
+**Date:** 2026-04-14
+
+**Decision:** One-to-one relay-carried private direct messages use `NIP-17` encrypted transport rather than ordinary public Overnet core events.
+
+The logical Overnet item types remain `chat.dm_message` and `chat.dm_notice`, but when those items are intended to remain private from generic relay operators:
+
+- the logical message is represented as a kind `14` rumor
+- the rumor is sealed and gift-wrapped according to `NIP-17`
+- the relay-visible event is kind `1059`
+- the decrypted payload carries the Overnet logical fields needed to recover `chat.dm` semantics
+
+`NIP-04` is not part of the Overnet private direct-message profile.
+
+**Alternatives considered:**
+
+- Publish direct-message bodies as ordinary public kind `7800` Overnet core events. Simpler, but defeats relay-level privacy.
+- Define a custom Overnet encrypted direct-message transport unrelated to existing Nostr private-message work. Unnecessary duplication and weaker ecosystem alignment.
+- Continue treating all direct messages as local-only semantics with no relay-carried private transport. Too limiting once direct messages need to cross relay or instance boundaries.
+
+**Rationale:** The Overnet core event model is intentionally public and relay-queryable. Private direct messages have different requirements. Using `NIP-17` keeps Overnet aligned with existing Nostr private-messaging mechanisms while preserving Overnet application semantics in the decrypted payload. It also lets generic relays store and forward opaque encrypted messages without pretending they can derive public objects or inspect private content.

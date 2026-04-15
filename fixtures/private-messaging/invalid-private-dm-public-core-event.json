@@ -1,0 +1,27 @@
+{
+  "description": "A relay-carried private direct message is invalid under the private-messaging profile when it is represented as a public Overnet core event instead of NIP-17 transport.",
+  "input": {
+    "relay_carried_private_intent": true,
+    "event": {
+      "kind": 7800,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.dm_message"],
+        ["overnet_ot", "chat.dm"],
+        ["overnet_oid", "example:dm:alice:bob"]
+      ],
+      "content": {
+        "provenance": {
+          "type": "native"
+        },
+        "body": {
+          "text": "hello"
+        }
+      }
+    }
+  },
+  "expected": {
+    "private_transport_valid": false,
+    "reason": "relay-carried private direct messages must use NIP-17 rather than public Overnet core events"
+  }
+}
