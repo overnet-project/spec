@@ -664,6 +664,88 @@ For this profile:
 
 This section does not define one mandatory IRC-side authentication mechanism for establishing that pubkey binding. The required property is that the implementation can reliably associate each authoritative IRC client connection with one authenticated Nostr identity.
 
+#### 11.2.1 `OVERNETAUTH` Explicit Pubkey Binding
+
+An implementation claiming support for the authoritative profile in section 11.1 MAY expose an explicit registered-client command surface for authoritative pubkey binding:
+
+- `OVERNETAUTH CHALLENGE`
+- `OVERNETAUTH AUTH <base64_json_event>`
+
+For this command surface:
+
+- `OVERNETAUTH CHALLENGE` issues one implementation-generated challenge token scoped to the current IRC client connection
+- `OVERNETAUTH AUTH <base64_json_event>` submits one signed Nostr event encoded as base64 JSON
+- the submitted event MUST be kind `22242`
+- the submitted event MUST include first tag `["relay", "irc://<server_name>/<network>"]`
+- the submitted event MUST include first tag `["challenge", "<issued_challenge>"]`
+- the submitted event MUST validate as a signed Nostr event under the normal Overnet core verification model
+- on success, the connection MUST become bound to the submitting event pubkey
+- on success, any previously active authoritative session delegation for that IRC client connection MUST be cleared
+- an implementation MUST NOT keep a challenge valid after it has been consumed successfully for that IRC client connection
+
+For this command surface:
+
+- `<server_name>` is the same presented server name used on the IRC surface for that connection
+- `<network>` is the bound IRC network identifier for that server instance
+- the `relay` tag above identifies the authoritative IRC auth scope, not necessarily a WebSocket relay URL
+
+#### 11.2.2 Session-Scoped Delegation for Relay-Backed Authoritative Writes
+
+If an implementation claiming the authoritative profile in section 11.1 publishes authoritative `NIP-29` control events through an external relay on behalf of the authenticated IRC user, it MAY use one session-scoped delegated signing key for that IRC client connection.
+
+When this delegation model is used:
+
+- the implementation MUST bind the delegation to one already authenticated authoritative pubkey as established by section 11.2 or section 11.2.1
+- the implementation MUST use one grant event of kind `14142`
+- the grant event MUST be signed by the authenticated authoritative pubkey rather than by the delegated session key
+- the grant event MUST include first tag `["relay", "<relay_url>"]`
+- the grant event MUST include first tag `["server", "irc://<server_name>/<network>"]`
+- the grant event MUST include first tag `["delegate", "<delegate_pubkey>"]`
+- the grant event MUST include first tag `["session", "<session_id>"]`
+- the grant event MUST include first tag `["expires_at", "<unix_timestamp>"]`
+- the grant event MAY include first tag `["nick", "<presentational_nick>"]`
+- the implementation MUST verify that the grant matches the current authoritative pubkey, relay URL, auth scope, delegated pubkey, session identifier, and expiry before using it
+- the implementation MUST publish or otherwise activate only the verified grant event it actually intends to honor for that IRC client connection
+- the implementation MUST stop using a grant that has expired or that no longer matches the current authoritative connection binding
+
+When authoritative `NIP-29` control events are published through such a delegated session key:
+
+- the visible event signer MAY be the delegated session key rather than the authoritative user key
+- the implementation MUST preserve the effective acting authoritative pubkey using first tag `["overnet_actor", "<authority_pubkey>"]`
+- the implementation MUST preserve a reference to the accepted delegation grant using first tag `["overnet_authority", "<grant_event_id>"]`
+- the implementation MUST attach one monotonically increasing per-session first tag `["overnet_sequence", "<positive_integer>"]`
+- the implementation MUST reset that per-session sequence when a new delegation grant replaces the old one for that IRC client connection
+
+#### 11.2.3 Optional SASL `NOSTR` Binding Surface
+
+An implementation claiming support for the authoritative profile in section 11.1 MAY expose the same authoritative pubkey binding and optional session delegation through IRCv3 capability `sasl` with mechanism name `NOSTR`.
+
+When this optional surface is implemented:
+
+- the resulting authenticated pubkey binding MUST be semantically equivalent to a successful `OVERNETAUTH AUTH`
+- when relay-backed delegation is included in the SASL exchange, the resulting delegation state MUST be semantically equivalent to a successful `OVERNETAUTH DELEGATE`
+- the implementation MUST NOT silently bind the IRC client connection to a different pubkey or grant shape depending on whether the client used `OVERNETAUTH` or SASL `NOSTR`
+
+For SASL `NOSTR`:
+
+- the client initiates with `AUTHENTICATE NOSTR`
+- the server challenge payload is one base64-encoded JSON object carried in one or more `AUTHENTICATE <chunk>` lines
+- that challenge object MUST include string field `challenge`
+- that challenge object MUST include string field `scope` equal to `irc://<server_name>/<network>`
+- if relay-backed delegation is required for the session, the challenge object MUST additionally include `relay_url`, `grant_kind`, `delegate_pubkey`, `session_id`, and `expires_at`
+- the client response payload is one base64-encoded JSON object carried in one or more `AUTHENTICATE <chunk>` lines
+- the response object MUST include object field `auth_event`
+- if the challenge included relay-backed delegation parameters, the response object MUST additionally include object field `delegate_event`
+- `auth_event` MUST satisfy the same validation rules as section 11.2.1
+- `delegate_event`, when required, MUST satisfy the same validation rules as section 11.2.2
+- the implementation MUST reassemble standard 400-byte SASL chunks before decoding the final JSON payload
+
+For this optional SASL surface:
+
+- an implementation MAY defer IRC registration completion until SASL negotiation is finished and the client sends `CAP END`
+- an implementation MAY continue to support `OVERNETAUTH` alongside SASL `NOSTR`
+- this specification does not require support for any other SASL mechanism for authoritative Nostr binding
+
 ### 11.3 Channel-to-Group Binding
 
 For each IRC channel using the profile in section 11.1, the implementation MUST maintain one stable binding between:
@@ -852,7 +934,44 @@ If a `CAP REQ` request mixes `overnet-e2ee` with any unsupported capability toke
 
 - `:<server_name> CAP * NAK :<capabilities>`
 
-#### 13.1.1.2 Optional `OVERNETKEY` Registration and Lookup
+#### 13.1.1.2 Optional `OVERNETAUTH` Explicit Binding and Delegation
+
+An implementation claiming support for the authoritative profile in section 11.1 MAY additionally support the explicit registered-client command surface defined in section 11.2.1 and section 11.2.2:
+
+- `OVERNETAUTH CHALLENGE`
+- `OVERNETAUTH AUTH <base64_json_event>`
+- `OVERNETAUTH DELEGATE`
+- `OVERNETAUTH DELEGATE <base64_json_event>`
+
+When `OVERNETAUTH` is supported:
+
+- `OVERNETAUTH CHALLENGE` MUST return one server `NOTICE` or another non-error implementation-defined reply containing the issued challenge token
+- `OVERNETAUTH AUTH <base64_json_event>` MUST return one success reply that identifies the newly bound authoritative pubkey when validation succeeds
+- `OVERNETAUTH DELEGATE` MAY return relay-backed delegation parameters using a server `NOTICE` or another implementation-defined non-error reply
+- `OVERNETAUTH DELEGATE <base64_json_event>` MUST return one success reply when delegation is accepted for the current authenticated IRC client connection
+- the implementation MUST reject `OVERNETAUTH DELEGATE` when no current authenticated authoritative pubkey is bound for that IRC client connection
+
+This section does not require one specific success-text wording for the implementation-defined `NOTICE` forms above.
+
+#### 13.1.1.3 Optional `sasl` Capability for Authoritative `NOSTR`
+
+An implementation claiming support for the authoritative profile in section 11.1 MAY additionally advertise IRC capability token:
+
+- `sasl`
+
+When this optional capability is implemented:
+
+- `CAP LS` and `CAP LS <version>` MUST include `sasl` in the advertised capability list
+- `CAP REQ :sasl` MUST be acknowledged with `:<server_name> CAP * ACK :sasl`
+- `AUTHENTICATE NOSTR` MUST begin the SASL exchange defined in section 11.2.3
+- an unsupported SASL mechanism MUST fail rather than silently falling back to a different mechanism
+- the implementation SHOULD emit `903 RPL_SASLSUCCESS` on successful SASL completion
+- the implementation SHOULD emit `904 ERR_SASLFAIL` on failed SASL completion
+- if the client begins SASL before registration completes, the implementation MAY defer registration completion until SASL finishes and the client sends `CAP END`
+
+This section does not require support for `PLAIN`, `EXTERNAL`, `ECDSA-NIST256P-CHALLENGE`, or any non-`NOSTR` SASL mechanism.
+
+#### 13.1.1.4 Optional `OVERNETKEY` Registration and Lookup
 
 An implementation claiming support for the endpoint-blind E2E IRC client profile defined by this specification MUST accept the following registered-client commands after `overnet-e2ee` capability negotiation succeeds:
 
@@ -877,8 +996,8 @@ An implementation claiming support for this section MUST emit at least the follo
 |---|---|---|
 | `421` | `ERR_UNKNOWNCOMMAND` | A command name is not recognized by this section's baseline server behavior. |
 | `431` | `ERR_NONICKNAMEGIVEN` | A client sends `NICK` without a nickname parameter. |
-| `451` | `ERR_NOTREGISTERED` | A client sends `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, `LUSERS`, `LIST`, or `OVERNETKEY` before registration completes. |
-| `461` | `ERR_NEEDMOREPARAMS` | A client sends `USER`, `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, `OVERNETKEY`, or `CAP REQ` without the required parameter set for that command. |
+| `451` | `ERR_NOTREGISTERED` | A client sends `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, `LUSERS`, `LIST`, `OVERNETKEY`, or `OVERNETAUTH` before registration completes. |
+| `461` | `ERR_NEEDMOREPARAMS` | A client sends `USER`, `JOIN`, `PART`, `PRIVMSG`, `NOTICE`, `TOPIC`, `NAMES`, `MODE`, `USERHOST`, `WHO`, `WHOIS`, `OVERNETKEY`, `OVERNETAUTH`, `AUTHENTICATE`, or `CAP REQ` without the required parameter set for that command. |
 | `401` | `ERR_NOSUCHNICK` | A client sends direct-message `PRIVMSG`, direct-message `NOTICE`, or `WHOIS` for a nick target that does not match any currently connected nick under the comparison rules in section 13.1.3. |
 | `403` | `ERR_NOSUCHCHANNEL` | A command in this section requires a channel target but the supplied target is not syntactically a valid IRC channel name. |
 | `442` | `ERR_NOTONCHANNEL` | A registered client sends channel `PART`, channel-targeted `PRIVMSG`, channel-targeted `NOTICE`, channel `TOPIC`, or channel `MODE` for a channel that the implementation does not currently treat as joined for that client under the comparison rules in section 13.1.3. |
@@ -896,6 +1015,11 @@ An implementation claiming support for the authoritative moderated-channel profi
 
 - `404 ERR_CANNOTSENDTOCHAN` for the `+m` enforcement case defined in section 11.6
 - `482 ERR_CHANOPRIVSNEEDED` for the privilege-denial cases defined in section 11.6
+
+An implementation claiming support for optional SASL `NOSTR` in section 13.1.1.3 SHOULD additionally support:
+
+- `903 RPL_SASLSUCCESS`
+- `904 ERR_SASLFAIL`
 
 #### 13.1.3 RFC1459-Style Comparison Baseline
 
@@ -1272,7 +1396,7 @@ An implementation MAY additionally claim support for relay-carried private direc
 
 An implementation claiming that support MUST apply the binding rules defined in section 8.4.1.
 
-An implementation MAY additionally claim support for the optional endpoint-blind E2E IRC client profile defined in sections 13.1.1.1, 13.1.1.2, 13.3.1, and 13.5.1.
+An implementation MAY additionally claim support for the optional endpoint-blind E2E IRC client profile defined in sections 13.1.1.1, 13.1.1.4, 13.3.1, and 13.5.1.
 
 An implementation claiming that support MUST, at minimum:
 
@@ -1316,7 +1440,7 @@ An implementation claiming support for that optional server-side slice MUST, at 
 The following IRC adapter topics remain open:
 
 - account-aware identity mapping beyond nicknames
-- the exact IRC-side authentication and session-binding mechanism used to associate an authoritative IRC client connection with one authenticated Nostr pubkey
+- richer compatibility guidance for IRC clients that do not support custom SASL mechanisms such as `NOSTR`
 - IRCv3-specific enhancements such as message tags, server-time, and account-aware identity refinement
 - broader network-specific case-mapping negotiation beyond the baseline RFC1459-style comparison defined in section 13.1.3
 - additional user-scoped mode mapping beyond `+o` and `+v`
