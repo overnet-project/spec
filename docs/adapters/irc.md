@@ -759,6 +759,12 @@ For this profile:
 - the bound `NIP-29` group identifier is the authoritative group-control identifier used by the underlying `NIP-29` events
 - the bound `NIP-29` group identifier MAY equal the IRC channel name, but it is not required to do so
 - all `NIP-29` events used as authoritative input for that channel MUST refer to the same bound group identifier
+- an implementation MAY provision bindings statically, but it MAY also derive them dynamically for hosted authoritative channels
+- when a hosted authoritative channel is created dynamically from IRC, the implementation MUST bind `irc:<network>:<channel>` to one deterministic `NIP-29` group identifier derived from the IRC network name and the RFC1459-folded channel name
+- when the implementation supports dynamic hosted-channel creation, the first authenticated authoritative `JOIN <channel>` on an otherwise unbound and undiscovered channel MAY create that hosted channel
+- that creation flow MUST publish initial authoritative group metadata for the newly bound group identifier and MUST seed the creating authenticated pubkey with role `irc.operator`
+- when multiple instances expose the same authoritative hosted-channel deployment, they MUST resolve the same deterministic IRC-channel-to-group binding for the same `<network>` and `<channel>` pair
+- an implementation MAY discover dynamically created hosted authoritative channels by observing authoritative relay metadata for deterministic group identifiers; support for such discovery MUST NOT require a preconfigured static `channel_groups` entry for every hosted channel
 
 ### 11.4 Authoritative Source and Derived State
 
@@ -780,6 +786,9 @@ For this profile:
 - if accepted control-event history and relay-signed snapshots disagree, the implementation MUST prefer the authoritative relay state it actually enforces; a stale or partial snapshot MUST NOT silently widen authority
 - `39002` membership snapshots MAY be partial and therefore MUST NOT be treated as exhaustive unless the implementation explicitly knows they are exhaustive for that deployment
 - the channel-mode mapping defined in section 11.5 MUST be derived from the current authoritative group metadata and role state, not from nick-local heuristics
+- hosted authoritative channels remain persistent authoritative objects even when they currently have no present members
+- a hosted authoritative channel becoming empty MUST NOT implicitly delete that channel, unbind it, or silently reset its authoritative metadata
+- if a deployment wants channel deletion, tombstoning, or expiration semantics, those semantics MUST be explicit and separately defined rather than inferred from emptiness alone
 
 ### 11.5 Canonical IRC Role and Channel-Mode Mapping
 
@@ -801,11 +810,13 @@ The following channel-flag mappings are defined by this profile:
 - `NIP-29` group metadata flag `closed` maps to IRC channel mode `+i`
 - a profile-defined `39000` metadata tag `["mode", "moderated"]` maps to IRC channel mode `+m`
 - a profile-defined `39000` metadata tag `["mode", "topic-restricted"]` maps to IRC channel mode `+t`
+- a profile-defined repeated metadata tag `["ban", "<irc_mask>"]` maps to the current authoritative IRC ban list exposed through `+b`
 
 For this profile:
 
 - `+n` is treated as an implicit presentational mode for authoritative hosted channels; an implementation MAY include it in `MODE <channel>` replies, but this profile does not define a writable toggle for `+n`
-- this profile does not define authoritative mappings for bans, ban exceptions, invite exceptions, keys, user limits, secret/private visibility, or other IRC channel modes beyond `+o`, `+v`, `+i`, `+m`, and `+t`
+- this profile defines only mask-based `+b` bans
+- this profile does not define authoritative mappings for ban exceptions, invite exceptions, keys, user limits, secret/private visibility, or other IRC channel modes beyond `+o`, `+v`, `+i`, `+m`, `+t`, and `+b`
 
 ### 11.6 Authoritative Command Mapping and Enforcement
 
@@ -822,6 +833,9 @@ For a channel using the profile in section 11.1, the following IRC commands are 
 - `MODE <channel> -m`
 - `MODE <channel> +t`
 - `MODE <channel> -t`
+- `MODE <channel> +b`
+- `MODE <channel> +b <mask>`
+- `MODE <channel> -b <mask>`
 
 For this profile:
 
@@ -833,10 +847,14 @@ For this profile:
 - `MODE +i` and `MODE -i` MUST add or remove the authoritative `NIP-29` `closed` metadata flag
 - `MODE +m` and `MODE -m` MUST add or remove profile metadata tag `["mode", "moderated"]`
 - `MODE +t` and `MODE -t` MUST add or remove profile metadata tag `["mode", "topic-restricted"]`
+- `MODE +b <mask>` MUST add one current authoritative ban entry `["ban", "<mask>"]`
+- `MODE -b <mask>` MUST remove that current authoritative ban entry when present
+- `MODE <channel> +b` with no `<mask>` parameter MUST return the current authoritative ban list rather than mutating channel state
 - unsupported writable mode letters MUST be rejected rather than silently ignored
 - when a client lacks the required operator privilege for `KICK`, writable `MODE`, or a topic change blocked by `+t`, the implementation MUST return `482 ERR_CHANOPRIVSNEEDED`
 - when a channel is currently `+m` and a client lacking both `irc.operator` and `irc.voice` attempts channel-targeted `PRIVMSG` or `NOTICE`, the implementation MUST reject that send with `404 ERR_CANNOTSENDTOCHAN`
 - a `closed` / `+i` channel MUST NOT grant new authoritative membership through ordinary local IRC `JOIN` alone without an invite or other authorized `NIP-29` admission path
+- an attempted authoritative `JOIN` whose current IRC user mask matches one current authoritative `+b` entry MUST be rejected with `474 ERR_BANNEDFROMCHAN`
 
 This profile does not yet require one exact IRC numeric or request/response sequence for pending join requests, invite-code workflows, or asynchronous moderation review.
 
@@ -847,9 +865,11 @@ An implementation claiming support for the profile in section 11.1 MUST extend t
 - `353` name-list output for an authoritative channel SHOULD prefix nicks with `@` or `+` according to the current authoritative role mapping defined in section 11.5
 - `MODE <channel>` query replies for an authoritative channel SHOULD reflect the currently active derived channel flags from section 11.5 in a stable deterministic order
 - a successful authoritative change to `+o`, `+v`, `+i`, `+m`, or `+t` MUST be rendered back to joined IRC clients as a corresponding IRC `MODE` line
+- a successful authoritative change to `+b` or `-b` MUST be rendered back to joined IRC clients as a corresponding IRC `MODE` line including the affected ban mask
 - an authoritative membership removal caused by moderator action SHOULD be rendered back to joined IRC clients as IRC `KICK`
 - an authoritative membership removal that is known to correspond to the target user's own accepted leave request SHOULD be rendered as `PART` rather than `KICK`
 - when rendering an authoritative `MODE` or `KICK` line, the prefix nick SHOULD use the current presentational nick of the acting authenticated user when the implementation has one; otherwise the implementation MAY use the server name or another stable implementation-defined authoritative prefix
+- `MODE <channel> +b` list queries SHOULD be rendered using `367 RPL_BANLIST` for each current authoritative mask and `368 RPL_ENDOFBANLIST` at the end of the list
 
 This profile does not require every authoritative moderation-state transition to be re-emitted as a generic Overnet core event. The authoritative source remains the `NIP-29` group state and its accepted control events.
 
@@ -1385,11 +1405,12 @@ An implementation claiming that support MUST, at minimum:
 - support reserved role labels `irc.operator` and `irc.voice` with the semantics defined in section 11.5
 - map authoritative metadata flag `closed` to IRC channel mode `+i`
 - support profile metadata tags `["mode", "moderated"]` and `["mode", "topic-restricted"]` for IRC channel modes `+m` and `+t`
+- support repeated profile metadata tags `["ban", "<irc_mask>"]` for IRC channel mode `+b`
 - accept authoritative `KICK`
-- accept authoritative writable `MODE` for `+o`, `-o`, `+v`, `-v`, `+i`, `-i`, `+m`, `-m`, `+t`, and `-t`
+- accept authoritative writable `MODE` for `+o`, `-o`, `+v`, `-v`, `+i`, `-i`, `+m`, `-m`, `+t`, `-t`, `+b`, and `-b`
 - enforce `+m` against senders lacking both `irc.operator` and `irc.voice`
 - enforce `+t` against topic changes from senders lacking `irc.operator`
-- emit `404` and `482` in the situations defined in section 11.6
+- emit `367`, `368`, `404`, `474`, and `482` in the situations defined in section 11.6
 - render authoritative `MODE` and `KICK` changes back out through the IRC presentation surface according to section 11.7
 
 An implementation MAY additionally claim support for relay-carried private direct messaging through the [Overnet Private Messaging Specification](../private-messaging.md).
@@ -1444,10 +1465,11 @@ The following IRC adapter topics remain open:
 - IRCv3-specific enhancements such as message tags, server-time, and account-aware identity refinement
 - broader network-specific case-mapping negotiation beyond the baseline RFC1459-style comparison defined in section 13.1.3
 - additional user-scoped mode mapping beyond `+o` and `+v`
-- additional authoritative channel-mode mapping beyond `+i`, `+m`, and `+t`
+- additional authoritative channel-mode mapping beyond `+i`, `+m`, `+t`, and `+b`
 - join-request, invite-code, and invite-list UX and numerics for `NIP-29`-backed authoritative channels
 - presentation and visibility mapping for `NIP-29` `private`, `hidden`, and `restricted` semantics
-- ban lists, exception lists, keyed channels, user limits, and other richer IRC channel-control surfaces
+- explicit hosted-channel deletion or tombstoning semantics beyond the persistent-empty-channel default
+- ban exceptions, invite exceptions, keyed channels, user limits, and other richer IRC channel-control surfaces
 - richer server numerics, listing, and channel-bootstrap semantics beyond the minimal `JOIN`/topic/`NAMES` bootstrap defined here
 - richer direct-message session semantics beyond target-directed `PRIVMSG` and `NOTICE` presentation
 - interaction between relay-carried encrypted direct-message transport and richer IRC direct-message session semantics
