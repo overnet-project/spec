@@ -50,6 +50,8 @@ This specification is authoritative for:
 
 Overnet remains Nostr-native.
 
+A conforming Overnet relay may be implemented atop one or more underlying Nostr relays, may embed Nostr relay behavior directly, or may combine both approaches.
+
 In this version:
 
 - event publication uses the NIP-01 `EVENT` message
