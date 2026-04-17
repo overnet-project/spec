@@ -792,7 +792,11 @@ For this profile:
 - a profile-defined metadata tag `["status", "tombstoned"]` marks a hosted authoritative channel as explicitly deleted while retaining its deterministic IRC-channel-to-group binding
 - a tombstoned hosted authoritative channel MUST NOT appear in authoritative hosted-channel discovery or `LIST`
 - a tombstoned hosted authoritative channel MUST reject `JOIN` as nonexistent rather than implicitly recreating the channel
-- once a hosted authoritative channel is tombstoned, the same deterministic binding MUST remain tombstoned until some future explicitly defined reactivation flow changes that state
+- once a hosted authoritative channel is tombstoned, the same deterministic binding MUST remain tombstoned until an explicit reactivation flow changes that state
+- this profile defines reactivation through a profile-defined IRC extension command `OVERNETCHANNEL UNDELETE <channel>`
+- reactivation MUST remove the profile tombstone tag while keeping the same deterministic IRC-channel-to-group binding
+- reactivation MUST restore the previously retained authoritative metadata, role assignments, and durable membership state carried by the authoritative event history rather than requiring a new reseeding flow
+- reactivation MUST clear any transient pre-tombstone present-member state and pending invites; clients MUST `JOIN` again after reactivation
 - this profile does not define implicit reactivation, automatic expiration, or emptiness-driven deletion for hosted authoritative channels
 
 ### 11.5 Canonical IRC Role and Channel-Mode Mapping
@@ -843,6 +847,7 @@ For a channel using the profile in section 11.1, the following IRC commands are 
 - `MODE <channel> +b <mask>`
 - `MODE <channel> -b <mask>`
 - `OVERNETCHANNEL DELETE <channel>`
+- `OVERNETCHANNEL UNDELETE <channel>`
 
 For this profile:
 
@@ -861,6 +866,10 @@ For this profile:
 - `OVERNETCHANNEL DELETE <channel>` MUST update the authoritative group metadata so the bound hosted channel becomes tombstoned according to section 11.4
 - only a current `irc.operator` for the hosted authoritative channel MAY issue `OVERNETCHANNEL DELETE <channel>`
 - after a hosted authoritative channel is tombstoned, `LIST` MUST omit it and `JOIN` MUST fail as though the channel no longer exists
+- `OVERNETCHANNEL UNDELETE <channel>` is a profile-defined IRC extension command, not a standard IRC command
+- `OVERNETCHANNEL UNDELETE <channel>` MUST remove the profile tombstone tag for the bound hosted channel without changing its deterministic binding
+- only an authenticated client whose authoritative pubkey still retains role `irc.operator` for the tombstoned hosted channel MAY issue `OVERNETCHANNEL UNDELETE <channel>`
+- `OVERNETCHANNEL UNDELETE <channel>` MUST restore prior retained metadata and durable membership state while leaving present-member state empty until users `JOIN` again
 - this profile does not define any implicit or automatic recreation of a tombstoned hosted authoritative channel through `JOIN`
 - unsupported writable mode letters MUST be rejected rather than silently ignored
 - when a client lacks the required operator privilege for `KICK`, writable `MODE`, or a topic change blocked by `+t`, the implementation MUST return `482 ERR_CHANOPRIVSNEEDED`
@@ -1480,8 +1489,8 @@ The following IRC adapter topics remain open:
 - additional authoritative channel-mode mapping beyond `+i`, `+m`, `+t`, and `+b`
 - join-request, invite-code, and invite-list UX and numerics for `NIP-29`-backed authoritative channels
 - presentation and visibility mapping for `NIP-29` `private`, `hidden`, and `restricted` semantics
-- explicit reactivation or undeletion semantics for tombstoned hosted authoritative channels
 - ban exceptions, invite exceptions, keyed channels, user limits, and other richer IRC channel-control surfaces
+- recovery or override semantics when no retained operator can issue `OVERNETCHANNEL UNDELETE <channel>`
 - richer server numerics, listing, and channel-bootstrap semantics beyond the minimal `JOIN`/topic/`NAMES` bootstrap defined here
 - richer direct-message session semantics beyond target-directed `PRIVMSG` and `NOTICE` presentation
 - interaction between relay-carried encrypted direct-message transport and richer IRC direct-message session semantics
