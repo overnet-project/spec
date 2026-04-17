@@ -788,7 +788,12 @@ For this profile:
 - the channel-mode mapping defined in section 11.5 MUST be derived from the current authoritative group metadata and role state, not from nick-local heuristics
 - hosted authoritative channels remain persistent authoritative objects even when they currently have no present members
 - a hosted authoritative channel becoming empty MUST NOT implicitly delete that channel, unbind it, or silently reset its authoritative metadata
-- if a deployment wants channel deletion, tombstoning, or expiration semantics, those semantics MUST be explicit and separately defined rather than inferred from emptiness alone
+- this profile defines explicit hosted-channel deletion as a tombstone carried in authoritative group metadata rather than as an effect inferred from emptiness
+- a profile-defined metadata tag `["status", "tombstoned"]` marks a hosted authoritative channel as explicitly deleted while retaining its deterministic IRC-channel-to-group binding
+- a tombstoned hosted authoritative channel MUST NOT appear in authoritative hosted-channel discovery or `LIST`
+- a tombstoned hosted authoritative channel MUST reject `JOIN` as nonexistent rather than implicitly recreating the channel
+- once a hosted authoritative channel is tombstoned, the same deterministic binding MUST remain tombstoned until some future explicitly defined reactivation flow changes that state
+- this profile does not define implicit reactivation, automatic expiration, or emptiness-driven deletion for hosted authoritative channels
 
 ### 11.5 Canonical IRC Role and Channel-Mode Mapping
 
@@ -811,6 +816,7 @@ The following channel-flag mappings are defined by this profile:
 - a profile-defined `39000` metadata tag `["mode", "moderated"]` maps to IRC channel mode `+m`
 - a profile-defined `39000` metadata tag `["mode", "topic-restricted"]` maps to IRC channel mode `+t`
 - a profile-defined repeated metadata tag `["ban", "<irc_mask>"]` maps to the current authoritative IRC ban list exposed through `+b`
+- a profile-defined metadata tag `["status", "tombstoned"]` marks the hosted authoritative channel as explicitly deleted for discovery, `LIST`, and `JOIN` purposes
 
 For this profile:
 
@@ -836,6 +842,7 @@ For a channel using the profile in section 11.1, the following IRC commands are 
 - `MODE <channel> +b`
 - `MODE <channel> +b <mask>`
 - `MODE <channel> -b <mask>`
+- `OVERNETCHANNEL DELETE <channel>`
 
 For this profile:
 
@@ -850,6 +857,11 @@ For this profile:
 - `MODE +b <mask>` MUST add one current authoritative ban entry `["ban", "<mask>"]`
 - `MODE -b <mask>` MUST remove that current authoritative ban entry when present
 - `MODE <channel> +b` with no `<mask>` parameter MUST return the current authoritative ban list rather than mutating channel state
+- `OVERNETCHANNEL DELETE <channel>` is a profile-defined IRC extension command, not a standard IRC command
+- `OVERNETCHANNEL DELETE <channel>` MUST update the authoritative group metadata so the bound hosted channel becomes tombstoned according to section 11.4
+- only a current `irc.operator` for the hosted authoritative channel MAY issue `OVERNETCHANNEL DELETE <channel>`
+- after a hosted authoritative channel is tombstoned, `LIST` MUST omit it and `JOIN` MUST fail as though the channel no longer exists
+- this profile does not define any implicit or automatic recreation of a tombstoned hosted authoritative channel through `JOIN`
 - unsupported writable mode letters MUST be rejected rather than silently ignored
 - when a client lacks the required operator privilege for `KICK`, writable `MODE`, or a topic change blocked by `+t`, the implementation MUST return `482 ERR_CHANOPRIVSNEEDED`
 - when a channel is currently `+m` and a client lacking both `irc.operator` and `irc.voice` attempts channel-targeted `PRIVMSG` or `NOTICE`, the implementation MUST reject that send with `404 ERR_CANNOTSENDTOCHAN`
@@ -1468,7 +1480,7 @@ The following IRC adapter topics remain open:
 - additional authoritative channel-mode mapping beyond `+i`, `+m`, `+t`, and `+b`
 - join-request, invite-code, and invite-list UX and numerics for `NIP-29`-backed authoritative channels
 - presentation and visibility mapping for `NIP-29` `private`, `hidden`, and `restricted` semantics
-- explicit hosted-channel deletion or tombstoning semantics beyond the persistent-empty-channel default
+- explicit reactivation or undeletion semantics for tombstoned hosted authoritative channels
 - ban exceptions, invite exceptions, keyed channels, user limits, and other richer IRC channel-control surfaces
 - richer server numerics, listing, and channel-bootstrap semantics beyond the minimal `JOIN`/topic/`NAMES` bootstrap defined here
 - richer direct-message session semantics beyond target-directed `PRIVMSG` and `NOTICE` presentation
