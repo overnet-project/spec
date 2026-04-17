@@ -23,6 +23,7 @@ This document defines the baseline methods, parameters, results, and service-spe
 - document and object storage
 - append-only event storage
 - subscriptions
+- relay-backed Nostr event publishing, querying, and subscriptions
 - timers and scheduled jobs
 - adapter sessions
 - Overnet event emission
@@ -552,7 +553,7 @@ The baseline `query` object MAY include:
 
 If `query` is an empty object, it MUST mean "all visible baseline subscription items available to this program instance".
 
-For `private_message` subscription items defined by section 10:
+For `private_message` subscription items defined by section 11:
 
 - `query.kind`, when present, MUST match the visible transport event kind
 - `query.overnet_et`, when present, MUST match the logical private-message `private_type`
@@ -618,13 +619,169 @@ When `item_type` is `private_message`, the `data` object MAY additionally includ
 | `decrypted_rumor` | object | no | Runtime-validated decrypted rumor object when the trusted-decrypted candidate form was used |
 | `sender_identity` | string | no | Cleartext routing or presentational sender identity supplied by the ingress boundary |
 
-## 9. Timers and Scheduled Jobs Service
+## 9. Nostr Relay Services
 
 ### 9.1 Overview
 
+The `nostr.*` service family allows a program to use runtime-mediated Nostr relay operations without directly linking to a specific Nostr library.
+
+These methods are transport primitives.
+
+This document does not define application-specific interpretation of returned Nostr events.
+
+Programs and companion specifications that use these methods remain responsible for:
+
+- selecting meaningful relay URLs
+- choosing Nostr filters
+- interpreting returned Nostr event semantics
+
+### 9.2 Shared Filter Rules
+
+Methods in this section that accept `filters` use baseline Nostr filter objects.
+
+For the baseline runtime service contract:
+
+- `filters` MUST be a non-empty array
+- each entry in `filters` MUST be an object
+- the runtime MAY pass additional filter fields through unchanged to the underlying Nostr implementation
+- if `filters` is not a non-empty array of objects, the runtime MUST reject the request with `protocol.invalid_params`
+
+This document does not define the full Nostr filter language.
+
+### 9.3 `nostr.publish_event`
+
+Required permission:
+
+- `nostr.write`
+
+Request parameters:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `relay_url` | string | yes | Target relay URL |
+| `event` | object | yes | Signed Nostr event object to publish |
+| `timeout_ms` | integer | no | Optional positive publish timeout in milliseconds |
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `accepted` | boolean | yes | Whether the relay accepted the publish |
+| `event_id` | string | no | Published event id when available |
+| `message` | string | no | Relay-provided status message when available |
+
+The runtime MUST pass the supplied event object to the underlying Nostr publish operation without adding Overnet-specific semantic interpretation.
+
+### 9.4 `nostr.query_events`
+
+Required permission:
+
+- `nostr.read`
+
+Request parameters:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `relay_url` | string | yes | Target relay URL |
+| `filters` | array | yes | Non-empty array of Nostr filter objects |
+| `timeout_ms` | integer | no | Optional positive query timeout in milliseconds |
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `events` | array | yes | Matching Nostr events returned by the relay query |
+
+The returned `events` array MUST contain full Nostr event objects.
+
+### 9.5 `nostr.open_subscription`
+
+Required permission:
+
+- `nostr.read`
+
+Request parameters:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `subscription_id` | string | yes | Program-chosen subscription identifier unique within the session |
+| `relay_url` | string | yes | Target relay URL |
+| `filters` | array | yes | Non-empty array of Nostr filter objects |
+| `timeout_ms` | integer | no | Optional positive query timeout in milliseconds used for the initial seeded snapshot |
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `subscription_id` | string | yes | Opened subscription identifier |
+| `events` | array | yes | Seeded relay snapshot for the supplied filters at open time |
+
+The runtime MUST treat `subscription_id` as scoped to the calling session.
+
+If a program attempts to open the same `subscription_id` twice in one session, the runtime MUST reject the request.
+
+### 9.6 `nostr.read_subscription_snapshot`
+
+Required permission:
+
+- `nostr.read`
+
+Request parameters:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `subscription_id` | string | yes | Previously opened subscription identifier |
+| `refresh` | boolean or integer | no | When true or `1`, force an immediate relay refresh before returning the snapshot |
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `events` | array | yes | Current cached snapshot for the subscription |
+
+If `refresh` is not supplied, the runtime MAY return the current cached snapshot without forcing a new relay query.
+
+If `subscription_id` is unknown, the runtime MUST reject the request.
+
+### 9.7 `nostr.close_subscription`
+
+Required permission:
+
+- `nostr.read`
+
+Request parameters:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `subscription_id` | string | yes | Previously opened subscription identifier |
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `closed` | boolean | yes | Whether the runtime closed the subscription |
+
+If `subscription_id` is unknown, the runtime MUST reject the request.
+
+### 9.8 `runtime.subscription_event` for Nostr Relay Subscriptions
+
+The runtime uses the baseline `runtime.subscription_event` notification defined in section 8.4 for relay-backed Nostr subscriptions as well.
+
+For relay-backed Nostr subscription updates:
+
+- `params.subscription_id` MUST identify the open `nostr.open_subscription`
+- `params.item_type` MUST be `nostr.event`
+- `params.data` MUST contain the full Nostr event object that triggered the update
+
+Closing a Nostr relay subscription SHOULD discard queued `runtime.subscription_event` notifications for that subscription that have not yet been delivered to the program.
+
+## 10. Timers and Scheduled Jobs Service
+
+### 10.1 Overview
+
 The timers service allows a program to request runtime-managed future callbacks.
 
-### 9.2 `timers.schedule`
+### 10.2 `timers.schedule`
 
 Required permission:
 
@@ -648,7 +805,7 @@ Successful result:
 |---|---|---|---|
 | `timer_id` | string | yes | Scheduled timer identifier |
 
-### 9.3 `timers.cancel`
+### 10.3 `timers.cancel`
 
 Required permission:
 
@@ -660,7 +817,7 @@ Request parameters:
 |---|---|---|---|
 | `timer_id` | string | yes | Scheduled timer identifier |
 
-### 9.4 `runtime.timer_fired` Notification
+### 10.4 `runtime.timer_fired` Notification
 
 The runtime MUST deliver timer firings using a notification with:
 
@@ -674,15 +831,15 @@ Notification parameters:
 | `fired_at` | integer | yes | Unix timestamp of delivery |
 | `payload` | object | no | Timer-associated payload |
 
-## 10. Overnet Data Emission Services
+## 11. Overnet Data Emission Services
 
-### 10.1 Overview
+### 11.1 Overview
 
 Programs emit candidate Overnet data through runtime service methods.
 
 The runtime MUST validate these outputs before accepting them.
 
-### 10.2 `overnet.emit_event`
+### 11.2 `overnet.emit_event`
 
 Required permission:
 
@@ -701,7 +858,7 @@ Successful result:
 | `accepted` | boolean | yes | Runtime acceptance result; MUST be `true` on success |
 | `event_id` | string | no | Runtime-known event identifier when available |
 
-### 10.3 `overnet.emit_state`
+### 11.3 `overnet.emit_state`
 
 Required permission:
 
@@ -720,7 +877,7 @@ Successful result:
 | `accepted` | boolean | yes | Runtime acceptance result; MUST be `true` on success |
 | `event_id` | string | no | Runtime-known event identifier when available |
 
-### 10.4 `overnet.emit_private_message`
+### 11.4 `overnet.emit_private_message`
 
 Required permission:
 
@@ -772,7 +929,7 @@ Successful result:
 | `event_id` | string | no | Runtime-known visible wrapped event identifier when available |
 | `rumor_id` | string | no | Runtime-known decrypted rumor identifier when available |
 
-### 10.5 `overnet.emit_capabilities`
+### 11.5 `overnet.emit_capabilities`
 
 Required permission:
 
@@ -807,9 +964,9 @@ Successful result:
 |---|---|---|---|
 | `accepted` | boolean | yes | Runtime acceptance result; MUST be `true` on success |
 
-## 11. Adapter Session Services
+## 12. Adapter Session Services
 
-### 11.1 Overview
+### 12.1 Overview
 
 The adapter service allows a program to use runtime-managed adapters through explicit adapter sessions.
 
@@ -822,7 +979,7 @@ In the baseline model:
 
 This baseline surface is intentionally narrow. Later revisions MAY define richer adapter session operations.
 
-### 11.2 `adapters.open_session`
+### 12.2 `adapters.open_session`
 
 Required permission:
 
@@ -872,7 +1029,7 @@ Successful result:
 |---|---|---|---|
 | `adapter_session_id` | string | yes | Runtime-assigned adapter session identifier |
 
-### 11.3 `adapters.map_input`
+### 12.3 `adapters.map_input`
 
 Required permission:
 
@@ -899,7 +1056,7 @@ Adapter-defined `input` objects SHOULD NOT contain raw secret plaintext.
 
 If a later adapter companion specification requires secret-bearing operational input beyond session opening, it SHOULD define secret-handle input fields explicitly and MUST require runtime-side secret-handle resolution rather than plaintext transport through ordinary adapter input objects.
 
-### 11.4 `adapters.derive`
+### 12.4 `adapters.derive`
 
 Required permission:
 
@@ -923,7 +1080,7 @@ Successful result:
 
 If `capabilities` is present, each item MUST use the same baseline capability object shape defined for `overnet.emit_capabilities`.
 
-### 11.5 `adapters.close_session`
+### 12.5 `adapters.close_session`
 
 Required permission:
 
@@ -937,9 +1094,9 @@ Request parameters:
 
 Successful result MAY be an empty object.
 
-## 12. Logging and Health Services
+## 13. Logging and Health Services
 
-### 12.1 `program.log` Notification
+### 13.1 `program.log` Notification
 
 Programs SHOULD emit structured logs through a notification with:
 
@@ -953,7 +1110,7 @@ Notification parameters:
 | `message` | string | yes | Human-readable log message |
 | `context` | object | no | Structured contextual data |
 
-### 12.2 `program.health` Notification
+### 13.2 `program.health` Notification
 
 Programs SHOULD emit structured health updates through a notification with:
 
@@ -967,7 +1124,7 @@ Notification parameters:
 | `message` | string | no | Human-readable status explanation |
 | `details` | object | no | Structured health detail |
 
-## 13. Permission Identifiers
+## 14. Permission Identifiers
 
 This version defines the following baseline permission identifiers:
 
@@ -980,6 +1137,8 @@ This version defines the following baseline permission identifiers:
 | `events.read` | Read runtime-managed append-only event streams |
 | `events.append` | Append to runtime-managed event streams |
 | `subscriptions.read` | Open and close runtime-managed subscriptions |
+| `nostr.read` | Query relays and read relay-backed Nostr subscription snapshots |
+| `nostr.write` | Publish Nostr events through runtime-managed relay access |
 | `timers.write` | Schedule and cancel runtime-managed timers |
 | `adapters.use` | Open, use, and close runtime-managed adapter sessions |
 | `overnet.emit_event` | Emit candidate Overnet events |
@@ -987,7 +1146,7 @@ This version defines the following baseline permission identifiers:
 | `overnet.emit_private_message` | Emit encrypted private-message transport items |
 | `overnet.emit_capabilities` | Emit candidate capability advertisements |
 
-## 14. Error Expectations
+## 15. Error Expectations
 
 When rejecting service requests, the runtime SHOULD use the structured error model from the program protocol specification.
 
@@ -1000,7 +1159,7 @@ Typical error codes include:
 
 Service-specific companion specifications MAY define additional structured error detail.
 
-## 15. Open Issues
+## 16. Open Issues
 
 The following areas remain open for later revision:
 
