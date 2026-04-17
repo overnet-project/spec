@@ -810,6 +810,90 @@ For this profile:
 - reactivation MUST clear any transient pre-tombstone present-member state and pending invites; clients MUST `JOIN` again after reactivation
 - this profile does not define implicit reactivation, automatic expiration, or emptiness-driven deletion for hosted authoritative channels
 
+#### 11.4.1 Reusable Adapter Semantic Derive Operations
+
+For implementations that expose this profile through the baseline adapter session model, reusable IRC channel semantics SHOULD be exposed through `adapters.derive` operations rather than reimplemented independently in every IRC-facing program.
+
+For this profile:
+
+- programs SHOULD treat the adapter as the semantic authority for authoritative IRC channel policy and derived IRC-facing channel state
+- adapters SHOULD return symbolic semantic outcomes rather than pre-rendered IRC numerics or wire lines
+- programs remain responsible for IRC command parsing, socket/session management, and mapping symbolic adapter outcomes to IRC numerics and wire output
+
+The following reusable derive operations are defined for this profile:
+
+- `authoritative_channel_view`
+  - input MUST include `network`, `target`, and `authoritative_events`
+  - input MAY include `actor_pubkey`, `actor_mask`, and deployment-defined view options
+  - result MUST expose one stable IRC-facing channel view including:
+    - current `channel_modes`
+    - current `members`
+    - current `present_members`
+    - current `pending_invites`
+    - current `ban_masks` when present
+    - current `topic` and topic actor when present
+    - tombstone state when applicable
+    - actor-specific admission information when actor input was supplied
+
+- `authoritative_join_admission`
+  - input MUST include `network`, `target`, and `authoritative_events`
+  - input MAY include `actor_pubkey` and `actor_mask`
+  - result MUST expose:
+    - `allowed`
+    - symbolic `reason`
+    - whether the actor is already a durable `member`
+    - whether the actor is already `present`
+    - `invite_code` when invite-mediated admission is currently available
+    - `deleted` when the channel is tombstoned
+    - `create_channel` when first authenticated `JOIN` would create a hosted channel under section 11.3
+    - `auth_required` when admission is blocked only because authenticated actor binding is missing
+
+- `authoritative_speak_permission`
+  - input MUST include `network`, `target`, `authoritative_events`, and `actor_pubkey`
+  - result MUST expose `allowed` and symbolic `reason`
+  - the result SHOULD also expose the actor's currently derived channel roles or prefixes when useful for presentation
+
+- `authoritative_topic_permission`
+  - input MUST include `network`, `target`, `authoritative_events`, and `actor_pubkey`
+  - result MUST expose `allowed` and symbolic `reason`
+
+- `authoritative_mode_write_permission`
+  - input MUST include `network`, `target`, `authoritative_events`, `actor_pubkey`, `mode`, and `mode_args`
+  - result MUST expose `allowed` and symbolic `reason`
+  - when `allowed`, the result SHOULD expose enough derived context for subsequent authoritative mapping without independent program-side reconstruction, such as current `group_metadata`, resolved `target_pubkey`, current target roles, or normalized ban mask information
+
+- `authoritative_channel_action_permission`
+  - input MUST include `network`, `target`, `authoritative_events`, `actor_pubkey`, and one action name
+  - this operation is intended for actions such as `kick`, `invite`, `delete`, and `undelete`
+  - result MUST expose `allowed` and symbolic `reason`
+  - when `allowed`, the result SHOULD expose any action-specific resolved context needed for subsequent authoritative mapping, such as `target_pubkey` or current `group_metadata`
+
+- `authoritative_ban_list_view`
+  - input MUST include `network`, `target`, and `authoritative_events`
+  - result MUST expose the current authoritative IRC ban mask list in stable deterministic order
+
+- `authoritative_list_entry_view`
+  - input MUST include `network`, `target`, and `authoritative_events`
+  - result MUST expose whether the authoritative hosted channel is currently visible in `LIST`
+  - when visible, the result SHOULD expose the canonical channel name plus any stable presentational data needed for `LIST`, such as topic text, derived channel modes, and current visible member count
+
+#### 11.4.2 Symbolic Result Conventions
+
+For the reusable semantic operations in section 11.4.1:
+
+- symbolic `reason` values SHOULD be stable adapter-level identifiers rather than human-language error text
+- programs SHOULD map those symbolic identifiers to IRC numerics and messages appropriate for the client surface
+- implementations claiming this profile SHOULD use stable symbolic reasons for at least:
+  - `+i`
+  - `+b`
+  - `+m`
+  - `+t`
+  - `deleted`
+  - `not_operator`
+  - `not_member`
+  - `auth_required`
+  - `state_unavailable`
+
 ### 11.5 Canonical IRC Role and Channel-Mode Mapping
 
 To provide interoperable IRC behavior without defining a second generic moderation model, this profile reserves the following `NIP-29` role labels for IRC presentation:
