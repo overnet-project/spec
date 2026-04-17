@@ -785,6 +785,17 @@ For this profile:
 - relay-signed `39001`, `39002`, and `39003` events are authoritative snapshots of current relay state, but they MUST NOT be interpreted as creating a separate non-`NIP-29` authority model
 - if accepted control-event history and relay-signed snapshots disagree, the implementation MUST prefer the authoritative relay state it actually enforces; a stale or partial snapshot MUST NOT silently widen authority
 - `39002` membership snapshots MAY be partial and therefore MUST NOT be treated as exhaustive unless the implementation explicitly knows they are exhaustive for that deployment
+- when deriving current authoritative state, the implementation MUST process relevant authoritative events in one deterministic total order rather than in relay delivery order or local input-array order
+- the primary ordering key MUST be ascending `created_at`
+- when two events have the same `created_at`, the implementation MUST first preserve explicit per-session causal order when both events carry the same non-empty first `["overnet_authority", "<grant_event_id>"]` tag and both carry valid positive first `["overnet_sequence", "<n>"]` tags; in that case the lower `overnet_sequence` value MUST be applied first
+- when two same-second events are not ordered by the preceding per-session rule, the implementation MUST use the following semantic phase order:
+  - phase 0: `9000`, `9002`, and `9009`
+  - phase 1: `9021`
+  - phase 2: `9001` and `9022`
+  - phase 3: relay-signed snapshots `39000`, `39001`, `39002`, and `39003`
+- this phase order means, for example, that same-second invite or metadata changes apply before same-second join requests across authorities, and same-second removals or leaves apply after same-second joins across authorities
+- when two events remain tied after `created_at`, per-session causal order, and semantic phase, the implementation MUST break the tie by ascending lowercase Nostr event id
+- authoritative derivation MUST NOT use grant id lexicographic order, actor nick order, or raw local input position as a semantic tie-break
 - the channel-mode mapping defined in section 11.5 MUST be derived from the current authoritative group metadata and role state, not from nick-local heuristics
 - hosted authoritative channels remain persistent authoritative objects even when they currently have no present members
 - a hosted authoritative channel becoming empty MUST NOT implicitly delete that channel, unbind it, or silently reset its authoritative metadata
