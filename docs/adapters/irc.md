@@ -923,6 +923,9 @@ The following channel-flag mappings are defined by this profile:
 - a profile-defined metadata tag `["key", "<opaque_key>"]` maps to IRC channel mode `+k`
 - a profile-defined metadata tag `["limit", "<positive_integer>"]` maps to IRC channel mode `+l`
 - a profile-defined metadata tag `["status", "tombstoned"]` marks the hosted authoritative channel as explicitly deleted for discovery, `LIST`, and `JOIN` purposes
+- authoritative `NIP-29` metadata flag `private` maps to profile-defined `LIST` redaction for non-members rather than to a writable IRC mode letter
+- authoritative `NIP-29` metadata flag `hidden` maps to profile-defined `LIST` omission for non-members rather than to a writable IRC mode letter
+- authoritative `NIP-29` metadata flag `restricted` maps to request-mediated admission for closed hosted channels and does not by itself suppress `LIST`
 
 For this profile:
 
@@ -935,7 +938,11 @@ For this profile:
 - `MODE <channel>` replies for authoritative hosted channels MUST include `+k` and `+l` arguments when those modes are present
 - `MODE <channel> +e` with no mask argument MUST render the authoritative exception list through `348`/`349`
 - `MODE <channel> +I` with no mask argument MUST render the authoritative invite-exception list through `346`/`347`
-- this profile still does not define authoritative mappings for secret/private visibility or other IRC channel modes beyond `+o`, `+v`, `+i`, `+m`, `+t`, `+b`, `+e`, `+I`, `+k`, and `+l`
+- for a `private` hosted channel, non-members MUST still see the channel in `LIST`, but the presented visible-user count MUST be `0` and the presented topic text MUST be empty
+- for a `hidden` hosted channel, non-members MUST NOT see the channel in `LIST`
+- current durable members of a `private` or `hidden` hosted channel MAY still see the ordinary authoritative `LIST` entry for that channel
+- `restricted` hosted channels remain `LIST`-visible unless another visibility rule suppresses them
+- this profile still does not define authoritative mappings for secret/private IRC mode letters or other IRC channel modes beyond `+o`, `+v`, `+i`, `+m`, `+t`, `+b`, `+e`, `+I`, `+k`, and `+l`
 
 ### 11.6 Authoritative Command Mapping and Enforcement
 
@@ -967,6 +974,8 @@ For a channel using the profile in section 11.1, the following IRC commands are 
 - `MODE <channel> -l`
 - `OVERNETCHANNEL DELETE <channel>`
 - `OVERNETCHANNEL UNDELETE <channel>`
+- `OVERNETCHANNEL INVITES <channel>`
+- `OVERNETCHANNEL REQUESTS <channel>`
 
 For this profile:
 
@@ -981,6 +990,9 @@ For this profile:
 - `MODE +b <mask>` MUST add one current authoritative ban entry `["ban", "<mask>"]`
 - `MODE -b <mask>` MUST remove that current authoritative ban entry when present
 - `MODE <channel> +b` with no `<mask>` parameter MUST return the current authoritative ban list rather than mutating channel state
+- when a hosted channel is both `closed` and `restricted`, an authenticated client that is not already admitted by current membership, invite, or invite-exception SHOULD have `JOIN` interpreted as a request-mediated `9021` join request rather than as an ordinary `+i` denial
+- that request-mediated `JOIN` MUST NOT emit ordinary IRC join bootstrap until the actor is separately admitted
+- an implementation SHOULD avoid accumulating duplicate pending join requests for the same pubkey and hosted channel
 - `OVERNETCHANNEL DELETE <channel>` is a profile-defined IRC extension command, not a standard IRC command
 - `OVERNETCHANNEL DELETE <channel>` MUST update the authoritative group metadata so the bound hosted channel becomes tombstoned according to section 11.4
 - only a current `irc.operator` for the hosted authoritative channel MAY issue `OVERNETCHANNEL DELETE <channel>`
@@ -990,13 +1002,21 @@ For this profile:
 - only an authenticated client whose authoritative pubkey still retains role `irc.operator` for the tombstoned hosted channel MAY issue `OVERNETCHANNEL UNDELETE <channel>`
 - `OVERNETCHANNEL UNDELETE <channel>` MUST restore prior retained metadata and durable membership state while leaving present-member state empty until users `JOIN` again
 - this profile does not define any implicit or automatic recreation of a tombstoned hosted authoritative channel through `JOIN`
+- `OVERNETCHANNEL INVITES <channel>` MUST return the current targeted authoritative pending-invite set using:
+  - one or more `336 <nick> <channel> <target_pubkey> <invite_code>` lines
+  - one terminating `337 <nick> <channel> :End of authoritative invite list` line
+- only a current `irc.operator` for the hosted authoritative channel MAY issue `OVERNETCHANNEL INVITES <channel>`
+- `OVERNETCHANNEL REQUESTS <channel>` MUST return the current pending authoritative join-request set using:
+  - one or more `338 <nick> <channel> <requester_pubkey> <actor_mask_or_*>` lines
+  - one terminating `339 <nick> <channel> :End of authoritative join request list` line
+- only a current `irc.operator` for the hosted authoritative channel MAY issue `OVERNETCHANNEL REQUESTS <channel>`
 - unsupported writable mode letters MUST be rejected rather than silently ignored
 - when a client lacks the required operator privilege for `KICK`, writable `MODE`, or a topic change blocked by `+t`, the implementation MUST return `482 ERR_CHANOPRIVSNEEDED`
 - when a channel is currently `+m` and a client lacking both `irc.operator` and `irc.voice` attempts channel-targeted `PRIVMSG` or `NOTICE`, the implementation MUST reject that send with `404 ERR_CANNOTSENDTOCHAN`
 - a `closed` / `+i` channel MUST NOT grant new authoritative membership through ordinary local IRC `JOIN` alone without an invite or other authorized `NIP-29` admission path
 - an attempted authoritative `JOIN` whose current IRC user mask matches one current authoritative `+b` entry MUST be rejected with `474 ERR_BANNEDFROMCHAN`
 
-This profile does not yet require one exact IRC numeric or request/response sequence for pending join requests, invite-code workflows, or asynchronous moderation review.
+This profile does not yet require one exact IRC numeric for initial join-request submission; an implementation MAY use a server notice or another stable implementation-defined acknowledgement path.
 
 ### 11.7 Authoritative IRC Presentation Extensions
 
@@ -1010,6 +1030,10 @@ An implementation claiming support for the profile in section 11.1 MUST extend t
 - an authoritative membership removal that is known to correspond to the target user's own accepted leave request SHOULD be rendered as `PART` rather than `KICK`
 - when rendering an authoritative `MODE` or `KICK` line, the prefix nick SHOULD use the current presentational nick of the acting authenticated user when the implementation has one; otherwise the implementation MAY use the server name or another stable implementation-defined authoritative prefix
 - `MODE <channel> +b` list queries SHOULD be rendered using `367 RPL_BANLIST` for each current authoritative mask and `368 RPL_ENDOFBANLIST` at the end of the list
+- `LIST` for authoritative hosted channels SHOULD apply the `private`, `hidden`, and `restricted` presentation rules defined in section 11.5
+- successful request-mediated `JOIN` submission for a `restricted` hosted channel SHOULD be acknowledged through a stable client-visible notice path
+- `OVERNETCHANNEL INVITES <channel>` SHOULD be rendered using the `336`/`337` lines defined in section 11.6
+- `OVERNETCHANNEL REQUESTS <channel>` SHOULD be rendered using the `338`/`339` lines defined in section 11.6
 
 This profile does not require every authoritative moderation-state transition to be re-emitted as a generic Overnet core event. The authoritative source remains the `NIP-29` group state and its accepted control events.
 
@@ -1544,13 +1568,15 @@ An implementation claiming that support MUST, at minimum:
 - derive authoritative membership, roles, and channel-mode state from the authoritative `NIP-29` group state rather than from nick-local heuristics
 - support reserved role labels `irc.operator` and `irc.voice` with the semantics defined in section 11.5
 - map authoritative metadata flag `closed` to IRC channel mode `+i`
+- apply the authoritative `private`, `hidden`, and `restricted` visibility and request-mediated-admission rules defined in section 11.5
 - support profile metadata tags `["mode", "moderated"]` and `["mode", "topic-restricted"]` for IRC channel modes `+m` and `+t`
 - support repeated profile metadata tags `["ban", "<irc_mask>"]` for IRC channel mode `+b`
 - accept authoritative `KICK`
 - accept authoritative writable `MODE` for `+o`, `-o`, `+v`, `-v`, `+i`, `-i`, `+m`, `-m`, `+t`, `-t`, `+b`, and `-b`
+- accept profile-defined `OVERNETCHANNEL INVITES <channel>` and `OVERNETCHANNEL REQUESTS <channel>`
 - enforce `+m` against senders lacking both `irc.operator` and `irc.voice`
 - enforce `+t` against topic changes from senders lacking `irc.operator`
-- emit `367`, `368`, `404`, `474`, and `482` in the situations defined in section 11.6
+- emit `336`, `337`, `338`, `339`, `367`, `368`, `404`, `474`, and `482` in the situations defined in section 11.6
 - render authoritative `MODE` and `KICK` changes back out through the IRC presentation surface according to section 11.7
 
 An implementation MAY additionally claim support for relay-carried private direct messaging through the [Overnet Private Messaging Specification](../private-messaging.md).
@@ -1606,8 +1632,7 @@ The following IRC adapter topics remain open:
 - broader network-specific case-mapping negotiation beyond the baseline RFC1459-style comparison defined in section 13.1.3
 - additional user-scoped mode mapping beyond `+o` and `+v`
 - additional authoritative channel-mode mapping beyond `+i`, `+m`, `+t`, `+b`, `+e`, `+I`, `+k`, and `+l`
-- join-request, invite-code, and invite-list UX and numerics for `NIP-29`-backed authoritative channels
-- presentation and visibility mapping for `NIP-29` `private`, `hidden`, and `restricted` semantics
+- richer approval UX for pending join requests whose requesting pubkey does not currently correspond to a locally connected IRC nick
 - recovery or override semantics when no retained operator can issue `OVERNETCHANNEL UNDELETE <channel>`
 - richer server numerics, listing, and channel-bootstrap semantics beyond the minimal `JOIN`/topic/`NAMES` bootstrap defined here
 - richer direct-message session semantics beyond target-directed `PRIVMSG` and `NOTICE` presentation
