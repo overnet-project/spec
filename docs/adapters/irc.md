@@ -796,6 +796,10 @@ For this profile:
 - this phase order means, for example, that same-second invite or metadata changes apply before same-second join requests across authorities, and same-second removals or leaves apply after same-second joins across authorities
 - when two events remain tied after `created_at`, per-session causal order, and semantic phase, the implementation MUST break the tie by ascending lowercase Nostr event id
 - authoritative derivation MUST NOT use grant id lexicographic order, actor nick order, or raw local input position as a semantic tie-break
+- authoritative recovery across relay reconnect, replay, duplicate delivery, and process restart MUST be idempotent
+- if an implementation has already observed accepted authoritative events for a known hosted channel, a stale empty relay refresh or stale subset of relay history MUST NOT erase that previously observed authoritative state
+- a restarted implementation MAY rebuild authoritative channel state from replayed relay history or persisted relay snapshots, but the resulting derived state MUST be equivalent to the state that would have been derived from the same accepted authoritative events before restart
+- replayed or duplicate authoritative events MUST NOT cause duplicate user-visible IRC effects for already applied state, including duplicate retained `JOIN` bootstrap, duplicate topic replay, or duplicate ban-list entries
 - the channel-mode mapping defined in section 11.5 MUST be derived from the current authoritative group metadata and role state, not from nick-local heuristics
 - hosted authoritative channels remain persistent authoritative objects even when they currently have no present members
 - a hosted authoritative channel becoming empty MUST NOT implicitly delete that channel, unbind it, or silently reset its authoritative metadata

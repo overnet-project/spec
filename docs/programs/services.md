@@ -720,6 +720,13 @@ The runtime MUST treat `subscription_id` as scoped to the calling session.
 
 If a program attempts to open the same `subscription_id` twice in one session, the runtime MUST reject the request.
 
+For relay-backed Nostr subscriptions:
+
+- the runtime MUST treat the cached subscription snapshot as the append-only set of Nostr events observed for that open subscription, deduplicated by Nostr event id
+- if a relay disconnects, restarts, resyncs, or replays prior history, the runtime MUST merge newly observed events into that cached snapshot by event id rather than replacing the snapshot with a stale subset
+- duplicate relay delivery and replay of already-seen events are allowed; the runtime MUST NOT queue a second `runtime.subscription_event` notification for an event id already observed on that open subscription
+- when two subscription opens observe the same relay history, including history replayed after relay restart, they MUST produce equivalent seeded `events` snapshots modulo ordering of semantically tied Nostr events returned by the relay
+
 ### 9.6 `nostr.read_subscription_snapshot`
 
 Required permission:
@@ -742,6 +749,13 @@ Successful result:
 If `refresh` is not supplied, the runtime MAY return the current cached snapshot without forcing a new relay query.
 
 If `subscription_id` is unknown, the runtime MUST reject the request.
+
+When `refresh` is supplied:
+
+- the runtime MUST merge the refreshed relay result into the existing cached snapshot by Nostr event id
+- a refresh that fails, returns an empty result, or returns a stale subset of previously observed relay history MUST NOT erase already observed events from the cached snapshot
+- a runtime MAY retain previously observed events even when the relay temporarily returns no matching events, because relay restart, replay lag, or partial resync can transiently under-report history
+- repeated refreshes over unchanged relay history MUST be idempotent and MUST NOT queue new `runtime.subscription_event` notifications for already observed event ids
 
 ### 9.7 `nostr.close_subscription`
 
@@ -772,6 +786,12 @@ For relay-backed Nostr subscription updates:
 - `params.subscription_id` MUST identify the open `nostr.open_subscription`
 - `params.item_type` MUST be `nostr.event`
 - `params.data` MUST contain the full Nostr event object that triggered the update
+
+For relay-backed Nostr subscriptions, a runtime MUST treat replayed or duplicate relay delivery as idempotent:
+
+- the same event id MAY be observed multiple times across reconnect, relay restart, or resubscription
+- the runtime MUST NOT surface those duplicates as repeated `runtime.subscription_event` notifications for the same open subscription
+- a newly opened subscription after relay restart MAY legitimately receive those same events again in its seeded snapshot, because that is a new subscription state rather than a duplicate notification on an existing one
 
 Closing a Nostr relay subscription SHOULD discard queued `runtime.subscription_event` notifications for that subscription that have not yet been delivered to the program.
 
