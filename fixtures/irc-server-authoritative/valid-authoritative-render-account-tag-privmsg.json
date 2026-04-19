@@ -1,0 +1,47 @@
+{
+  "description": "A client with account-tag receives the authenticated sender account on rendered channel PRIVMSG lines.",
+  "input": {
+    "server_view": {
+      "network": "irc.example.test"
+    },
+    "client": {
+      "registered": true,
+      "joined_channels": [
+        "#ops"
+      ],
+      "capabilities": [
+        "message-tags",
+        "account-tag"
+      ]
+    },
+    "known_nicks": [
+      {
+        "nick": "bob",
+        "authority_pubkey": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ],
+    "item": {
+      "item_type": "event",
+      "data": {
+        "id": "1111111111111111111111111111111111111111111111111111111111111111",
+        "pubkey": "2222222222222222222222222222222222222222222222222222222222222222",
+        "created_at": 1744300860,
+        "kind": 7800,
+        "tags": [
+          ["overnet_v", "0.1.0"],
+          ["overnet_et", "chat.message"],
+          ["overnet_ot", "chat.channel"],
+          ["overnet_oid", "irc:irc.example.test:#ops"]
+        ],
+        "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.example.test/#ops\",\"external_identity\":\"bob\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"text\":\"Hello from IRC!\"}}",
+        "sig": "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
+      }
+    }
+  },
+  "expected": {
+    "rendered": true,
+    "decorated_lines": [
+      "@account=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb :bob PRIVMSG #ops :Hello from IRC!"
+    ]
+  }
+}

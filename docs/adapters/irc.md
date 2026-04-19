@@ -1326,6 +1326,40 @@ This baseline does not require support for:
 - hopcount semantics beyond the literal `0` used in this section
 - additional `WHOIS` numerics such as channel membership, idle time, account status, secure transport, or operator state
 
+#### 13.1.6.1 Optional Account-Aware Identity Compatibility
+
+An implementation claiming support for the authoritative profile in section 11.1 MAY expose the authenticated authoritative pubkey binding as IRC-facing account identity.
+
+When this optional account-aware identity surface is implemented:
+
+- the visible IRC account name MUST equal the currently bound authoritative pubkey hex string for that client connection
+- when no authoritative pubkey is currently bound for that client connection, the IRC account state MUST be treated as logged out
+- a successful `OVERNETAUTH AUTH` or SASL `NOSTR` authentication MUST update that IRC account state for the client connection without inventing any separate account namespace
+
+For IRCv3 capability negotiation:
+
+- the implementation MAY advertise `account-tag`
+- the implementation MAY advertise `account-notify`
+- if `account-tag` is acknowledged, the implementation MUST also behave as if `message-tags` were enabled for that client connection
+
+For `account-tag`:
+
+- when a client connection has enabled both `message-tags` and `account-tag`, the implementation MUST attach IRCv3 message tag `account=<pubkey_hex>` to commands sent by currently authenticated IRC clients
+- when the sending IRC client is not currently authenticated, the implementation MUST NOT attach the `account` tag
+
+For `account-notify`:
+
+- when a client connection has enabled `account-notify`, the implementation MUST emit `ACCOUNT` updates for currently visible clients on shared channels, including the client's own later account changes
+- when an authenticated IRC client binds a new authoritative pubkey, the implementation MUST emit:
+  - `:<nick>!<username>@<host> ACCOUNT <pubkey_hex>`
+- when an authenticated IRC client clears its authoritative binding, the implementation MUST emit:
+  - `:<nick>!<username>@<host> ACCOUNT *`
+
+For `WHOIS`:
+
+- if the queried nick currently has an authenticated authoritative pubkey bound, the implementation MAY additionally emit:
+  - `:<server_name> 330 <requesting_nick> <display_nick> <pubkey_hex> :is logged in as`
+
 #### 13.1.7 Minimal LUSERS Compatibility
 
 After registration completes, an implementation claiming support for this section MUST accept:
@@ -1626,9 +1660,8 @@ An implementation claiming support for that optional server-side slice MUST, at 
 
 The following IRC adapter topics remain open:
 
-- account-aware identity mapping beyond nicknames
 - richer compatibility guidance for IRC clients that do not support custom SASL mechanisms such as `NOSTR`
-- IRCv3-specific enhancements such as message tags, server-time, and account-aware identity refinement
+- IRCv3-specific enhancements beyond `account-tag`, `account-notify`, `message-tags`, `server-time`, and basic account-aware identity refinement
 - broader network-specific case-mapping negotiation beyond the baseline RFC1459-style comparison defined in section 13.1.3
 - additional user-scoped mode mapping beyond `+o` and `+v`
 - additional authoritative channel-mode mapping beyond `+i`, `+m`, `+t`, `+b`, `+e`, `+I`, `+k`, and `+l`

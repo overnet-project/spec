@@ -1,0 +1,43 @@
+{
+  "description": "A client with account-notify and account-tag receives tagged ACCOUNT logout updates for shared users.",
+  "input": {
+    "server_view": {
+      "adapter_config": {
+        "authority_profile": "nip29"
+      },
+      "channel_members": {
+        "#ops": [
+          "alice",
+          "bob"
+        ]
+      }
+    },
+    "client": {
+      "registered": true,
+      "nick": "alice",
+      "capabilities": [
+        "message-tags",
+        "account-tag",
+        "account-notify"
+      ],
+      "joined_channels": [
+        "#ops"
+      ]
+    },
+    "known_nicks": [
+      {
+        "nick": "bob",
+        "authority_pubkey": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ],
+    "account_update": {
+      "nick": "bob",
+      "account": null
+    }
+  },
+  "expected": {
+    "lines": [
+      "@account=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb :bob!bob@127.0.0.1 ACCOUNT *"
+    ]
+  }
+}

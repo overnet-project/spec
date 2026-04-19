@@ -1,0 +1,25 @@
+{
+  "description": "An authoritative-profile server advertises and ACKs account-tag and account-notify.",
+  "input": {
+    "server_view": {
+      "server_name": "overnet.irc.local",
+      "use_server_capabilities": true,
+      "adapter_config": {
+        "authority_profile": "nip29"
+      }
+    },
+    "client": {
+      "registered": false
+    },
+    "commands": [
+      "CAP LS 302",
+      "CAP REQ :account-tag account-notify"
+    ]
+  },
+  "expected": {
+    "lines": [
+      ":overnet.irc.local CAP * LS :message-tags server-time overnet-e2ee account-tag account-notify sasl",
+      ":overnet.irc.local CAP * ACK :account-tag account-notify"
+    ]
+  }
+}
