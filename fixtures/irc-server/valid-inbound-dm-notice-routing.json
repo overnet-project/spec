@@ -9,6 +9,9 @@
       "nick": "bob",
       "joined_channels": []
     },
+    "known_nicks": [
+      "alice"
+    ],
     "line": "NOTICE alice :private notice"
   },
   "expected": {

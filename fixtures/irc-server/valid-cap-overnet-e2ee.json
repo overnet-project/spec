@@ -1,6 +1,11 @@
 {
   "description": "A server claiming support for the optional endpoint-blind E2E profile advertises overnet-e2ee in CAP LS and ACKs CAP REQ for that token.",
   "input": {
+    "server_view": {
+      "supported_capabilities": [
+        "overnet-e2ee"
+      ]
+    },
     "client": {
       "registered": false
     },

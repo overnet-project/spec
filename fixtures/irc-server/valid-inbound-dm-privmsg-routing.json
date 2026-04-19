@@ -9,6 +9,9 @@
       "nick": "alice",
       "joined_channels": []
     },
+    "known_nicks": [
+      "bob"
+    ],
     "line": "PRIVMSG bob :hello in private"
   },
   "expected": {

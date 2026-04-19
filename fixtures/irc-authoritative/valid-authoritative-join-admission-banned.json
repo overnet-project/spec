@@ -1,0 +1,34 @@
+{
+  "description": "A matching IRC ban mask denies authoritative join admission with symbolic +b.",
+  "input": {
+    "operation": "authoritative_join_admission",
+    "session_config": {
+      "authority_profile": "nip29",
+      "group_host": "groups.example.test"
+    },
+    "network": "irc.example.test",
+    "target": "#ops",
+    "actor_pubkey": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "actor_mask": "bob!u@127.0.0.1",
+    "authoritative_scenario": {
+      "events": [
+        {
+          "type": "metadata",
+          "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "created_at": 1,
+          "closed": true,
+          "ban_masks": [
+            "*!*@127.0.0.1"
+          ]
+        }
+      ]
+    }
+  },
+  "expected": {
+    "valid": true,
+    "assertions": [
+      { "path": "admission.0.allowed", "equals": false },
+      { "path": "admission.0.reason", "equals": "+b" }
+    ]
+  }
+}

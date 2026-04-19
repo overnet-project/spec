@@ -1,0 +1,44 @@
+{
+  "description": "An active hosted channel appears in LIST with the current visible-user count and topic.",
+  "input": {
+    "operation": "authoritative_list_entry_view",
+    "session_config": {
+      "authority_profile": "nip29",
+      "group_host": "groups.example.test"
+    },
+    "network": "irc.example.test",
+    "target": "#ops",
+    "authoritative_scenario": {
+      "events": [
+        {
+          "type": "metadata",
+          "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "created_at": 1,
+          "topic": "Ops room"
+        },
+        {
+          "type": "put_user",
+          "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "created_at": 2,
+          "target_pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "roles": [
+            "irc.operator"
+          ]
+        },
+        {
+          "type": "join",
+          "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "created_at": 3
+        }
+      ]
+    }
+  },
+  "expected": {
+    "valid": true,
+    "assertions": [
+      { "path": "view.0.visible_in_list", "equals": true },
+      { "path": "view.0.visible_users", "equals": 1 },
+      { "path": "view.0.topic", "equals": "Ops room" }
+    ]
+  }
+}

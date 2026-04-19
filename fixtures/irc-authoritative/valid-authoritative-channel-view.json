@@ -1,0 +1,79 @@
+{
+  "description": "A hosted channel view exposes modes, topic, bans, supported roles, and presentational prefixes derived from authoritative NIP-29 events.",
+  "input": {
+    "operation": "authoritative_channel_view",
+    "session_config": {
+      "authority_profile": "nip29",
+      "group_host": "groups.example.test"
+    },
+    "network": "irc.example.test",
+    "target": "#ops",
+    "authoritative_scenario": {
+      "events": [
+        {
+          "type": "metadata",
+          "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "created_at": 1,
+          "closed": true,
+          "moderated": true,
+          "topic_restricted": true,
+          "topic": "Ops room",
+          "ban_masks": [
+            "*!*@127.0.0.1"
+          ]
+        },
+        {
+          "type": "roles",
+          "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "created_at": 2,
+          "roles": [
+            { "name": "irc.operator" },
+            { "name": "irc.voice" }
+          ]
+        },
+        {
+          "type": "put_user",
+          "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "created_at": 3,
+          "target_pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "roles": [
+            "irc.operator"
+          ]
+        },
+        {
+          "type": "put_user",
+          "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "created_at": 4,
+          "target_pubkey": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "roles": [
+            "irc.voice"
+          ]
+        },
+        {
+          "type": "join",
+          "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "created_at": 5
+        },
+        {
+          "type": "join",
+          "pubkey": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "created_at": 6
+        }
+      ]
+    }
+  },
+  "expected": {
+    "valid": true,
+    "assertions": [
+      { "path": "view.0.channel_modes", "equals": "+imnt" },
+      { "path": "view.0.topic", "equals": "Ops room" },
+      { "path": "view.0.ban_masks.0", "equals": "*!*@127.0.0.1" },
+      { "path": "view.0.supported_roles.0", "equals": "irc.operator" },
+      { "path": "view.0.supported_roles.1", "equals": "irc.voice" },
+      { "path": "view.0.members.0.pubkey", "equals": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+      { "path": "view.0.members.0.presentational_prefix", "equals": "@" },
+      { "path": "view.0.present_members.1.pubkey", "equals": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" },
+      { "path": "view.0.present_members.1.presentational_prefix", "equals": "+" }
+    ]
+  }
+}
