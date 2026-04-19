@@ -886,6 +886,8 @@ For the reusable semantic operations in section 11.4.1:
 - implementations claiming this profile SHOULD use stable symbolic reasons for at least:
   - `+i`
   - `+b`
+  - `+k`
+  - `+l`
   - `+m`
   - `+t`
   - `deleted`
@@ -907,6 +909,7 @@ For this profile:
 - `irc.voice` maps to IRC channel privilege `+v` and presentational prefix `+`
 - if a user has both roles, `@` takes precedence over `+` in IRC presentational contexts such as `353`
 - `irc.operator` grants authority to issue `KICK`, to manage `+o`, `+v`, `+i`, `+m`, and `+t`, and to set the channel topic even when `+t` is active
+- `irc.operator` also grants authority to manage `+b`, `+e`, `+I`, `+k`, and `+l`
 - `irc.voice` grants authority to speak in a `+m` channel but does not by itself grant moderation authority
 
 The following channel-flag mappings are defined by this profile:
@@ -915,13 +918,24 @@ The following channel-flag mappings are defined by this profile:
 - a profile-defined `39000` metadata tag `["mode", "moderated"]` maps to IRC channel mode `+m`
 - a profile-defined `39000` metadata tag `["mode", "topic-restricted"]` maps to IRC channel mode `+t`
 - a profile-defined repeated metadata tag `["ban", "<irc_mask>"]` maps to the current authoritative IRC ban list exposed through `+b`
+- a profile-defined repeated metadata tag `["except", "<irc_mask>"]` maps to the current authoritative IRC ban-exception list exposed through `+e`
+- a profile-defined repeated metadata tag `["invite-except", "<irc_mask>"]` maps to the current authoritative IRC invite-exception list exposed through `+I`
+- a profile-defined metadata tag `["key", "<opaque_key>"]` maps to IRC channel mode `+k`
+- a profile-defined metadata tag `["limit", "<positive_integer>"]` maps to IRC channel mode `+l`
 - a profile-defined metadata tag `["status", "tombstoned"]` marks the hosted authoritative channel as explicitly deleted for discovery, `LIST`, and `JOIN` purposes
 
 For this profile:
 
 - `+n` is treated as an implicit presentational mode for authoritative hosted channels; an implementation MAY include it in `MODE <channel>` replies, but this profile does not define a writable toggle for `+n`
 - this profile defines only mask-based `+b` bans
-- this profile does not define authoritative mappings for ban exceptions, invite exceptions, keys, user limits, secret/private visibility, or other IRC channel modes beyond `+o`, `+v`, `+i`, `+m`, `+t`, and `+b`
+- a matching `+e` mask overrides an otherwise matching `+b` mask for IRC `JOIN` admission
+- a matching `+I` mask overrides `+i` admission denial for IRC `JOIN`
+- a configured `+k` key denies `JOIN` with symbolic reason `+k` unless the supplied join key matches
+- a configured `+l` limit denies `JOIN` with symbolic reason `+l` when the current authoritative present-member count already meets the limit and the joining actor is not already a durable member
+- `MODE <channel>` replies for authoritative hosted channels MUST include `+k` and `+l` arguments when those modes are present
+- `MODE <channel> +e` with no mask argument MUST render the authoritative exception list through `348`/`349`
+- `MODE <channel> +I` with no mask argument MUST render the authoritative invite-exception list through `346`/`347`
+- this profile still does not define authoritative mappings for secret/private visibility or other IRC channel modes beyond `+o`, `+v`, `+i`, `+m`, `+t`, `+b`, `+e`, `+I`, `+k`, and `+l`
 
 ### 11.6 Authoritative Command Mapping and Enforcement
 
@@ -941,6 +955,16 @@ For a channel using the profile in section 11.1, the following IRC commands are 
 - `MODE <channel> +b`
 - `MODE <channel> +b <mask>`
 - `MODE <channel> -b <mask>`
+- `MODE <channel> +e`
+- `MODE <channel> +e <mask>`
+- `MODE <channel> -e <mask>`
+- `MODE <channel> +I`
+- `MODE <channel> +I <mask>`
+- `MODE <channel> -I <mask>`
+- `MODE <channel> +k <key>`
+- `MODE <channel> -k`
+- `MODE <channel> +l <count>`
+- `MODE <channel> -l`
 - `OVERNETCHANNEL DELETE <channel>`
 - `OVERNETCHANNEL UNDELETE <channel>`
 
@@ -1581,10 +1605,9 @@ The following IRC adapter topics remain open:
 - IRCv3-specific enhancements such as message tags, server-time, and account-aware identity refinement
 - broader network-specific case-mapping negotiation beyond the baseline RFC1459-style comparison defined in section 13.1.3
 - additional user-scoped mode mapping beyond `+o` and `+v`
-- additional authoritative channel-mode mapping beyond `+i`, `+m`, `+t`, and `+b`
+- additional authoritative channel-mode mapping beyond `+i`, `+m`, `+t`, `+b`, `+e`, `+I`, `+k`, and `+l`
 - join-request, invite-code, and invite-list UX and numerics for `NIP-29`-backed authoritative channels
 - presentation and visibility mapping for `NIP-29` `private`, `hidden`, and `restricted` semantics
-- ban exceptions, invite exceptions, keyed channels, user limits, and other richer IRC channel-control surfaces
 - recovery or override semantics when no retained operator can issue `OVERNETCHANNEL UNDELETE <channel>`
 - richer server numerics, listing, and channel-bootstrap semantics beyond the minimal `JOIN`/topic/`NAMES` bootstrap defined here
 - richer direct-message session semantics beyond target-directed `PRIVMSG` and `NOTICE` presentation

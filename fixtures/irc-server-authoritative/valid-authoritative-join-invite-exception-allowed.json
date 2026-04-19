@@ -1,0 +1,67 @@
+{
+  "description": "A matching authoritative +I invite exception allows JOIN on a closed hosted channel without an explicit invite code.",
+  "input": {
+    "server_view": {
+      "network": "irc.example.test",
+      "server_name": "overnet.irc.local",
+      "adapter_config": {
+        "authority_profile": "nip29",
+        "group_host": "groups.example.test"
+      }
+    },
+    "client": {
+      "registered": true,
+      "nick": "bob",
+      "username": "u",
+      "peerhost": "invited.example",
+      "authority_pubkey": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "visible_channel_members": [
+      {
+        "channel": "#ops",
+        "nick": "alice",
+        "authority_pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "authoritative_channels": {
+      "#ops": {
+        "scenario": {
+          "events": [
+            {
+              "type": "metadata",
+              "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "created_at": 1,
+              "closed": true,
+              "invite_exception_masks": [
+                "*!*@invited.example"
+              ]
+            },
+            {
+              "type": "put_user",
+              "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "created_at": 2,
+              "target_pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "roles": [
+                "irc.operator"
+              ]
+            },
+            {
+              "type": "join",
+              "pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "created_at": 3
+            }
+          ]
+        },
+        "discovered": true
+      }
+    },
+    "line": "JOIN #ops"
+  },
+  "expected": {
+    "lines": [
+      ":bob JOIN #ops",
+      ":overnet.irc.local 353 bob = #ops :@alice bob",
+      ":overnet.irc.local 366 bob #ops :End of /NAMES list."
+    ]
+  }
+}
