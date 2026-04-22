@@ -1,5 +1,5 @@
 {
-  "description": "A first-contact IRC auth request without a stable service identity uses provisional exact locator trust and returns one signed Nostr auth event artifact.",
+  "description": "A first-contact request with a stable presented service identity succeeds interactively and reports first_contact pin state.",
   "input": {
     "agent": {
       "identities": [
@@ -17,14 +17,19 @@
     },
     "request": {
       "type": "request",
-      "id": "auth-1",
+      "id": "auth-2",
       "method": "sessions.authorize",
       "params": {
         "program_id": "irc.bridge",
         "identity_id": "default",
         "service": {
-          "locators": ["irc://irc.example.test/overnet"],
-          "display": "irc.example.test overnet"
+          "locators": ["wss://relay.example.test/auth"],
+          "service_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "1111111111111111111111111111111111111111111111111111111111111111",
+            "display": "relay.example.test authority"
+          },
+          "display": "relay.example.test authority"
         },
         "scope": "irc://irc.example.test/overnet",
         "action": "session.authenticate",
@@ -50,7 +55,7 @@
   "expected": {
     "response": {
       "type": "response",
-      "id": "auth-1",
+      "id": "auth-2",
       "ok": true
     },
     "assertions": [
@@ -60,14 +65,10 @@
       },
       {
         "path": "result.service_pin_state",
-        "equals": "provisional"
+        "equals": "first_contact"
       },
       {
         "path": "result.artifacts.0.type",
-        "equals": "nostr.event"
-      },
-      {
-        "path": "result.artifacts.0.format",
         "equals": "nostr.event"
       },
       {
@@ -77,13 +78,6 @@
       {
         "path": "result.artifacts.0.value.pubkey",
         "equals": "4f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa"
-      },
-      {
-        "path": "result.artifacts.0.value.tags",
-        "equals": [
-          ["relay", "irc://irc.example.test/overnet"],
-          ["challenge", "6cf8a952df516a8e691c6138496516abe84ccfefa9678f518bb52f70b1ca966f"]
-        ]
       }
     ]
   }

@@ -1,0 +1,29 @@
+{
+  "description": "The auth agent reports its baseline protocol version.",
+  "input": {
+    "agent": {
+      "identities": [],
+      "policies": [],
+      "service_pins": {}
+    },
+    "request": {
+      "type": "request",
+      "id": "info-1",
+      "method": "agent.info",
+      "params": {}
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "info-1",
+      "ok": true
+    },
+    "assertions": [
+      {
+        "path": "result.protocol_version",
+        "equals": "0.1.0"
+      }
+    ]
+  }
+}

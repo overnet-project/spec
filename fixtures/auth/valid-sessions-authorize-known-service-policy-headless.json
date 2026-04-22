@@ -5,9 +5,10 @@
       "identities": [
         {
           "identity_id": "default",
+          "private_key": "1111111111111111111111111111111111111111111111111111111111111111",
           "public_identity": {
             "scheme": "nostr.pubkey",
-            "value": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d"
+            "value": "4f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa"
           }
         }
       ],
@@ -95,6 +96,10 @@
       {
         "path": "result.artifacts.0.value.kind",
         "equals": 14142
+      },
+      {
+        "path": "result.artifacts.0.value.pubkey",
+        "equals": "4f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa"
       }
     ]
   }

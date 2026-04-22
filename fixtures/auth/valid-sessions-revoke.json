@@ -1,0 +1,55 @@
+{
+  "description": "The auth agent accepts one sessions.revoke request for a known local session handle.",
+  "input": {
+    "agent": {
+      "identities": [
+        {
+          "identity_id": "default",
+          "public_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d"
+          }
+        }
+      ],
+      "policies": [],
+      "service_pins": {},
+      "sessions": [
+        {
+          "session_handle": {
+            "id": "sess-1"
+          },
+          "identity_id": "default",
+          "program_id": "irc.bridge",
+          "service": {
+            "locators": ["wss://relay.example.test/auth"],
+            "service_identity": {
+              "scheme": "nostr.pubkey",
+              "value": "1111111111111111111111111111111111111111111111111111111111111111"
+            }
+          },
+          "scope": "irc://irc.example.test/overnet",
+          "action": "session.delegate",
+          "renewable": true,
+          "artifacts": []
+        }
+      ]
+    },
+    "request": {
+      "type": "request",
+      "id": "revoke-1",
+      "method": "sessions.revoke",
+      "params": {
+        "session_handle": {
+          "id": "sess-1"
+        }
+      }
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "revoke-1",
+      "ok": true
+    }
+  }
+}

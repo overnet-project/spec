@@ -1,0 +1,66 @@
+{
+  "description": "The auth agent lists the configured local identities with their public identity descriptors.",
+  "input": {
+    "agent": {
+      "identities": [
+        {
+          "identity_id": "default",
+          "public_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d",
+            "display": "default"
+          }
+        },
+        {
+          "identity_id": "work",
+          "public_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "display": "work"
+          }
+        }
+      ],
+      "policies": [],
+      "service_pins": {}
+    },
+    "request": {
+      "type": "request",
+      "id": "identities-1",
+      "method": "identities.list",
+      "params": {}
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "identities-1",
+      "ok": true
+    },
+    "assertions": [
+      {
+        "path": "result.identities.0.identity_id",
+        "equals": "default"
+      },
+      {
+        "path": "result.identities.0.public_identity",
+        "equals": {
+          "scheme": "nostr.pubkey",
+          "value": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d",
+          "display": "default"
+        }
+      },
+      {
+        "path": "result.identities.1.identity_id",
+        "equals": "work"
+      },
+      {
+        "path": "result.identities.1.public_identity",
+        "equals": {
+          "scheme": "nostr.pubkey",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "display": "work"
+        }
+      }
+    ]
+  }
+}

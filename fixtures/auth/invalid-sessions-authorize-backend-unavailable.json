@@ -1,11 +1,10 @@
 {
-  "description": "A first-contact IRC auth request without a stable service identity uses provisional exact locator trust and returns one signed Nostr auth event artifact.",
+  "description": "A signing request is rejected with backend_unavailable when the chosen identity has no available signing backend.",
   "input": {
     "agent": {
       "identities": [
         {
           "identity_id": "default",
-          "private_key": "1111111111111111111111111111111111111111111111111111111111111111",
           "public_identity": {
             "scheme": "nostr.pubkey",
             "value": "4f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa"
@@ -17,7 +16,7 @@
     },
     "request": {
       "type": "request",
-      "id": "auth-1",
+      "id": "backend-1",
       "method": "sessions.authorize",
       "params": {
         "program_id": "irc.bridge",
@@ -50,41 +49,11 @@
   "expected": {
     "response": {
       "type": "response",
-      "id": "auth-1",
-      "ok": true
-    },
-    "assertions": [
-      {
-        "path": "result.identity_id",
-        "equals": "default"
-      },
-      {
-        "path": "result.service_pin_state",
-        "equals": "provisional"
-      },
-      {
-        "path": "result.artifacts.0.type",
-        "equals": "nostr.event"
-      },
-      {
-        "path": "result.artifacts.0.format",
-        "equals": "nostr.event"
-      },
-      {
-        "path": "result.artifacts.0.value.kind",
-        "equals": 22242
-      },
-      {
-        "path": "result.artifacts.0.value.pubkey",
-        "equals": "4f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa"
-      },
-      {
-        "path": "result.artifacts.0.value.tags",
-        "equals": [
-          ["relay", "irc://irc.example.test/overnet"],
-          ["challenge", "6cf8a952df516a8e691c6138496516abe84ccfefa9678f518bb52f70b1ca966f"]
-        ]
+      "id": "backend-1",
+      "ok": false,
+      "error": {
+        "code": "backend_unavailable"
       }
-    ]
+    }
   }
 }
