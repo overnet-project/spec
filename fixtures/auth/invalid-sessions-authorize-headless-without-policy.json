@@ -1,0 +1,71 @@
+{
+  "description": "A headless auth request with no matching reusable policy fails closed rather than auto-approving.",
+  "input": {
+    "agent": {
+      "identities": [
+        {
+          "identity_id": "default",
+          "public_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d"
+          }
+        }
+      ],
+      "policies": [],
+      "service_pins": {
+        "wss://relay.example.test/auth": {
+          "scheme": "nostr.pubkey",
+          "value": "1111111111111111111111111111111111111111111111111111111111111111",
+          "display": "relay.example.test authority"
+        }
+      }
+    },
+    "request": {
+      "type": "request",
+      "id": "headless-1",
+      "method": "sessions.authorize",
+      "params": {
+        "program_id": "irc.bridge",
+        "identity_id": "default",
+        "service": {
+          "locators": ["wss://relay.example.test/auth"],
+          "service_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "1111111111111111111111111111111111111111111111111111111111111111",
+            "display": "relay.example.test authority"
+          },
+          "display": "relay.example.test authority"
+        },
+        "scope": "irc://irc.example.test/overnet",
+        "action": "session.authenticate",
+        "interactive": false,
+        "challenge": {
+          "type": "opaque",
+          "value": "6cf8a952df516a8e691c6138496516abe84ccfefa9678f518bb52f70b1ca966f"
+        },
+        "artifacts": [
+          {
+            "type": "nostr.event",
+            "params": {
+              "kind": 22242,
+              "tags": [
+                ["relay", "wss://relay.example.test/auth"],
+                ["challenge", "6cf8a952df516a8e691c6138496516abe84ccfefa9678f518bb52f70b1ca966f"]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "headless-1",
+      "ok": false,
+      "error": {
+        "code": "headless_unavailable"
+      }
+    }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "description": "A first-contact IRC auth request without a stable service identity uses provisional exact locator trust and returns one signed Nostr auth event artifact.",
+  "input": {
+    "agent": {
+      "identities": [
+        {
+          "identity_id": "default",
+          "public_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d"
+          }
+        }
+      ],
+      "policies": [],
+      "service_pins": {}
+    },
+    "request": {
+      "type": "request",
+      "id": "auth-1",
+      "method": "sessions.authorize",
+      "params": {
+        "program_id": "irc.bridge",
+        "identity_id": "default",
+        "service": {
+          "locators": ["irc://irc.example.test/overnet"],
+          "display": "irc.example.test overnet"
+        },
+        "scope": "irc://irc.example.test/overnet",
+        "action": "session.authenticate",
+        "challenge": {
+          "type": "opaque",
+          "value": "6cf8a952df516a8e691c6138496516abe84ccfefa9678f518bb52f70b1ca966f"
+        },
+        "artifacts": [
+          {
+            "type": "nostr.event",
+            "params": {
+              "kind": 22242,
+              "tags": [
+                ["relay", "irc://irc.example.test/overnet"],
+                ["challenge", "6cf8a952df516a8e691c6138496516abe84ccfefa9678f518bb52f70b1ca966f"]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "auth-1",
+      "ok": true
+    },
+    "assertions": [
+      {
+        "path": "result.identity_id",
+        "equals": "default"
+      },
+      {
+        "path": "result.service_pin_state",
+        "equals": "provisional"
+      },
+      {
+        "path": "result.artifacts.0.type",
+        "equals": "nostr.event"
+      },
+      {
+        "path": "result.artifacts.0.format",
+        "equals": "nostr.event"
+      },
+      {
+        "path": "result.artifacts.0.value.kind",
+        "equals": 22242
+      },
+      {
+        "path": "result.artifacts.0.value.tags",
+        "equals": [
+          ["relay", "irc://irc.example.test/overnet"],
+          ["challenge", "6cf8a952df516a8e691c6138496516abe84ccfefa9678f518bb52f70b1ca966f"]
+        ]
+      }
+    ]
+  }
+}

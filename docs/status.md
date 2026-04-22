@@ -14,6 +14,7 @@ At the current checkpoint, the project has:
 - a first draft companion specification for the Overnet Program Protocol
 - a first draft companion specification for Overnet Program Services
 - a first draft companion specification for the Overnet Authentication Agent
+- an initial auth-agent fixture set covering authorize, renewal, pinning, and IRC bridge equivalence
 - a working IRC adapter implementation in the sibling `adapter-irc-perl` repository
 
 At this checkpoint, the specification also distinguishes between:

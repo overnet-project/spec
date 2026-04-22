@@ -1,0 +1,108 @@
+{
+  "description": "A renewable session with unchanged identity, service, scope, and action may renew automatically under matching policy.",
+  "input": {
+    "agent": {
+      "identities": [
+        {
+          "identity_id": "default",
+          "public_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d"
+          }
+        }
+      ],
+      "policies": [
+        {
+          "identity_id": "default",
+          "program_id": "irc.bridge",
+          "service_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "1111111111111111111111111111111111111111111111111111111111111111",
+            "display": "relay.example.test authority"
+          },
+          "scope": "irc://irc.example.test/overnet",
+          "action": "session.delegate"
+        }
+      ],
+      "service_pins": {
+        "wss://relay.example.test/auth": {
+          "scheme": "nostr.pubkey",
+          "value": "1111111111111111111111111111111111111111111111111111111111111111",
+          "display": "relay.example.test authority"
+        }
+      },
+      "sessions": [
+        {
+          "session_handle": {
+            "id": "sess-1"
+          },
+          "identity_id": "default",
+          "program_id": "irc.bridge",
+          "service": {
+            "locators": ["wss://relay.example.test/auth"],
+            "service_identity": {
+              "scheme": "nostr.pubkey",
+              "value": "1111111111111111111111111111111111111111111111111111111111111111",
+              "display": "relay.example.test authority"
+            }
+          },
+          "scope": "irc://irc.example.test/overnet",
+          "action": "session.delegate",
+          "renewable": true,
+          "expires_at": 1776884345,
+          "artifacts": [
+            {
+              "type": "nostr.event",
+              "params": {
+                "kind": 14142,
+                "tags": [
+                  ["relay", "wss://relay.example.test/auth"],
+                  ["server", "irc://irc.example.test/overnet"],
+                  ["delegate", "9778a076e7d41b398fbde5d685e685b359cfc4f6e4316b6e67f2903288a65e05"],
+                  ["session", "renewed-session-1"],
+                  ["expires_at", "1776887945"]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "request": {
+      "type": "request",
+      "id": "renew-1",
+      "method": "sessions.renew",
+      "params": {
+        "session_handle": {
+          "id": "sess-1"
+        },
+        "interactive": false
+      }
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "renew-1",
+      "ok": true
+    },
+    "assertions": [
+      {
+        "path": "result.identity_id",
+        "equals": "default"
+      },
+      {
+        "path": "result.artifacts.0.type",
+        "equals": "nostr.event"
+      },
+      {
+        "path": "result.artifacts.0.format",
+        "equals": "nostr.event"
+      },
+      {
+        "path": "result.artifacts.0.value.kind",
+        "equals": 14142
+      }
+    ]
+  }
+}

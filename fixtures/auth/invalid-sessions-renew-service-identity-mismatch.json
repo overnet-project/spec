@@ -1,0 +1,78 @@
+{
+  "description": "A renewal request is rejected when the current pinned service identity no longer matches the stored session context.",
+  "input": {
+    "agent": {
+      "identities": [
+        {
+          "identity_id": "default",
+          "public_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d"
+          }
+        }
+      ],
+      "policies": [
+        {
+          "identity_id": "default",
+          "program_id": "irc.bridge",
+          "service_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "1111111111111111111111111111111111111111111111111111111111111111",
+            "display": "relay.example.test authority"
+          },
+          "scope": "irc://irc.example.test/overnet",
+          "action": "session.delegate"
+        }
+      ],
+      "service_pins": {
+        "wss://relay.example.test/auth": {
+          "scheme": "nostr.pubkey",
+          "value": "2222222222222222222222222222222222222222222222222222222222222222",
+          "display": "relay.example.test authority replacement"
+        }
+      },
+      "sessions": [
+        {
+          "session_handle": {
+            "id": "sess-1"
+          },
+          "identity_id": "default",
+          "program_id": "irc.bridge",
+          "service": {
+            "locators": ["wss://relay.example.test/auth"],
+            "service_identity": {
+              "scheme": "nostr.pubkey",
+              "value": "1111111111111111111111111111111111111111111111111111111111111111",
+              "display": "relay.example.test authority"
+            }
+          },
+          "scope": "irc://irc.example.test/overnet",
+          "action": "session.delegate",
+          "renewable": true,
+          "expires_at": 1776884345
+        }
+      ]
+    },
+    "request": {
+      "type": "request",
+      "id": "renew-2",
+      "method": "sessions.renew",
+      "params": {
+        "session_handle": {
+          "id": "sess-1"
+        },
+        "interactive": false
+      }
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "renew-2",
+      "ok": false,
+      "error": {
+        "code": "service_identity_mismatch"
+      }
+    }
+  }
+}

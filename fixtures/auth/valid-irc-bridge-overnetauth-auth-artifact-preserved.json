@@ -1,0 +1,48 @@
+{
+  "description": "An IRC bridge may base64-encode one returned nostr.event artifact for OVERNETAUTH AUTH so long as decoding yields the unchanged signed event object.",
+  "input": {
+    "artifact": {
+      "type": "nostr.event",
+      "format": "nostr.event",
+      "value": {
+        "id": "190806b6e219eb629d5ea42ea726000b842c83d5ba834510aa238449a94cc5fb",
+        "pubkey": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d",
+        "created_at": 1744301000,
+        "kind": 22242,
+        "tags": [
+          ["relay", "irc://irc.example.test/overnet"],
+          ["challenge", "6cf8a952df516a8e691c6138496516abe84ccfefa9678f518bb52f70b1ca966f"]
+        ],
+        "content": "",
+        "sig": "0d8210fabb59170534aa947572fcbb1f4bc7867afebce8c05e571cbdcfe775191735cd37cae300fecfe92c210b171bb2b36e3b0f5568bad1295c742df10732c4"
+      }
+    },
+    "bridge": {
+      "protocol": "irc",
+      "command": "OVERNETAUTH AUTH",
+      "encoding": "base64-json"
+    }
+  },
+  "expected": {
+    "wire_output": {
+      "command": "OVERNETAUTH AUTH",
+      "encoding": "base64-json"
+    },
+    "decoded_artifact": {
+      "type": "nostr.event",
+      "format": "nostr.event",
+      "value": {
+        "id": "190806b6e219eb629d5ea42ea726000b842c83d5ba834510aa238449a94cc5fb",
+        "pubkey": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d",
+        "created_at": 1744301000,
+        "kind": 22242,
+        "tags": [
+          ["relay", "irc://irc.example.test/overnet"],
+          ["challenge", "6cf8a952df516a8e691c6138496516abe84ccfefa9678f518bb52f70b1ca966f"]
+        ],
+        "content": "",
+        "sig": "0d8210fabb59170534aa947572fcbb1f4bc7867afebce8c05e571cbdcfe775191735cd37cae300fecfe92c210b171bb2b36e3b0f5568bad1295c742df10732c4"
+      }
+    }
+  }
+}

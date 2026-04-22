@@ -1,0 +1,70 @@
+{
+  "description": "A request for a locator with a pinned service identity is rejected when the presented service identity changes.",
+  "input": {
+    "agent": {
+      "identities": [
+        {
+          "identity_id": "default",
+          "public_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d"
+          }
+        }
+      ],
+      "policies": [],
+      "service_pins": {
+        "wss://relay.example.test/auth": {
+          "scheme": "nostr.pubkey",
+          "value": "1111111111111111111111111111111111111111111111111111111111111111",
+          "display": "relay.example.test authority"
+        }
+      }
+    },
+    "request": {
+      "type": "request",
+      "id": "mismatch-1",
+      "method": "sessions.authorize",
+      "params": {
+        "program_id": "irc.bridge",
+        "identity_id": "default",
+        "service": {
+          "locators": ["wss://relay.example.test/auth"],
+          "service_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "2222222222222222222222222222222222222222222222222222222222222222",
+            "display": "relay.example.test authority replacement"
+          },
+          "display": "relay.example.test authority replacement"
+        },
+        "scope": "irc://irc.example.test/overnet",
+        "action": "session.authenticate",
+        "challenge": {
+          "type": "opaque",
+          "value": "6cf8a952df516a8e691c6138496516abe84ccfefa9678f518bb52f70b1ca966f"
+        },
+        "artifacts": [
+          {
+            "type": "nostr.event",
+            "params": {
+              "kind": 22242,
+              "tags": [
+                ["relay", "wss://relay.example.test/auth"],
+                ["challenge", "6cf8a952df516a8e691c6138496516abe84ccfefa9678f518bb52f70b1ca966f"]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "mismatch-1",
+      "ok": false,
+      "error": {
+        "code": "service_identity_mismatch"
+      }
+    }
+  }
+}

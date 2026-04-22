@@ -1,0 +1,101 @@
+{
+  "description": "An exact reusable policy match for a pinned service identity succeeds headless without requiring a new approval prompt.",
+  "input": {
+    "agent": {
+      "identities": [
+        {
+          "identity_id": "default",
+          "public_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d"
+          }
+        }
+      ],
+      "policies": [
+        {
+          "identity_id": "default",
+          "program_id": "irc.bridge",
+          "service_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "1111111111111111111111111111111111111111111111111111111111111111",
+            "display": "relay.example.test authority"
+          },
+          "scope": "irc://irc.example.test/overnet",
+          "action": "session.delegate"
+        }
+      ],
+      "service_pins": {
+        "wss://relay.example.test/auth": {
+          "scheme": "nostr.pubkey",
+          "value": "1111111111111111111111111111111111111111111111111111111111111111",
+          "display": "relay.example.test authority"
+        }
+      }
+    },
+    "request": {
+      "type": "request",
+      "id": "delegate-1",
+      "method": "sessions.authorize",
+      "params": {
+        "program_id": "irc.bridge",
+        "identity_id": "default",
+        "service": {
+          "locators": ["wss://relay.example.test/auth"],
+          "service_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "1111111111111111111111111111111111111111111111111111111111111111",
+            "display": "relay.example.test authority"
+          },
+          "display": "relay.example.test authority"
+        },
+        "scope": "irc://irc.example.test/overnet",
+        "action": "session.delegate",
+        "interactive": false,
+        "artifacts": [
+          {
+            "type": "nostr.event",
+            "params": {
+              "kind": 14142,
+              "tags": [
+                ["relay", "wss://relay.example.test/auth"],
+                ["server", "irc://irc.example.test/overnet"],
+                ["delegate", "9778a076e7d41b398fbde5d685e685b359cfc4f6e4316b6e67f2903288a65e05"],
+                ["session", "0a4ad3d04e7b2f2563882c69a55ba89a64d14c27ed08e150087f22bf8291217f"],
+                ["expires_at", "1776884345"]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "delegate-1",
+      "ok": true
+    },
+    "assertions": [
+      {
+        "path": "result.identity_id",
+        "equals": "default"
+      },
+      {
+        "path": "result.service_pin_state",
+        "equals": "known"
+      },
+      {
+        "path": "result.artifacts.0.type",
+        "equals": "nostr.event"
+      },
+      {
+        "path": "result.artifacts.0.format",
+        "equals": "nostr.event"
+      },
+      {
+        "path": "result.artifacts.0.value.kind",
+        "equals": 14142
+      }
+    ]
+  }
+}

@@ -72,6 +72,7 @@ The current documents and fixtures cover:
 - the first draft Overnet Program Protocol specification
 - the first draft Overnet Program Services specification
 - the first draft Overnet Authentication Agent specification
+- initial auth-agent protocol and bridge fixtures
 
 Application-specific behavior and additional adapters are still expected to be defined in companion specifications rather than folded into the core.
 

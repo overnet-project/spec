@@ -142,6 +142,14 @@ A remote service identity is distinct from:
 
 Locators such as hostnames and URLs are still important, but they are not the primary trust anchor.
 
+When represented as structured data in this document, a remote service identity object SHOULD include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `scheme` | string | yes | Service-identity scheme identifier |
+| `value` | string | yes | Stable service-identity value |
+| `display` | string | no | User-facing service label |
+
 ### 4.6 Locator
 
 A locator is one transport or routing reference for a remote service, such as:
