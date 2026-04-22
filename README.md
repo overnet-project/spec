@@ -2,6 +2,8 @@
 
 This repository contains the draft specifications for Overnet.
 
+GitHub: <https://github.com/overnet-project/spec>
+
 Overnet is a higher-level protocol and application platform built on top of Nostr.
 It is intended to support systems such as chat, email, code hosting, marketplaces, and websites, while emphasizing freedom, decentralization, self-hostability, and interoperability.
 
@@ -17,7 +19,12 @@ In this specification family:
 This repository is in active development.
 
 The current specifications should be treated as working drafts.
-They are being revised alongside early implementation work in the sibling `overnet-code` and `overnet-adapter-irc` repositories.
+They are being revised alongside early implementation work in the sibling repositories:
+
+- [core-perl](https://github.com/overnet-project/core-perl)
+- [relay-perl](https://github.com/overnet-project/relay-perl)
+- [adapter-irc-perl](https://github.com/overnet-project/adapter-irc-perl)
+- [irc-server](https://github.com/overnet-project/irc-server)
 
 The current document is useful as:
 
@@ -99,6 +106,13 @@ Discussion, review, criticism, issue reports, and pull requests are welcome.
 If you think something in the spec is ambiguous, inconsistent, too broad, too narrow, or likely to break under implementation pressure, please open an issue.
 
 Small clarifications and focused pull requests are especially helpful while the specification is still evolving.
+
+## Related Repositories
+
+- [core-perl](https://github.com/overnet-project/core-perl)
+- [relay-perl](https://github.com/overnet-project/relay-perl)
+- [adapter-irc-perl](https://github.com/overnet-project/adapter-irc-perl)
+- [irc-server](https://github.com/overnet-project/irc-server)
 
 ## License
 
