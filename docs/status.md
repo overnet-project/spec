@@ -8,12 +8,13 @@ At the current checkpoint, the project has:
 
 - a materially specified core event model
 - a shared core fixture corpus
-- a working core validator/reference implementation in the sibling `overnet-code` repository
+- a working core validator/reference implementation in the sibling `core-perl` repository
 - a first companion adapter specification for IRC
 - a first draft companion specification for the Overnet Program Runtime
 - a first draft companion specification for the Overnet Program Protocol
 - a first draft companion specification for Overnet Program Services
-- a working IRC adapter implementation in the sibling `overnet-adapter-irc` repository
+- a first draft companion specification for the Overnet Authentication Agent
+- a working IRC adapter implementation in the sibling `adapter-irc-perl` repository
 
 At this checkpoint, the specification also distinguishes between:
 
@@ -37,6 +38,7 @@ The following areas are now comparatively mature for this stage:
 - first-pass Overnet Program Runtime architecture
 - first-pass Overnet Program Protocol framing and envelope rules
 - first-pass Overnet Program service method definitions
+- first-pass auth-agent trust and session semantics
 
 These areas may still change, but they are now backed by fixtures and implementation pressure rather than only abstract design.
 
@@ -84,6 +86,7 @@ The following areas should still be treated as open design territory:
 - richer authority and moderation models
 - derived state from adapted event streams
 - mature and implementation-tested service-level semantics for Overnet program APIs
+- mature and implementation-tested auth-agent semantics, service identity discovery, and cross-program session UX
 - relay/query capability details beyond the current baseline
 - user-scoped IRC mode mapping
 - derived IRC channel privilege or membership state
@@ -93,7 +96,7 @@ The following areas should still be treated as open design territory:
 
 The most likely near-term work is one or more of:
 
-- stabilizing docs and repo boundaries across the current three repositories
+- stabilizing docs and repo boundaries across the current repositories
 - deciding whether IRC should remain observation-focused or start deriving richer state
 - extending Overnet core only where the adapter and implementation work expose real gaps
 - choosing the next major proof-point after IRC

@@ -746,6 +746,23 @@ For this optional SASL surface:
 - an implementation MAY continue to support `OVERNETAUTH` alongside SASL `NOSTR`
 - this specification does not require support for any other SASL mechanism for authoritative Nostr binding
 
+#### 11.2.4 Local Auth-Agent and Bridge Compatibility
+
+An implementation of the authoritative profile MAY use one local auth-agent or bridge component conforming to the Overnet Authentication Agent Specification to automate:
+
+- `OVERNETAUTH CHALLENGE` and `OVERNETAUTH AUTH`
+- `OVERNETAUTH DELEGATE`
+- SASL `NOSTR`
+
+When such a local auth-agent or bridge is used:
+
+- the resulting authoritative pubkey binding MUST remain semantically equivalent to section 11.2.1
+- the resulting session-scoped delegation MUST remain semantically equivalent to section 11.2.2
+- the resulting SASL `NOSTR` exchange, when used, MUST remain semantically equivalent to section 11.2.3
+- the local auth-agent or bridge MUST NOT alter the effective auth scope, relay URL, delegate pubkey, session identifier, or expiry semantics
+- the local auth-agent or bridge MUST NOT expose raw private key material to the IRC server or to the IRC client surface
+- a local auth-agent or bridge MAY translate a returned `nostr.event` artifact into the exact IRC wire form required by `OVERNETAUTH` or SASL `NOSTR`, including base64-encoded JSON, so long as the underlying signed event object is unchanged
+
 ### 11.3 Channel-to-Group Binding
 
 For each IRC channel using the profile in section 11.1, the implementation MUST maintain one stable binding between:
@@ -1140,6 +1157,8 @@ When `OVERNETAUTH` is supported:
 - the implementation MUST reject `OVERNETAUTH DELEGATE` when no current authenticated authoritative pubkey is bound for that IRC client connection
 
 This section does not require one specific success-text wording for the implementation-defined `NOTICE` forms above.
+
+The companion Overnet Authentication Agent Specification MAY be used to automate this command surface locally, but any such automation MUST preserve the semantics defined in section 11.2.4.
 
 #### 13.1.1.3 Optional `sasl` Capability for Authoritative `NOSTR`
 
