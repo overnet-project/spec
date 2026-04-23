@@ -284,6 +284,60 @@ An auth agent MAY expose non-secret metadata for each local identity, including:
 
 The auth agent MUST treat backend-specific secrets, unlock material, and raw private key material as agent-private.
 
+## 6A. Reference Implementation Config Example
+
+This section is informative.
+
+The `core-perl` reference implementation currently uses one JSON config file for the local auth-agent daemon.
+
+Example:
+
+```json
+{
+  "daemon": {
+    "endpoint": "/tmp/overnet-auth.sock"
+  },
+  "identities": [
+    {
+      "identity_id": "default",
+      "backend_type": "pass",
+      "backend_config": {
+        "entry": "overnet-priv-key"
+      },
+      "public_identity": {
+        "scheme": "nostr.pubkey",
+        "value": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d"
+      }
+    }
+  ],
+  "policies": [
+    {
+      "identity_id": "default",
+      "program_id": "irc.bridge",
+      "locator": "irc://irc.example.test/overnet",
+      "scope": "irc://irc.example.test/overnet",
+      "action": "session.authenticate"
+    },
+    {
+      "identity_id": "default",
+      "program_id": "irc.bridge",
+      "locator": "irc://irc.example.test/overnet",
+      "scope": "irc://irc.example.test/overnet",
+      "action": "session.delegate"
+    }
+  ]
+}
+```
+
+The reference implementation currently recognizes:
+
+- `daemon.endpoint`
+- `daemon.socket_mode`
+- `identities`
+- `policies`
+- `service_pins`
+- `sessions`
+
 ## 7. Remote Service Identity and Trust
 
 ### 7.1 Primary Trust Anchor
