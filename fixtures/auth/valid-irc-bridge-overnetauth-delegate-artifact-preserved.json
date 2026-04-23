@@ -1,0 +1,54 @@
+{
+  "description": "An IRC bridge may base64-encode one returned nostr.event artifact for OVERNETAUTH DELEGATE so long as decoding yields the unchanged signed event object.",
+  "input": {
+    "artifact": {
+      "type": "nostr.event",
+      "format": "nostr.event",
+      "value": {
+        "id": "3f45bf4c8a4c0b037fb9d1a8fd8514b4d2cbf737fd6ce55d89a2e44a370d8d7f",
+        "pubkey": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d",
+        "created_at": 1744301100,
+        "kind": 14142,
+        "tags": [
+          ["relay", "ws://127.0.0.1:7448"],
+          ["server", "irc://irc.example.test/overnet"],
+          ["delegate", "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"],
+          ["session", "session-123"],
+          ["expires_at", "1744304600"]
+        ],
+        "content": "",
+        "sig": "13c5f6d26ed6dd861ab5d417f17405b92c2d8268cb6a39a61fe2a62fc97fece877f9d0aa57bdc0f1ddc048fa0f0250555f728e678ff85afc40c2b16e9db7bc8a"
+      }
+    },
+    "bridge": {
+      "protocol": "irc",
+      "command": "OVERNETAUTH DELEGATE",
+      "encoding": "base64-json"
+    }
+  },
+  "expected": {
+    "wire_output": {
+      "command": "OVERNETAUTH DELEGATE",
+      "encoding": "base64-json"
+    },
+    "decoded_artifact": {
+      "type": "nostr.event",
+      "format": "nostr.event",
+      "value": {
+        "id": "3f45bf4c8a4c0b037fb9d1a8fd8514b4d2cbf737fd6ce55d89a2e44a370d8d7f",
+        "pubkey": "274722f14ff06e2a790322ae1cee2d28c9cb0ffcd18d78d3bc7cca3f19e9764d",
+        "created_at": 1744301100,
+        "kind": 14142,
+        "tags": [
+          ["relay", "ws://127.0.0.1:7448"],
+          ["server", "irc://irc.example.test/overnet"],
+          ["delegate", "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"],
+          ["session", "session-123"],
+          ["expires_at", "1744304600"]
+        ],
+        "content": "",
+        "sig": "13c5f6d26ed6dd861ab5d417f17405b92c2d8268cb6a39a61fe2a62fc97fece877f9d0aa57bdc0f1ddc048fa0f0250555f728e678ff85afc40c2b16e9db7bc8a"
+      }
+    }
+  }
+}
