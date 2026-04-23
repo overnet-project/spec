@@ -534,6 +534,13 @@ This version defines the following baseline auth-agent methods:
 
 - `agent.info`
 - `identities.list`
+- `policies.list`
+- `policies.grant`
+- `policies.revoke`
+- `service_pins.list`
+- `service_pins.set`
+- `service_pins.forget`
+- `sessions.list`
 - `sessions.authorize`
 - `sessions.renew`
 - `sessions.revoke`
@@ -588,7 +595,171 @@ The agent MAY additionally include:
 - `backend_type`
 - other non-secret metadata
 
-### 10.7 `sessions.authorize`
+### 10.7 `policies.list`
+
+Purpose:
+
+- inspect reusable approval policy currently known to the auth agent
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `policies` | array | yes | Reusable approval policy descriptors |
+
+Each policy descriptor MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `policy_id` | string | yes | Stable local policy identifier |
+| `identity_id` | string | yes | Bound local identity |
+| `program_id` | string | yes | Bound program or bridge identity |
+| `scope` | string | yes | Bound scope |
+| `action` | string | yes | Bound action type |
+
+Each policy descriptor MAY additionally include:
+
+- `locators`
+- `service_identity`
+
+### 10.8 `policies.grant`
+
+Purpose:
+
+- create one reusable approval policy in the local auth agent
+
+Request parameters MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `policy` | object | yes | Requested reusable approval policy |
+
+The `policy` object MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `identity_id` | string | yes | Bound local identity |
+| `program_id` | string | yes | Bound program or bridge identity |
+| `scope` | string | yes | Bound scope |
+| `action` | string | yes | Bound action type |
+
+The `policy` object MUST include at least one of:
+
+- `locators`
+- `service_identity`
+
+The `policy` object MAY instead use one `service` object carrying those same service constraints.
+
+Successful result MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `policy` | object | yes | Stored policy descriptor including `policy_id` |
+
+### 10.9 `policies.revoke`
+
+Purpose:
+
+- remove one reusable approval policy from the local auth agent
+
+Request parameters MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `policy_id` | string | yes | Stable local policy identifier |
+
+Successful result MAY include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `policy_id` | string | no | Revoked policy identifier |
+
+### 10.10 `service_pins.list`
+
+Purpose:
+
+- inspect currently pinned remote service identities
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `service_pins` | array | yes | Locator-to-service-identity pin descriptors |
+
+Each service-pin descriptor MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `locator` | string | yes | Bound locator |
+| `service_identity` | object | yes | Pinned service identity descriptor |
+
+### 10.11 `service_pins.set`
+
+Purpose:
+
+- pin one remote service identity to one locator explicitly
+
+Request parameters MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `locator` | string | yes | Locator being pinned |
+| `service_identity` | object | yes | Stable service identity descriptor |
+
+Successful result MAY include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `locator` | string | no | Locator that was pinned |
+| `service_identity` | object | no | Stored pinned service identity |
+
+### 10.12 `service_pins.forget`
+
+Purpose:
+
+- remove one pinned remote service identity by locator
+
+Request parameters MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `locator` | string | yes | Locator whose pin is being removed |
+
+Successful result MAY include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `locator` | string | no | Locator that was forgotten |
+
+### 10.13 `sessions.list`
+
+Purpose:
+
+- inspect locally tracked session state currently known to the auth agent
+
+Successful result:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `sessions` | array | yes | Local session descriptors |
+
+Each session descriptor MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `session_handle` | object | yes | Stable local session handle |
+| `identity_id` | string | yes | Bound local identity |
+| `program_id` | string | yes | Bound program or bridge identity |
+| `service` | object | yes | Bound service context |
+| `scope` | string | yes | Bound scope |
+| `action` | string | yes | Bound action type |
+| `renewable` | boolean | yes | Whether renewal is currently permitted |
+
+The session descriptor MAY additionally include:
+
+- `expires_at`
+
+### 10.14 `sessions.authorize`
 
 Purpose:
 
@@ -684,7 +855,7 @@ For `session.token`:
 
 An auth agent MAY support additional artifact types defined by a companion specification.
 
-#### 10.7.1 Informative IRC Example
+#### 10.14.1 Informative IRC Example
 
 The following is an informative example of one IRC bridge asking for one signed auth event for `OVERNETAUTH AUTH` using provisional locator trust because no stable IRC service identity has yet been established by the companion specification:
 
@@ -758,7 +929,7 @@ An informative successful response could then include:
 
 An IRC bridge MAY then base64-encode the returned `nostr.event` artifact into the exact `OVERNETAUTH AUTH` wire form required by the IRC companion specification.
 
-### 10.8 `sessions.renew`
+### 10.15 `sessions.renew`
 
 Purpose:
 
@@ -786,7 +957,7 @@ The auth agent MUST reject renewal when:
 
 The successful result shape is the same as `sessions.authorize`.
 
-### 10.9 `sessions.revoke`
+### 10.16 `sessions.revoke`
 
 Purpose:
 
@@ -802,7 +973,7 @@ Successful result MAY be empty.
 
 This method revokes or forgets local auth-agent session state. It does not imply one universal remote logout semantics.
 
-### 10.10 Baseline Error Codes
+### 10.17 Baseline Error Codes
 
 At minimum, the auth-agent protocol MUST distinguish:
 

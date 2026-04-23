@@ -1,0 +1,43 @@
+{
+  "description": "The auth agent lists pinned service identities by locator.",
+  "input": {
+    "agent": {
+      "identities": [],
+      "policies": [],
+      "service_pins": {
+        "wss://relay.example.test/auth": {
+          "scheme": "nostr.pubkey",
+          "value": "1111111111111111111111111111111111111111111111111111111111111111",
+          "display": "relay.example.test authority"
+        }
+      }
+    },
+    "request": {
+      "type": "request",
+      "id": "service-pins-1",
+      "method": "service_pins.list",
+      "params": {}
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "service-pins-1",
+      "ok": true
+    },
+    "assertions": [
+      {
+        "path": "result.service_pins.0.locator",
+        "equals": "wss://relay.example.test/auth"
+      },
+      {
+        "path": "result.service_pins.0.service_identity",
+        "equals": {
+          "scheme": "nostr.pubkey",
+          "value": "1111111111111111111111111111111111111111111111111111111111111111",
+          "display": "relay.example.test authority"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "description": "The auth agent forgets one pinned service identity by locator.",
+  "input": {
+    "agent": {
+      "identities": [],
+      "policies": [],
+      "service_pins": {
+        "wss://relay.example.test/auth": {
+          "scheme": "nostr.pubkey",
+          "value": "1111111111111111111111111111111111111111111111111111111111111111",
+          "display": "relay.example.test authority"
+        }
+      }
+    },
+    "request": {
+      "type": "request",
+      "id": "service-pin-forget-1",
+      "method": "service_pins.forget",
+      "params": {
+        "locator": "wss://relay.example.test/auth"
+      }
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "service-pin-forget-1",
+      "ok": true
+    },
+    "assertions": [
+      {
+        "path": "result.locator",
+        "equals": "wss://relay.example.test/auth"
+      }
+    ]
+  }
+}

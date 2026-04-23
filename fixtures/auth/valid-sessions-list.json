@@ -1,0 +1,59 @@
+{
+  "description": "The auth agent lists tracked local session handles and their bound auth context.",
+  "input": {
+    "agent": {
+      "identities": [],
+      "policies": [],
+      "service_pins": {},
+      "sessions": [
+        {
+          "session_handle": {
+            "id": "sess-1"
+          },
+          "identity_id": "default",
+          "program_id": "irc.bridge",
+          "service": {
+            "locators": [
+              "wss://relay.example.test/auth"
+            ],
+            "service_identity": {
+              "scheme": "nostr.pubkey",
+              "value": "1111111111111111111111111111111111111111111111111111111111111111"
+            }
+          },
+          "scope": "irc://irc.example.test/overnet",
+          "action": "session.delegate",
+          "renewable": true,
+          "artifacts": []
+        }
+      ]
+    },
+    "request": {
+      "type": "request",
+      "id": "sessions-1",
+      "method": "sessions.list",
+      "params": {}
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "sessions-1",
+      "ok": true
+    },
+    "assertions": [
+      {
+        "path": "result.sessions.0.session_handle.id",
+        "equals": "sess-1"
+      },
+      {
+        "path": "result.sessions.0.identity_id",
+        "equals": "default"
+      },
+      {
+        "path": "result.sessions.0.action",
+        "equals": "session.delegate"
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "description": "The auth agent grants one reusable approval policy and returns the stable policy identifier.",
+  "input": {
+    "agent": {
+      "identities": [],
+      "policies": [],
+      "service_pins": {}
+    },
+    "request": {
+      "type": "request",
+      "id": "policy-grant-1",
+      "method": "policies.grant",
+      "params": {
+        "policy": {
+          "identity_id": "default",
+          "program_id": "irc.bridge",
+          "service": {
+            "locators": [
+              "wss://relay.example.test/auth"
+            ],
+            "service_identity": {
+              "scheme": "nostr.pubkey",
+              "value": "1111111111111111111111111111111111111111111111111111111111111111",
+              "display": "relay.example.test authority"
+            }
+          },
+          "scope": "irc://irc.example.test/overnet",
+          "action": "session.delegate"
+        }
+      }
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "policy-grant-1",
+      "ok": true
+    },
+    "assertions": [
+      {
+        "path": "result.policy.policy_id",
+        "equals": "policy-1"
+      },
+      {
+        "path": "result.policy.service_identity",
+        "equals": {
+          "scheme": "nostr.pubkey",
+          "value": "1111111111111111111111111111111111111111111111111111111111111111",
+          "display": "relay.example.test authority"
+        }
+      }
+    ]
+  }
+}

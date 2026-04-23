@@ -1,0 +1,57 @@
+{
+  "description": "The auth agent lists reusable approval policies with stable policy identifiers.",
+  "input": {
+    "agent": {
+      "identities": [],
+      "policies": [
+        {
+          "identity_id": "default",
+          "program_id": "irc.bridge",
+          "service_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "1111111111111111111111111111111111111111111111111111111111111111",
+            "display": "relay.example.test authority"
+          },
+          "scope": "irc://irc.example.test/overnet",
+          "action": "session.delegate"
+        }
+      ],
+      "service_pins": {}
+    },
+    "request": {
+      "type": "request",
+      "id": "policies-1",
+      "method": "policies.list",
+      "params": {}
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "policies-1",
+      "ok": true
+    },
+    "assertions": [
+      {
+        "path": "result.policies.0.policy_id",
+        "equals": "policy-1"
+      },
+      {
+        "path": "result.policies.0.identity_id",
+        "equals": "default"
+      },
+      {
+        "path": "result.policies.0.program_id",
+        "equals": "irc.bridge"
+      },
+      {
+        "path": "result.policies.0.scope",
+        "equals": "irc://irc.example.test/overnet"
+      },
+      {
+        "path": "result.policies.0.action",
+        "equals": "session.delegate"
+      }
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "description": "The auth agent revokes one known reusable approval policy by policy identifier.",
+  "input": {
+    "agent": {
+      "identities": [],
+      "policies": [
+        {
+          "identity_id": "default",
+          "program_id": "irc.bridge",
+          "service_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "1111111111111111111111111111111111111111111111111111111111111111",
+            "display": "relay.example.test authority"
+          },
+          "scope": "irc://irc.example.test/overnet",
+          "action": "session.delegate"
+        }
+      ],
+      "service_pins": {}
+    },
+    "request": {
+      "type": "request",
+      "id": "policy-revoke-1",
+      "method": "policies.revoke",
+      "params": {
+        "policy_id": "policy-1"
+      }
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "policy-revoke-1",
+      "ok": true
+    },
+    "assertions": [
+      {
+        "path": "result.policy_id",
+        "equals": "policy-1"
+      }
+    ]
+  }
+}
