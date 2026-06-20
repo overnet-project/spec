@@ -4,7 +4,7 @@ This repository contains the draft specifications for Overnet.
 
 GitHub: <https://github.com/overnet-project/spec>
 
-Overnet is a higher-level protocol and application platform built on top of Nostr.
+Overnet is a higher-level protocol and application platform built on top of [Nostr](https://nostr.org/).
 It is intended to support systems such as chat, email, code hosting, marketplaces, and websites, while emphasizing freedom, decentralization, self-hostability, and interoperability.
 
 At present, this repository contains the Overnet Core Specification draft plus the first companion adapter specification for IRC, along with shared conformance fixtures used by the reference implementation work.
