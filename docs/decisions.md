@@ -185,3 +185,17 @@ Overnet-specific semantics SHOULD be defined only when existing NIPs are insuffi
 - Require reuse of every potentially relevant existing NIP. Too rigid when an existing NIP is too loose, too differently scoped, or otherwise a poor fit for the invariants Overnet needs.
 
 **Rationale:** Overnet is intended to build on Nostr, not to shadow it with a parallel specification stack. Reusing existing NIPs where they already solve the problem keeps Overnet aligned with the wider ecosystem, reduces duplication, and makes companion specifications easier to justify and review. Making the rule preference-based rather than absolute preserves room for narrower profiles, stricter mappings, and genuinely new semantics when existing NIPs do not provide the required guarantees.
+
+## D013: UTF-8 Is Required for Textual Protocol Elements
+
+**Date:** 2026-06-25
+
+**Decision:** Overnet textual protocol elements are Unicode scalar values encoded as UTF-8. Implementations reject malformed UTF-8 at protocol boundaries. Binary data uses explicitly typed binary forms rather than alternate text encodings.
+
+**Alternatives considered:**
+
+- Permit implementation-defined text encodings. This preserves compatibility with legacy systems, but makes interoperation ambiguous and pushes encoding bugs into application logic.
+- Let adapter specifications define their own text encodings. This fits some external protocols, but creates different text models for different Overnet surfaces and weakens the core interoperability contract.
+- Treat text fields as arbitrary byte strings. This avoids early decoding failures, but makes display, comparison, signatures, validation, and bridge behavior less predictable.
+
+**Rationale:** A single required text encoding gives clients, relays, adapters, and runtimes one shared interpretation of protocol text. UTF-8 is already the natural encoding for JSON-based Overnet protocol surfaces and for Nostr-compatible event data. Requiring explicit binary forms keeps opaque bytes possible without letting ambiguous byte strings masquerade as text.

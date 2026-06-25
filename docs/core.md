@@ -186,6 +186,16 @@ Examples, explanations, and rationale are informative unless they are explicitly
 
 Overnet core events use structured JSON content for primary application data.
 
+All Overnet textual protocol elements MUST be Unicode scalar values encoded as UTF-8.
+
+Implementations MUST emit valid UTF-8 for every textual protocol element.
+
+Implementations MUST reject malformed UTF-8 at protocol boundaries before interpreting the affected value as Overnet text.
+
+Profiles and companion specifications MUST NOT define alternate encodings for textual protocol elements.
+
+Data that is not text MUST be represented by an explicitly typed binary form, such as a byte field or an encoded string whose encoding is defined by the applicable specification.
+
 Unless a profile states otherwise, string comparison, field names, type names, capability names, and namespace identifiers are exact and case-sensitive.
 
 Where this specification requires canonical representation, implementations MUST preserve the exact structured meaning of the represented data and MUST NOT treat semantically distinct encodings as interchangeable.
