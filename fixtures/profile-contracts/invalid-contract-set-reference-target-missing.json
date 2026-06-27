@@ -1,0 +1,89 @@
+{
+  "description": "contract set is invalid when an external reference target is absent from the resolved dependency contract",
+  "input": {
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-identity-profile-contract.json"
+    ],
+    "contracts": [
+      {
+        "contract_version": 1,
+        "profile": "chat",
+        "profile_version": "1.0.0",
+        "status": "draft",
+        "description": "Chat contract referencing an absent identity target.",
+        "capabilities": [
+          "chat.events"
+        ],
+        "depends_on": [
+          {
+            "profile": "identity",
+            "version": ">=1.0.0 <2.0.0"
+          }
+        ],
+        "object_types": {
+          "chat.channel": {
+            "description": "A chat channel.",
+            "id": {
+              "scheme": "profile-defined",
+              "pattern": null,
+              "examples": []
+            },
+            "state": {
+              "derivation": "event-log",
+              "state_event_type": null
+            },
+            "extensions": {}
+          }
+        },
+        "event_types": {
+          "chat.message": {
+            "description": "A message event.",
+            "kind": 7800,
+            "object_type": "chat.channel",
+            "required_tags": [
+              "overnet_v",
+              "overnet_et",
+              "overnet_ot",
+              "overnet_oid",
+              "v",
+              "t",
+              "o",
+              "d"
+            ],
+            "body_schema": {
+              "type": "object"
+            },
+            "references": [
+              {
+                "name": "sender_avatar",
+                "required": false,
+                "tag": "p",
+                "target_object_type": "identity.avatar",
+                "target_event_type": null
+              }
+            ],
+            "state_effect": "creates",
+            "authorization": {
+              "model": "open",
+              "description": "Open."
+            },
+            "privacy": "public",
+            "extensions": {}
+          }
+        },
+        "fixtures": {
+          "valid": [],
+          "invalid": [
+            "fixtures/profile-contracts/invalid-contract-set-reference-target-missing.json"
+          ]
+        },
+        "extensions": {}
+      }
+    ]
+  },
+  "expected": {
+    "overnet_valid": false,
+    "profile_contract_set_valid": false,
+    "reason": "profile_contract_set.reference_target_missing"
+  }
+}

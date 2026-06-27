@@ -214,4 +214,22 @@ Profile contracts are decentralized. Standard Overnet profiles may publish contr
 - JSON Schema only for `content.body`. This helps payload validation, but it cannot describe event kinds, object types, required tags, references, capabilities, privacy expectations, authorization metadata, fixtures, or state derivation.
 - A centralized universal application schema. This makes tooling easier in the narrow case, but it turns Overnet into a schema committee and conflicts with decentralization and application sovereignty.
 
-**Rationale:** The core defines the universal envelope. Profiles define profile-specific meaning. A small contract format gives tools a stable automation surface without requiring Overnet to define every possible application type. This is especially important for conformance validators, adapters, and overnet-burner, which can use contracts to generate realistic workloads and report profile-aware results.
+**Rationale:** The core defines the universal envelope. Profiles define profile-specific meaning. A small contract format gives tools a stable automation surface without requiring Overnet to define every possible application type. This is especially important for conformance validators, adapters, and automated test systems, which can use contracts to generate realistic workloads and report profile-aware results.
+
+## D015: Profile Contracts Compose Through Explicit Dependencies
+
+**Date:** 2026-06-27
+
+**Decision:** Profile Contract v1 supports composition by loading multiple independent contracts as a contract set. A contract may declare explicit profile dependencies in `depends_on`, and reference declarations may target object or event types from those dependency profiles.
+
+Profile Contract v1 does not support inheritance, mixins, imports, overrides, or mutation of definitions from another contract. Each contract owns only its own namespace. Cross-contract references are valid only when covered by an explicit dependency declaration and resolved by the selected contract set.
+
+Contract set validation rejects duplicate profile entries, missing dependency contracts, dependency contracts whose `profile_version` does not satisfy the declared version requirement, and external reference targets that do not exist in the resolved dependency contract.
+
+**Alternatives considered:**
+
+- No composition. Simpler, but forces every useful application contract to duplicate identity, authorization, storage, payment, or moderation semantics.
+- Inheritance or mixins. More expressive, but turns profile contracts into a schema programming language too early.
+- Implicit cross-profile references. Convenient in small examples, but makes validation dependent on ambient knowledge and weakens automation.
+
+**Rationale:** Explicit dependency-based composition gives validators, adapters, clients, and automated test systems a deterministic way to load related profile semantics without centralizing all application behavior or allowing one contract to rewrite another contract's meaning. Keeping V1 limited to explicit references leaves room for later extension without committing to inheritance semantics now.

@@ -70,6 +70,7 @@ The top-level object contains:
 | `status` | string | yes | Contract stability status. |
 | `description` | string | yes | Human-readable summary. |
 | `capabilities` | array | yes | Capability identifiers associated with the profile. |
+| `depends_on` | array | no | Other profile contracts required for cross-contract references. |
 | `object_types` | object | yes | Object type definitions keyed by object type name. |
 | `event_types` | object | yes | Event type definitions keyed by event type name. |
 | `fixtures` | object | yes | Valid and invalid conformance fixture paths. |
@@ -110,6 +111,56 @@ The `status` field is one of:
 - `draft`
 - `stable`
 - `deprecated`
+
+### 3.4 Dependencies
+
+The optional `depends_on` field declares profile contracts required by this
+contract for cross-contract references.
+
+Each dependency entry contains:
+
+| Field | Type | Required | Description |
+|---|---:|---:|---|
+| `profile` | string | yes | Profile namespace required by this contract. |
+| `version` | string | yes | Required profile version or version range. |
+
+The `profile` value uses the same namespace syntax as the top-level `profile`
+field.
+
+A dependency entry is invalid when its `profile` value equals the containing
+contract's top-level `profile` value.
+
+The `depends_on` array is invalid when more than one dependency entry uses the
+same `profile` value.
+
+The `version` value is either an exact semantic version:
+
+```text
+1.2.3
+```
+
+or one or two comparator terms separated by one space:
+
+```text
+>=1.0.0 <2.0.0
+```
+
+The supported comparators are:
+
+- `=`
+- `>`
+- `>=`
+- `<`
+- `<=`
+
+An exact semantic version is equivalent to `=` followed by that version.
+
+Version comparison uses numeric `major`, `minor`, and `patch` components. V1
+does not define pre-release or build metadata.
+
+Dependency declarations do not import, inherit, override, or mutate definitions
+from another contract. They only allow a contract set validator to resolve
+explicit cross-contract reference targets.
 
 ## 4. Object Type Definitions
 
@@ -255,15 +306,19 @@ Each `references` entry contains:
 | `target_object_type` | string or null | yes | Target object type, when object-typed. |
 | `target_event_type` | string or null | yes | Target event type, when event-typed. |
 
+Exactly one of `target_object_type` or `target_event_type` MUST be non-null.
+
+If `required` is true, `tag` MUST NOT be null.
+
 If `target_object_type` is not null, it identifies an object type defined by the
-same contract.
+same contract or by a profile listed in `depends_on`.
 
 If `target_event_type` is not null, it identifies an event type defined by the
-same contract.
+same contract or by a profile listed in `depends_on`.
 
-When `required` is true and `tag` is not null, the reference is a required
-tag-carried reference. Section 7 defines profile-aware event validation for
-required tag-carried references.
+When `required` is true, the reference is a required tag-carried reference.
+Section 8 defines profile-aware event validation for required tag-carried
+references.
 
 ### 5.6 State Effect
 
@@ -311,7 +366,56 @@ If `privacy` is `encrypted`, the profile specification identifies the
 applicable encryption or private-message companion specification. A profile
 contract alone is not sufficient to define encryption behavior.
 
-## 6. Fixtures
+## 6. Contract Composition
+
+Profile Contract v1 supports composition by loading multiple independent
+contracts as a contract set.
+
+A contract set is a selected validation context. It is not a new Overnet wire
+format.
+
+Each contract owns only its own namespace. A contract's `object_types` and
+`event_types` keys remain constrained to that contract's `profile` namespace.
+Definitions in one contract cannot override or replace definitions in another
+contract.
+
+In V1, composition applies to `references` entries. An event type's
+`object_type` field and an object type's `state_event_type` field remain
+same-contract links.
+
+A reference target is local when it starts with the current contract's `profile`
+value followed by a period.
+
+A reference target is external when it does not start with the current
+contract's `profile` value followed by a period.
+
+An external reference target is valid only when its type name starts with the
+`profile` value of an entry in `depends_on` followed by a period.
+
+A contract-set validator resolves external reference targets by loading the
+referenced dependency contract, checking that the dependency contract's
+`profile_version` satisfies the dependency `version` requirement, and then
+checking that the target object or event type exists in that dependency
+contract.
+
+A contract set is invalid when it contains more than one contract for the same
+`profile` value.
+
+A contract document with external reference targets covered by `depends_on` can
+be valid before dependency contracts are loaded. Loading and resolving the
+dependency contracts is part of contract-set validation.
+
+If a dependency contract is not available in the selected contract set,
+contract-set validation fails. That failure does not make otherwise core-valid
+events invalid at the core protocol level.
+
+If a dependency contract is available but its `profile_version` does not satisfy
+the dependency `version` requirement, contract-set validation fails.
+
+If an external reference target does not exist in the resolved dependency
+contract, contract-set validation fails.
+
+## 7. Fixtures
 
 The `fixtures` object contains:
 
@@ -342,7 +446,9 @@ Contract-document fixtures use the common fixture envelope with
 ```
 
 Profile-event fixtures use the common fixture envelope with `input.event` and
-either `input.contract` or `input.contract_fixture`:
+one or more selected contracts. Selected contracts may appear as
+`input.contract`, `input.contract_fixture`, `input.contracts`, or
+`input.contract_fixtures`:
 
 ```json
 {
@@ -359,6 +465,26 @@ either `input.contract` or `input.contract_fixture`:
 }
 ```
 
+Contract-set fixtures use the common fixture envelope with inline contracts,
+contract fixture paths, or both:
+
+```json
+{
+  "description": "fixture purpose",
+  "input": {
+    "contracts": [],
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-identity-profile-contract.json",
+      "fixtures/profile-contracts/valid-chat-identity-reference-contract.json"
+    ]
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_set_valid": true
+  }
+}
+```
+
 When no profile contract is selected, profile-aware event validation is not
 applicable. Fixtures for this case set `expected.profile_contract_selected` to
 `false` and `expected.profile_event_validation` to `"not_applicable"`.
@@ -368,22 +494,27 @@ For invalid profile contracts, `expected.overnet_valid` is `false`,
 the failed rule.
 
 For invalid profile events where core validation has already succeeded,
-`expected.overnet_valid` is `true`, `expected.profile_contract_valid` is `true`,
-`expected.profile_event_valid` is `false`, and `expected.reason` identifies the
-failed profile-aware validation rule.
+`expected.overnet_valid` is `true`, `expected.profile_event_valid` is `false`,
+and `expected.reason` identifies the failed profile-aware validation rule. If
+the selected validation context is one contract, `expected.profile_contract_valid`
+is `true`. If the selected validation context is a contract set,
+`expected.profile_contract_set_valid` is `true`.
 
-## 7. Profile-Aware Event Validation
+## 8. Profile-Aware Event Validation
 
 This section defines how profile-aware validators use a contract after core
 event validation succeeds.
 
 Profile-aware event validation is only active when a valid profile contract is
-selected.
+selected. A selected validation context can be a single valid profile contract
+or a valid contract set.
 
 A profile-aware validator MUST extract the event type from the `overnet_et` tag.
 
-A profile-aware validator MUST find an event type definition with a matching
-name in the selected profile contract.
+A profile-aware validator MUST find exactly one event type definition with a
+matching name in the selected validation context. In a contract set, the
+matching definition's contract is the defining contract for the remaining
+profile-aware event checks.
 
 A profile-aware validator MUST reject an event when the event's Nostr `kind`
 does not equal the contract event type's `kind`.
@@ -403,7 +534,7 @@ defined in `references`.
 Authorization enforcement is profile-specific. Passing the profile contract
 shape checks does not prove that the event is authorized.
 
-## 8. Discovery and Publication
+## 9. Discovery and Publication
 
 Profile contracts MAY be published in specification repositories, application
 repositories, relay metadata, package metadata, or other distribution channels.
@@ -413,7 +544,7 @@ The core protocol does not require a central registry of profile contracts.
 Implementations that advertise support for a profile SHOULD also advertise the
 contract identifier or retrieval location they use for that profile.
 
-## 9. Informative Example
+## 10. Informative Example
 
 The following example is informative.
 
@@ -425,6 +556,12 @@ The following example is informative.
   "status": "draft",
   "description": "Example chat profile contract.",
   "capabilities": ["chat.events"],
+  "depends_on": [
+    {
+      "profile": "identity",
+      "version": ">=1.0.0 <2.0.0"
+    }
+  ],
   "object_types": {
     "chat.channel": {
       "description": "A chat channel.",
@@ -466,7 +603,15 @@ The following example is informative.
           }
         }
       },
-      "references": [],
+      "references": [
+        {
+          "name": "sender_profile",
+          "required": false,
+          "tag": "p",
+          "target_object_type": "identity.profile",
+          "target_event_type": null
+        }
+      ],
       "state_effect": "creates",
       "authorization": {
         "model": "open",
@@ -483,24 +628,3 @@ The following example is informative.
   "extensions": {}
 }
 ```
-
-## 10. Informative Use by overnet-burner
-
-`overnet-burner` can consume profile contracts to generate realistic workloads.
-
-For example, a burner scenario can request an event mix by event type:
-
-```yaml
-profiles:
-  - path: ../spec/profiles/chat/profile-contract.json
-
-workload:
-  mix:
-    - event_type: chat.message
-      rate_per_second: 500
-```
-
-The burner can use the contract to choose the Nostr kind, required tags,
-`content.body` shape, reference requirements, and report categories. The
-contract remains a consumer input for burner; it is not authored by burner and
-does not replace the profile specification.

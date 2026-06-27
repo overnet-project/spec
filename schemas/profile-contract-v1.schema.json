@@ -45,6 +45,13 @@
       },
       "uniqueItems": true
     },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dependency"
+      },
+      "uniqueItems": true
+    },
     "object_types": {
       "type": "object",
       "minProperties": 1,
@@ -103,6 +110,10 @@
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
+    "semver_requirement": {
+      "type": "string",
+      "pattern": "^(?:\\d+\\.\\d+\\.\\d+|(?:=|>=|>|<=|<)\\d+\\.\\d+\\.\\d+(?: (?:=|>=|>|<=|<)\\d+\\.\\d+\\.\\d+)?)$"
+    },
     "relative_path": {
       "type": "string",
       "minLength": 1,
@@ -124,6 +135,22 @@
           "type": "null"
         }
       ]
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "version"
+      ],
+      "properties": {
+        "profile": {
+          "$ref": "#/$defs/profile_name"
+        },
+        "version": {
+          "$ref": "#/$defs/semver_requirement"
+        }
+      }
     },
     "object_type": {
       "type": "object",
@@ -365,7 +392,14 @@
           "type": "boolean"
         },
         "tag": {
-          "$ref": "#/$defs/nullable_string"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/tag_name"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "target_object_type": {
           "anyOf": [
@@ -387,7 +421,52 @@
             }
           ]
         }
-      }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "target_object_type": {
+                  "$ref": "#/$defs/profile_scoped_name"
+                },
+                "target_event_type": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "target_object_type": {
+                  "type": "null"
+                },
+                "target_event_type": {
+                  "$ref": "#/$defs/profile_scoped_name"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "if": {
+            "properties": {
+              "required": {
+                "const": true
+              }
+            },
+            "required": [
+              "required"
+            ]
+          },
+          "then": {
+            "properties": {
+              "tag": {
+                "$ref": "#/$defs/tag_name"
+              }
+            }
+          }
+        }
+      ]
     },
     "tag_name": {
       "type": "string",

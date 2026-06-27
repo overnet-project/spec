@@ -1,0 +1,13 @@
+{
+  "description": "valid contract set resolves a cross-contract reference through an explicit dependency",
+  "input": {
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-identity-profile-contract.json",
+      "fixtures/profile-contracts/valid-chat-identity-reference-contract.json"
+    ]
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_set_valid": true
+  }
+}

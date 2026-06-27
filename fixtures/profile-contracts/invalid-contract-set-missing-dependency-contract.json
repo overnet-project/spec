@@ -1,0 +1,13 @@
+{
+  "description": "contract set is invalid when a declared dependency profile is not present in the selected contract set",
+  "input": {
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-chat-identity-reference-contract.json"
+    ]
+  },
+  "expected": {
+    "overnet_valid": false,
+    "profile_contract_set_valid": false,
+    "reason": "profile_contract_set.dependency_missing"
+  }
+}

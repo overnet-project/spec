@@ -1,0 +1,93 @@
+{
+  "description": "valid profile contract using depends_on to declare a cross-contract identity reference",
+  "input": {
+    "contract": {
+      "contract_version": 1,
+      "profile": "chat",
+      "profile_version": "1.0.0",
+      "status": "draft",
+      "description": "Example chat profile contract referencing identity.",
+      "capabilities": [
+        "chat.events"
+      ],
+      "depends_on": [
+        {
+          "profile": "identity",
+          "version": ">=1.0.0 <2.0.0"
+        }
+      ],
+      "object_types": {
+        "chat.channel": {
+          "description": "A chat channel.",
+          "id": {
+            "scheme": "profile-defined",
+            "pattern": "^channel:[a-z0-9][a-z0-9._-]*$",
+            "examples": [
+              "channel:general"
+            ]
+          },
+          "state": {
+            "derivation": "event-log",
+            "state_event_type": null
+          },
+          "extensions": {}
+        }
+      },
+      "event_types": {
+        "chat.message": {
+          "description": "A message sent to a chat channel with an optional identity profile reference.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "references": [
+            {
+              "name": "sender_profile",
+              "required": false,
+              "tag": "p",
+              "target_object_type": "identity.profile",
+              "target_event_type": null
+            }
+          ],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "open",
+            "description": "Any authorized channel participant may send a message."
+          },
+          "privacy": "public",
+          "extensions": {}
+        }
+      },
+      "fixtures": {
+        "valid": [],
+        "invalid": []
+      },
+      "extensions": {}
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_valid": true
+  }
+}

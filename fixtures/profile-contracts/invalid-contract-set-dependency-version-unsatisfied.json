@@ -1,0 +1,89 @@
+{
+  "description": "contract set is invalid when a present dependency contract does not satisfy the required version range",
+  "input": {
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-identity-profile-contract.json"
+    ],
+    "contracts": [
+      {
+        "contract_version": 1,
+        "profile": "chat",
+        "profile_version": "1.0.0",
+        "status": "draft",
+        "description": "Chat contract requiring an unsupported identity version.",
+        "capabilities": [
+          "chat.events"
+        ],
+        "depends_on": [
+          {
+            "profile": "identity",
+            "version": ">=2.0.0 <3.0.0"
+          }
+        ],
+        "object_types": {
+          "chat.channel": {
+            "description": "A chat channel.",
+            "id": {
+              "scheme": "profile-defined",
+              "pattern": null,
+              "examples": []
+            },
+            "state": {
+              "derivation": "event-log",
+              "state_event_type": null
+            },
+            "extensions": {}
+          }
+        },
+        "event_types": {
+          "chat.message": {
+            "description": "A message event.",
+            "kind": 7800,
+            "object_type": "chat.channel",
+            "required_tags": [
+              "overnet_v",
+              "overnet_et",
+              "overnet_ot",
+              "overnet_oid",
+              "v",
+              "t",
+              "o",
+              "d"
+            ],
+            "body_schema": {
+              "type": "object"
+            },
+            "references": [
+              {
+                "name": "sender_profile",
+                "required": false,
+                "tag": "p",
+                "target_object_type": "identity.profile",
+                "target_event_type": null
+              }
+            ],
+            "state_effect": "creates",
+            "authorization": {
+              "model": "open",
+              "description": "Open."
+            },
+            "privacy": "public",
+            "extensions": {}
+          }
+        },
+        "fixtures": {
+          "valid": [],
+          "invalid": [
+            "fixtures/profile-contracts/invalid-contract-set-dependency-version-unsatisfied.json"
+          ]
+        },
+        "extensions": {}
+      }
+    ]
+  },
+  "expected": {
+    "overnet_valid": false,
+    "profile_contract_set_valid": false,
+    "reason": "profile_contract_set.dependency_version_unsatisfied"
+  }
+}
