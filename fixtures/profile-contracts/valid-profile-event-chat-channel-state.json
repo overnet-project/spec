@@ -1,0 +1,29 @@
+{
+  "description": "profile-aware validation accepts a channel state event matching a parameterized replaceable profile event type",
+  "input": {
+    "contract_fixture": "fixtures/profile-contracts/valid-chat-channel-state-contract.json",
+    "event": {
+      "id": "1313131313131313131313131313131313131313131313131313131313131313",
+      "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "created_at": 1744300802,
+      "kind": 37800,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.channel.state"],
+        ["overnet_ot", "chat.channel"],
+        ["overnet_oid", "channel:general"],
+        ["v", "0.1.0"],
+        ["t", "chat.channel.state"],
+        ["o", "chat.channel"],
+        ["d", "channel:general"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"title\":\"General\",\"topic\":\"Project discussion\"}}",
+      "sig": "acacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacac"
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_valid": true,
+    "profile_event_valid": true
+  }
+}

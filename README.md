@@ -48,10 +48,14 @@ See [docs/status.md](docs/status.md) for more detail.
   - companion adapter specifications
 - [docs/programs/](docs/programs/)
   - companion Overnet program runtime, protocol, and services specifications
+- [docs/profile-contracts.md](docs/profile-contracts.md)
+  - optional machine-readable profile contract format
 - [docs/auth.md](docs/auth.md)
   - the draft Overnet Authentication Agent specification
 - [docs/profiles/](docs/profiles/)
   - companion application profile specifications
+- [schemas/](schemas/)
+  - JSON schemas for machine-readable specification artifacts
 - [docs/registries/](docs/registries/)
   - registries, namespaces, and related reference material
 - [fixtures/](fixtures/)
@@ -72,6 +76,7 @@ The current documents and fixtures cover:
 - the first draft Overnet Program Protocol specification
 - the first draft Overnet Program Services specification
 - the first draft Overnet Authentication Agent specification
+- the first draft Overnet Profile Contract format
 - initial auth-agent protocol and bridge fixtures
 
 Application-specific behavior and additional adapters are still expected to be defined in companion specifications rather than folded into the core.

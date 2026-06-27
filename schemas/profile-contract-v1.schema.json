@@ -1,0 +1,397 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/overnet-project/spec/schemas/profile-contract-v1.schema.json",
+  "title": "Overnet Profile Contract v1",
+  "description": "Machine-readable contract for a profile's use of the Overnet core event envelope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "profile",
+    "profile_version",
+    "status",
+    "description",
+    "capabilities",
+    "object_types",
+    "event_types",
+    "fixtures",
+    "extensions"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": 1
+    },
+    "profile": {
+      "$ref": "#/$defs/profile_name"
+    },
+    "profile_version": {
+      "$ref": "#/$defs/semver"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "stable",
+        "deprecated"
+      ]
+    },
+    "description": {
+      "$ref": "#/$defs/non_empty_string"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/profile_scoped_name"
+      },
+      "uniqueItems": true
+    },
+    "object_types": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/object_type"
+      },
+      "propertyNames": {
+        "$ref": "#/$defs/profile_scoped_name"
+      }
+    },
+    "event_types": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/event_type"
+      },
+      "propertyNames": {
+        "$ref": "#/$defs/profile_scoped_name"
+      }
+    },
+    "fixtures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "valid",
+        "invalid"
+      ],
+      "properties": {
+        "valid": {
+          "$ref": "#/$defs/fixture_path_list"
+        },
+        "invalid": {
+          "$ref": "#/$defs/fixture_path_list"
+        }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "non_empty_string": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+    },
+    "profile_scoped_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)+$"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(^|/)\\.\\.(/|$)).+"
+    },
+    "fixture_path_list": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relative_path"
+      },
+      "uniqueItems": true
+    },
+    "nullable_string": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "object_type": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "id",
+        "state",
+        "extensions"
+      ],
+      "properties": {
+        "description": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scheme",
+            "pattern",
+            "examples"
+          ],
+          "properties": {
+            "scheme": {
+              "type": "string",
+              "enum": [
+                "profile-defined",
+                "uuid",
+                "uri",
+                "content-addressed",
+                "opaque"
+              ]
+            },
+            "pattern": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/non_empty_string"
+              }
+            }
+          }
+        },
+        "state": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "derivation",
+            "state_event_type"
+          ],
+          "properties": {
+            "derivation": {
+              "type": "string",
+              "enum": [
+                "event-log",
+                "latest-per-author",
+                "external-authoritative",
+                "profile-defined"
+              ]
+            },
+            "state_event_type": {
+              "$ref": "#/$defs/nullable_string"
+            }
+          }
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "event_type": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "kind",
+        "object_type",
+        "required_tags",
+        "body_schema",
+        "references",
+        "state_effect",
+        "authorization",
+        "privacy",
+        "extensions"
+      ],
+      "properties": {
+        "description": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "kind": {
+          "type": "integer",
+          "enum": [
+            7800,
+            37800
+          ]
+        },
+        "object_type": {
+          "$ref": "#/$defs/profile_scoped_name"
+        },
+        "required_tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tag_name"
+          },
+          "uniqueItems": true,
+          "allOf": [
+            {
+              "contains": {
+                "const": "overnet_v"
+              }
+            },
+            {
+              "contains": {
+                "const": "overnet_et"
+              }
+            },
+            {
+              "contains": {
+                "const": "overnet_ot"
+              }
+            },
+            {
+              "contains": {
+                "const": "overnet_oid"
+              }
+            },
+            {
+              "contains": {
+                "const": "v"
+              }
+            },
+            {
+              "contains": {
+                "const": "t"
+              }
+            },
+            {
+              "contains": {
+                "const": "o"
+              }
+            },
+            {
+              "contains": {
+                "const": "d"
+              }
+            }
+          ]
+        },
+        "body_schema": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "object"
+            }
+          }
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "state_effect": {
+          "type": "string",
+          "enum": [
+            "none",
+            "creates",
+            "updates",
+            "removes",
+            "profile-defined"
+          ]
+        },
+        "authorization": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "model",
+            "description"
+          ],
+          "properties": {
+            "model": {
+              "type": "string",
+              "enum": [
+                "open",
+                "author-is-object-owner",
+                "delegated",
+                "external-authority",
+                "profile-defined"
+              ]
+            },
+            "description": {
+              "$ref": "#/$defs/non_empty_string"
+            }
+          }
+        },
+        "privacy": {
+          "type": "string",
+          "enum": [
+            "public",
+            "encrypted",
+            "profile-defined"
+          ]
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "required",
+        "tag",
+        "target_object_type",
+        "target_event_type"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "tag": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "target_object_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/profile_scoped_name"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target_event_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/profile_scoped_name"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "tag_name": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_:-]+$"
+    }
+  }
+}

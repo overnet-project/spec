@@ -324,6 +324,8 @@ Profiles may define application behavior, adapter behavior, storage rules, secur
 
 A profile may require specific capabilities, additional validation rules, or additional data model constraints.
 
+Machine-readable profile contract documents are defined by the [Overnet Profile Contract Specification](profile-contracts.md). Profile contracts describe profile-specific semantics without replacing the Overnet core event envelope. Profile contracts are optional at the core protocol level; absence of a selected profile contract does not make a core-valid event invalid.
+
 #### 3.2.7 Policy
 
 A policy is a rule set enforced by an operator, relay, application, or adapter concerning acceptance, rejection, transformation, retention, moderation, access, or other handling of Overnet data or actions.

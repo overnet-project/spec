@@ -1,0 +1,30 @@
+{
+  "description": "profile-aware validation rejects an event missing an additional tag listed in required_tags",
+  "input": {
+    "contract_fixture": "fixtures/profile-contracts/valid-chat-message-client-tag-contract.json",
+    "event": {
+      "id": "2424242424242424242424242424242424242424242424242424242424242424",
+      "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "created_at": 1744300813,
+      "kind": 7800,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.message"],
+        ["overnet_ot", "chat.channel"],
+        ["overnet_oid", "channel:general"],
+        ["v", "0.1.0"],
+        ["t", "chat.message"],
+        ["o", "chat.channel"],
+        ["d", "channel:general"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"text\":\"Hello\"}}",
+      "sig": "bdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbd"
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_valid": true,
+    "profile_event_valid": false,
+    "reason": "profile_event.required_tag_missing"
+  }
+}

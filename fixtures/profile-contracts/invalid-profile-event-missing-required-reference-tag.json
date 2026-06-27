@@ -1,0 +1,30 @@
+{
+  "description": "profile-aware validation rejects an event missing a required tag-carried reference",
+  "input": {
+    "contract_fixture": "fixtures/profile-contracts/valid-chat-reply-contract.json",
+    "event": {
+      "id": "2626262626262626262626262626262626262626262626262626262626262626",
+      "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "created_at": 1744300815,
+      "kind": 7800,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.message.reply"],
+        ["overnet_ot", "chat.channel"],
+        ["overnet_oid", "channel:general"],
+        ["v", "0.1.0"],
+        ["t", "chat.message.reply"],
+        ["o", "chat.channel"],
+        ["d", "channel:general"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"text\":\"I agree\"}}",
+      "sig": "bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf"
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_valid": true,
+    "profile_event_valid": false,
+    "reason": "profile_event.required_reference_tag_missing"
+  }
+}

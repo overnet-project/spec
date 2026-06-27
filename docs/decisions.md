@@ -199,3 +199,19 @@ Overnet-specific semantics SHOULD be defined only when existing NIPs are insuffi
 - Treat text fields as arbitrary byte strings. This avoids early decoding failures, but makes display, comparison, signatures, validation, and bridge behavior less predictable.
 
 **Rationale:** A single required text encoding gives clients, relays, adapters, and runtimes one shared interpretation of protocol text. UTF-8 is already the natural encoding for JSON-based Overnet protocol surfaces and for Nostr-compatible event data. Requiring explicit binary forms keeps opaque bytes possible without letting ambiguous byte strings masquerade as text.
+
+## D014: Profile Contracts Describe Profile Semantics Without Replacing Core Events
+
+**Date:** 2026-06-27
+
+**Decision:** Overnet defines an optional Profile Contract format for machine-readable profile semantics. A profile contract describes object types, event types, payload schemas, references, authorization metadata, privacy expectations, capabilities, and fixtures for a profile. It does not replace the Nostr event as the canonical signed wire unit, and it does not replace the Overnet core event envelope.
+
+Profile contracts are decentralized. Standard Overnet profiles may publish contracts under namespaces reserved by the Overnet specification family. Applications and adapters may publish their own contracts under namespaces they control.
+
+**Alternatives considered:**
+
+- No machine-readable profile contract. This keeps the spec simpler, but leaves validators, adapters, clients, and scale-test tools to hardcode profile semantics or parse prose.
+- JSON Schema only for `content.body`. This helps payload validation, but it cannot describe event kinds, object types, required tags, references, capabilities, privacy expectations, authorization metadata, fixtures, or state derivation.
+- A centralized universal application schema. This makes tooling easier in the narrow case, but it turns Overnet into a schema committee and conflicts with decentralization and application sovereignty.
+
+**Rationale:** The core defines the universal envelope. Profiles define profile-specific meaning. A small contract format gives tools a stable automation surface without requiring Overnet to define every possible application type. This is especially important for conformance validators, adapters, and overnet-burner, which can use contracts to generate realistic workloads and report profile-aware results.
