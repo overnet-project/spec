@@ -1,0 +1,33 @@
+{
+  "description": "profile-aware validation accepts a chat message event using a selected contract set",
+  "input": {
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-identity-profile-contract.json",
+      "fixtures/profile-contracts/valid-chat-identity-reference-contract.json"
+    ],
+    "event": {
+      "id": "4141414141414141414141414141414141414141414141414141414141414141",
+      "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "created_at": 1744300830,
+      "kind": 7800,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.message"],
+        ["overnet_ot", "chat.channel"],
+        ["overnet_oid", "channel:general"],
+        ["v", "0.1.0"],
+        ["t", "chat.message"],
+        ["o", "chat.channel"],
+        ["d", "channel:general"],
+        ["p", "npub:alice"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"text\":\"Hello\"}}",
+      "sig": "dadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadada"
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_set_valid": true,
+    "profile_event_valid": true
+  }
+}

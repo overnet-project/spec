@@ -1,0 +1,29 @@
+{
+  "description": "profile contracts are optional: a core-valid event remains valid when no profile contract is selected",
+  "input": {
+    "contract": null,
+    "event": {
+      "id": "3131313131313131313131313131313131313131313131313131313131313131",
+      "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "created_at": 1744300820,
+      "kind": 7800,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.message"],
+        ["overnet_ot", "chat.channel"],
+        ["overnet_oid", "channel:general"],
+        ["v", "0.1.0"],
+        ["t", "chat.message"],
+        ["o", "chat.channel"],
+        ["d", "channel:general"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"text\":\"Hello\"}}",
+      "sig": "cacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacaca"
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_selected": false,
+    "profile_event_validation": "not_applicable"
+  }
+}

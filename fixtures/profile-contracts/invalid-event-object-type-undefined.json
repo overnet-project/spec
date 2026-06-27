@@ -1,0 +1,68 @@
+{
+  "description": "profile contract is invalid when an event type references an undefined object type",
+  "input": {
+    "contract": {
+      "contract_version": 1,
+      "profile": "chat",
+      "profile_version": "1.0.0",
+      "status": "draft",
+      "description": "Invalid object type reference.",
+      "capabilities": [],
+      "object_types": {
+        "chat.channel": {
+          "description": "A chat channel.",
+          "id": {
+            "scheme": "profile-defined",
+            "pattern": null,
+            "examples": []
+          },
+          "state": {
+            "derivation": "event-log",
+            "state_event_type": null
+          },
+          "extensions": {}
+        }
+      },
+      "event_types": {
+        "chat.message": {
+          "description": "A message with an undefined object type.",
+          "kind": 7800,
+          "object_type": "chat.thread",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object"
+          },
+          "references": [],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "open",
+            "description": "Open."
+          },
+          "privacy": "public",
+          "extensions": {}
+        }
+      },
+      "fixtures": {
+        "valid": [],
+        "invalid": [
+          "fixtures/profile-contracts/invalid-event-object-type-undefined.json"
+        ]
+      },
+      "extensions": {}
+    }
+  },
+  "expected": {
+    "overnet_valid": false,
+    "profile_contract_valid": false,
+    "reason": "profile_contract.event_object_type_undefined"
+  }
+}

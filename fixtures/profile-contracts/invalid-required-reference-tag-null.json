@@ -1,0 +1,104 @@
+{
+  "description": "profile contract is invalid when a required reference has no carrying tag",
+  "input": {
+    "contract": {
+      "contract_version": 1,
+      "profile": "chat",
+      "profile_version": "1.0.0",
+      "status": "draft",
+      "description": "Invalid required reference with no tag.",
+      "capabilities": [
+        "chat.events"
+      ],
+      "object_types": {
+        "chat.channel": {
+          "description": "A chat channel.",
+          "id": {
+            "scheme": "profile-defined",
+            "pattern": null,
+            "examples": []
+          },
+          "state": {
+            "derivation": "event-log",
+            "state_event_type": null
+          },
+          "extensions": {}
+        }
+      },
+      "event_types": {
+        "chat.message": {
+          "description": "A message event.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object"
+          },
+          "references": [],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "open",
+            "description": "Open."
+          },
+          "privacy": "public",
+          "extensions": {}
+        },
+        "chat.message.reply": {
+          "description": "A reply event with an unenforceable required reference.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object"
+          },
+          "references": [
+            {
+              "name": "parent",
+              "required": true,
+              "tag": null,
+              "target_object_type": null,
+              "target_event_type": "chat.message"
+            }
+          ],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "open",
+            "description": "Open."
+          },
+          "privacy": "public",
+          "extensions": {}
+        }
+      },
+      "fixtures": {
+        "valid": [],
+        "invalid": [
+          "fixtures/profile-contracts/invalid-required-reference-tag-null.json"
+        ]
+      },
+      "extensions": {}
+    }
+  },
+  "expected": {
+    "overnet_valid": false,
+    "profile_contract_valid": false,
+    "reason": "profile_contract.required_reference_tag_missing"
+  }
+}

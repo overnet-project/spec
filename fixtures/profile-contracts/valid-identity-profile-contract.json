@@ -1,0 +1,75 @@
+{
+  "description": "valid profile contract for identity profile objects referenced by other contracts",
+  "input": {
+    "contract": {
+      "contract_version": 1,
+      "profile": "identity",
+      "profile_version": "1.0.0",
+      "status": "draft",
+      "description": "Example identity profile contract.",
+      "capabilities": [
+        "identity.events"
+      ],
+      "object_types": {
+        "identity.profile": {
+          "description": "A user identity profile.",
+          "id": {
+            "scheme": "profile-defined",
+            "pattern": "^npub:[a-z0-9]+$",
+            "examples": [
+              "npub:alice"
+            ]
+          },
+          "state": {
+            "derivation": "latest-per-author",
+            "state_event_type": "identity.profile.updated"
+          },
+          "extensions": {}
+        }
+      },
+      "event_types": {
+        "identity.profile.updated": {
+          "description": "Current identity profile state.",
+          "kind": 37800,
+          "object_type": "identity.profile",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "display_name": {
+                "type": "string"
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "updates",
+          "authorization": {
+            "model": "author-is-object-owner",
+            "description": "The profile owner controls profile state."
+          },
+          "privacy": "public",
+          "extensions": {}
+        }
+      },
+      "fixtures": {
+        "valid": [],
+        "invalid": []
+      },
+      "extensions": {}
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_valid": true
+  }
+}

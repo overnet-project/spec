@@ -1,0 +1,80 @@
+{
+  "description": "profile contract is invalid when depends_on contains duplicate profile entries",
+  "input": {
+    "contract": {
+      "contract_version": 1,
+      "profile": "chat",
+      "profile_version": "1.0.0",
+      "status": "draft",
+      "description": "Invalid duplicate dependency profile.",
+      "capabilities": [
+        "chat.events"
+      ],
+      "depends_on": [
+        {
+          "profile": "identity",
+          "version": ">=1.0.0 <2.0.0"
+        },
+        {
+          "profile": "identity",
+          "version": ">=1.1.0 <2.0.0"
+        }
+      ],
+      "object_types": {
+        "chat.channel": {
+          "description": "A chat channel.",
+          "id": {
+            "scheme": "profile-defined",
+            "pattern": null,
+            "examples": []
+          },
+          "state": {
+            "derivation": "event-log",
+            "state_event_type": null
+          },
+          "extensions": {}
+        }
+      },
+      "event_types": {
+        "chat.message": {
+          "description": "A message event.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object"
+          },
+          "references": [],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "open",
+            "description": "Open."
+          },
+          "privacy": "public",
+          "extensions": {}
+        }
+      },
+      "fixtures": {
+        "valid": [],
+        "invalid": [
+          "fixtures/profile-contracts/invalid-duplicate-dependency-profile.json"
+        ]
+      },
+      "extensions": {}
+    }
+  },
+  "expected": {
+    "overnet_valid": false,
+    "profile_contract_valid": false,
+    "reason": "profile_contract.duplicate_dependency_profile"
+  }
+}

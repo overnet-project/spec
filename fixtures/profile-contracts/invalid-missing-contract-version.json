@@ -1,0 +1,71 @@
+{
+  "description": "profile contract is invalid when contract_version is missing",
+  "input": {
+    "contract": {
+      "profile": "chat",
+      "profile_version": "1.0.0",
+      "status": "draft",
+      "description": "Missing contract version.",
+      "capabilities": [
+        "chat.events"
+      ],
+      "object_types": {
+        "chat.channel": {
+          "description": "A chat channel.",
+          "id": {
+            "scheme": "profile-defined",
+            "pattern": null,
+            "examples": [
+              "channel:general"
+            ]
+          },
+          "state": {
+            "derivation": "event-log",
+            "state_event_type": null
+          },
+          "extensions": {}
+        }
+      },
+      "event_types": {
+        "chat.message": {
+          "description": "A message sent to a chat channel.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object"
+          },
+          "references": [],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "open",
+            "description": "Open."
+          },
+          "privacy": "public",
+          "extensions": {}
+        }
+      },
+      "fixtures": {
+        "valid": [],
+        "invalid": [
+          "fixtures/profile-contracts/invalid-missing-contract-version.json"
+        ]
+      },
+      "extensions": {}
+    }
+  },
+  "expected": {
+    "overnet_valid": false,
+    "profile_contract_valid": false,
+    "reason": "profile_contract.missing_contract_version"
+  }
+}

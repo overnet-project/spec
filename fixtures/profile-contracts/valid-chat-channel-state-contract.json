@@ -1,0 +1,84 @@
+{
+  "description": "valid profile contract for a parameterized replaceable channel state event type",
+  "input": {
+    "contract": {
+      "contract_version": 1,
+      "profile": "chat",
+      "profile_version": "1.0.0",
+      "status": "draft",
+      "description": "Example chat state profile contract.",
+      "capabilities": [
+        "chat.state"
+      ],
+      "object_types": {
+        "chat.channel": {
+          "description": "A chat channel.",
+          "id": {
+            "scheme": "profile-defined",
+            "pattern": "^channel:[a-z0-9][a-z0-9._-]*$",
+            "examples": [
+              "channel:general"
+            ]
+          },
+          "state": {
+            "derivation": "latest-per-author",
+            "state_event_type": "chat.channel.state"
+          },
+          "extensions": {}
+        }
+      },
+      "event_types": {
+        "chat.channel.state": {
+          "description": "Current channel state.",
+          "kind": 37800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "topic": {
+                "type": "string"
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "updates",
+          "authorization": {
+            "model": "author-is-object-owner",
+            "description": "The channel owner controls channel state."
+          },
+          "privacy": "public",
+          "extensions": {}
+        }
+      },
+      "fixtures": {
+        "valid": [
+          "fixtures/profile-contracts/valid-profile-event-chat-channel-state.json"
+        ],
+        "invalid": []
+      },
+      "extensions": {}
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_valid": true
+  }
+}

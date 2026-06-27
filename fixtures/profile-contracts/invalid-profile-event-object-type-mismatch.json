@@ -1,0 +1,30 @@
+{
+  "description": "profile-aware validation rejects an event whose overnet_ot does not match the selected profile event type",
+  "input": {
+    "contract_fixture": "fixtures/profile-contracts/valid-chat-message-contract.json",
+    "event": {
+      "id": "2323232323232323232323232323232323232323232323232323232323232323",
+      "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "created_at": 1744300812,
+      "kind": 7800,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.message"],
+        ["overnet_ot", "chat.thread"],
+        ["overnet_oid", "channel:general"],
+        ["v", "0.1.0"],
+        ["t", "chat.message"],
+        ["o", "chat.thread"],
+        ["d", "channel:general"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"text\":\"Hello\"}}",
+      "sig": "bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc"
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_valid": true,
+    "profile_event_valid": false,
+    "reason": "profile_event.object_type_mismatch"
+  }
+}
