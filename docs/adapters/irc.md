@@ -264,6 +264,10 @@ This direct-message object identifier is adapter-local and directional. This spe
 
 ## 8. Event Mapping
 
+All mapped Overnet events MUST satisfy the core event tag requirements defined
+in [Overnet Core §6.3.1](../core.md#631-required-nostr-tags), including the
+single-letter compatibility mirror tags.
+
 ### 8.1 Channel `PRIVMSG`
 
 An IRC `PRIVMSG` sent to a channel target MUST be mapped to an Overnet event with:
@@ -567,7 +571,11 @@ The following example is informative:
     ["overnet_v", "0.1.0"],
     ["overnet_et", "chat.message"],
     ["overnet_ot", "chat.channel"],
-    ["overnet_oid", "irc:libera.chat:#overnet"]
+    ["overnet_oid", "irc:libera.chat:#overnet"],
+    ["v", "0.1.0"],
+    ["t", "chat.message"],
+    ["o", "chat.channel"],
+    ["d", "irc:libera.chat:#overnet"]
   ],
   "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"text\":\"Hello from IRC!\"}}"
 }
@@ -584,7 +592,11 @@ The following example is informative:
     ["overnet_v", "0.1.0"],
     ["overnet_et", "chat.dm_message"],
     ["overnet_ot", "chat.dm"],
-    ["overnet_oid", "irc:irc.libera.chat:dm:alice"]
+    ["overnet_oid", "irc:irc.libera.chat:dm:alice"],
+    ["v", "0.1.0"],
+    ["t", "chat.dm_message"],
+    ["o", "chat.dm"],
+    ["d", "irc:irc.libera.chat:dm:alice"]
   ],
   "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/alice\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"text\":\"hello in private\"}}"
 }

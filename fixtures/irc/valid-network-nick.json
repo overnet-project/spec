@@ -16,7 +16,11 @@
         ["overnet_v", "0.1.0"],
         ["overnet_et", "irc.nick"],
         ["overnet_ot", "irc.network"],
-        ["overnet_oid", "irc:irc.libera.chat"]
+        ["overnet_oid", "irc:irc.libera.chat"],
+        ["v", "0.1.0"],
+        ["t", "irc.nick"],
+        ["o", "irc.network"],
+        ["d", "irc:irc.libera.chat"]
       ],
       "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"old_nick\":\"alice\",\"new_nick\":\"alice_\"}}"
     }

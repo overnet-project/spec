@@ -17,7 +17,11 @@
         ["overnet_v", "0.1.0"],
         ["overnet_et", "chat.dm_notice"],
         ["overnet_ot", "chat.dm"],
-        ["overnet_oid", "irc:irc.libera.chat:dm:alice"]
+        ["overnet_oid", "irc:irc.libera.chat:dm:alice"],
+        ["v", "0.1.0"],
+        ["t", "chat.dm_notice"],
+        ["o", "chat.dm"],
+        ["d", "irc:irc.libera.chat:dm:alice"]
       ],
       "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/alice\",\"external_identity\":\"NickServ\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"text\":\"You are now identified.\"}}"
     }
