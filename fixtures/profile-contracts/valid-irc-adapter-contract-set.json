@@ -1,0 +1,13 @@
+{
+  "description": "valid IRC adapter contract set combines chat and IRC profile contracts",
+  "input": {
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-chat-irc-surface-contract.json",
+      "fixtures/profile-contracts/valid-irc-adapter-contract.json"
+    ]
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_set_valid": true
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "description": "profile-aware validation accepts an IRC direct PRIVMSG mapped as chat.dm_message using the IRC adapter contract set",
+  "input": {
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-chat-irc-surface-contract.json",
+      "fixtures/profile-contracts/valid-irc-adapter-contract.json"
+    ],
+    "event": {
+      "id": "3838383838383838383838383838383838383838383838383838383838383838",
+      "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "created_at": 1744300803,
+      "kind": 7800,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.dm_message"],
+        ["overnet_ot", "chat.dm"],
+        ["overnet_oid", "irc:irc.libera.chat:dm:alice"],
+        ["v", "0.1.0"],
+        ["t", "chat.dm_message"],
+        ["o", "chat.dm"],
+        ["d", "irc:irc.libera.chat:dm:alice"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/alice\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"text\":\"hello in private\"}}",
+      "sig": "bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc"
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_set_valid": true,
+    "profile_event_valid": true
+  }
+}

@@ -55,6 +55,24 @@ In particular:
 - IRC-adapted events MUST disclose origin and known translation limitations
 - IRC-adapted events MUST preserve the distinction between native Overnet authority and adapted IRC authority
 
+### 2.1 Profile Contract
+
+The conformance fixture for the machine-readable profile contract set for the
+IRC-adapted event surface defined by this specification is
+`fixtures/profile-contracts/valid-irc-adapter-contract-set.json`.
+
+That fixture selects the chat profile contract for shared `chat.*` event and
+object types and the IRC adapter profile contract for `irc.*` event and object
+types.
+
+That contract set covers the Overnet profile/application semantics of the IRC
+mapping. It does not define IRC socket numerics, CAP negotiation, SASL
+mechanisms, IRC session lifecycle, or IRC server presentation behavior.
+
+Profile contracts remain optional at the core protocol level. This adapter
+specification points to a profile contract set without making profile contracts
+mandatory for core-valid Overnet events.
+
 ## 3. Protocol Baseline
 
 This specification defines a baseline IRC adapter model for traditional RFC-style IRC networks.

@@ -1,0 +1,211 @@
+{
+  "description": "valid IRC adapter profile contract for IRC-specific events and objects",
+  "input": {
+    "contract": {
+      "contract_version": 1,
+      "profile": "irc",
+      "profile_version": "1.0.0",
+      "status": "draft",
+      "description": "IRC adapter profile contract for IRC-specific Overnet events.",
+      "capabilities": [
+        "irc.events"
+      ],
+      "depends_on": [
+        {
+          "profile": "chat",
+          "version": ">=1.0.0 <2.0.0"
+        }
+      ],
+      "object_types": {
+        "irc.network": {
+          "description": "An IRC network namespace.",
+          "id": {
+            "scheme": "profile-defined",
+            "pattern": "^irc:[^:\\\\s]+$",
+            "examples": [
+              "irc:irc.libera.chat"
+            ]
+          },
+          "state": {
+            "derivation": "event-log",
+            "state_event_type": null
+          },
+          "extensions": {}
+        }
+      },
+      "event_types": {
+        "irc.nick": {
+          "description": "A network-scoped IRC nick change.",
+          "kind": 7800,
+          "object_type": "irc.network",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "old_nick",
+              "new_nick"
+            ],
+            "properties": {
+              "old_nick": {
+                "type": "string",
+                "minLength": 1
+              },
+              "new_nick": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "external-authority",
+            "description": "The IRC network is the external authority for observed nick changes."
+          },
+          "privacy": "public",
+          "extensions": {}
+        },
+        "irc.mode": {
+          "description": "An observed IRC channel mode change.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "mode"
+            ],
+            "properties": {
+              "mode": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mode_args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "external-authority",
+            "description": "The IRC network is the external authority for observed channel mode changes."
+          },
+          "privacy": "public",
+          "extensions": {}
+        },
+        "irc.channel_presence": {
+          "description": "A derived IRC channel presence state view.",
+          "kind": 37800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "members",
+              "partial",
+              "as_of"
+            ],
+            "properties": {
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "nick"
+                  ],
+                  "properties": {
+                    "nick": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "account": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "user": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "host": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "last_event_type": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "partial": {
+                "type": "boolean"
+              },
+              "as_of": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "updates",
+          "authorization": {
+            "model": "external-authority",
+            "description": "The adapter derives presence from observed IRC network state."
+          },
+          "privacy": "public",
+          "extensions": {}
+        }
+      },
+      "fixtures": {
+        "valid": [
+          "fixtures/profile-contracts/valid-profile-event-irc-network-nick-contract-set.json",
+          "fixtures/profile-contracts/valid-profile-event-irc-channel-mode-contract-set.json",
+          "fixtures/profile-contracts/valid-profile-event-irc-channel-presence-contract-set.json"
+        ],
+        "invalid": [
+          "fixtures/profile-contracts/invalid-contract-set-event-object-type-target-missing.json"
+        ]
+      },
+      "extensions": {}
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_valid": true
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "description": "profile-aware validation accepts an IRC QUIT mapped as chat.quit using the IRC adapter contract set",
+  "input": {
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-chat-irc-surface-contract.json",
+      "fixtures/profile-contracts/valid-irc-adapter-contract.json"
+    ],
+    "event": {
+      "id": "4242424242424242424242424242424242424242424242424242424242424242",
+      "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "created_at": 1744300886,
+      "kind": 7800,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.quit"],
+        ["overnet_ot", "chat.channel"],
+        ["overnet_oid", "irc:irc.libera.chat:#overnet"],
+        ["v", "0.1.0"],
+        ["t", "chat.quit"],
+        ["o", "chat.channel"],
+        ["d", "irc:irc.libera.chat:#overnet"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{\"reason\":\"Quit: connection reset\"}}",
+      "sig": "12121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212"
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_set_valid": true,
+    "profile_event_valid": true
+  }
+}

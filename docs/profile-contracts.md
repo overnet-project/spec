@@ -256,10 +256,22 @@ Profile contracts do not define event type semantics for kind `7801`. Kind
 
 ### 5.2 Object Type Link
 
-The `object_type` field identifies an object type defined by the same contract.
+The `object_type` field identifies the object type targeted by the event type.
 
 The event type's `object_type` field corresponds to the event's `overnet_ot`
 tag value.
+
+When the `object_type` value starts with the current contract's `profile` value
+followed by a period, it identifies an object type defined by the same
+contract.
+
+When the `object_type` value does not start with the current contract's
+`profile` value followed by a period, it identifies an object type defined by a
+profile listed in `depends_on`.
+
+A contract document with an external `object_type` value covered by
+`depends_on` can be valid before the dependency contract is loaded. Loading and
+resolving the dependency contract is part of contract-set validation.
 
 ### 5.3 Required Tags
 
@@ -379,31 +391,30 @@ Each contract owns only its own namespace. A contract's `object_types` and
 Definitions in one contract cannot override or replace definitions in another
 contract.
 
-In V1, composition applies to `references` entries. An event type's
-`object_type` field and an object type's `state_event_type` field remain
-same-contract links.
+In V1, composition applies to `references` entries and event type
+`object_type` links. An object type's `state_event_type` field remains a
+same-contract link.
 
-A reference target is local when it starts with the current contract's `profile`
-value followed by a period.
+A reference target or event `object_type` target is local when it starts with
+the current contract's `profile` value followed by a period.
 
-A reference target is external when it does not start with the current
-contract's `profile` value followed by a period.
+A reference target or event `object_type` target is external when it does not
+start with the current contract's `profile` value followed by a period.
 
-An external reference target is valid only when its type name starts with the
-`profile` value of an entry in `depends_on` followed by a period.
+An external target is valid only when its type name starts with the `profile`
+value of an entry in `depends_on` followed by a period.
 
-A contract-set validator resolves external reference targets by loading the
-referenced dependency contract, checking that the dependency contract's
-`profile_version` satisfies the dependency `version` requirement, and then
-checking that the target object or event type exists in that dependency
-contract.
+A contract-set validator resolves external targets by loading the referenced
+dependency contract, checking that the dependency contract's `profile_version`
+satisfies the dependency `version` requirement, and then checking that the
+target object or event type exists in that dependency contract.
 
 A contract set is invalid when it contains more than one contract for the same
 `profile` value.
 
-A contract document with external reference targets covered by `depends_on` can
-be valid before dependency contracts are loaded. Loading and resolving the
-dependency contracts is part of contract-set validation.
+A contract document with external targets covered by `depends_on` can be valid
+before dependency contracts are loaded. Loading and resolving the dependency
+contracts is part of contract-set validation.
 
 If a dependency contract is not available in the selected contract set,
 contract-set validation fails. That failure does not make otherwise core-valid
@@ -412,8 +423,8 @@ events invalid at the core protocol level.
 If a dependency contract is available but its `profile_version` does not satisfy
 the dependency `version` requirement, contract-set validation fails.
 
-If an external reference target does not exist in the resolved dependency
-contract, contract-set validation fails.
+If an external reference target or event `object_type` target does not exist in
+the resolved dependency contract, contract-set validation fails.
 
 ## 7. Fixtures
 

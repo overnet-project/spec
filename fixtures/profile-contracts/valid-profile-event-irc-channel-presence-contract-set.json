@@ -1,0 +1,32 @@
+{
+  "description": "profile-aware validation accepts an IRC channel presence state mapped as irc.channel_presence using a dependency-owned chat.channel object type",
+  "input": {
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-chat-irc-surface-contract.json",
+      "fixtures/profile-contracts/valid-irc-adapter-contract.json"
+    ],
+    "event": {
+      "id": "3535353535353535353535353535353535353535353535353535353535353535",
+      "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "created_at": 1744300900,
+      "kind": 37800,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "irc.channel_presence"],
+        ["overnet_ot", "chat.channel"],
+        ["overnet_oid", "irc:irc.libera.chat:#overnet"],
+        ["v", "0.1.0"],
+        ["t", "irc.channel_presence"],
+        ["o", "chat.channel"],
+        ["d", "irc:irc.libera.chat:#overnet"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_scope\":\"channel_membership\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"irc.ephemeral_presence\",\"irc.partial_membership\"]},\"body\":{\"members\":[{\"nick\":\"robert\",\"account\":\"bob\",\"last_event_type\":\"irc.nick\"}],\"partial\":true,\"as_of\":1744300885}}",
+      "sig": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_set_valid": true,
+    "profile_event_valid": true
+  }
+}

@@ -1,0 +1,404 @@
+{
+  "description": "valid chat profile contract covering the chat event surface used by the IRC adapter",
+  "input": {
+    "contract": {
+      "contract_version": 1,
+      "profile": "chat",
+      "profile_version": "1.0.0",
+      "status": "draft",
+      "description": "Chat profile contract for channel and direct-message events used by the IRC adapter.",
+      "capabilities": [
+        "chat.events"
+      ],
+      "object_types": {
+        "chat.channel": {
+          "description": "A chat channel or room.",
+          "id": {
+            "scheme": "profile-defined",
+            "pattern": null,
+            "examples": [
+              "channel:general",
+              "irc:irc.libera.chat:#overnet"
+            ]
+          },
+          "state": {
+            "derivation": "event-log",
+            "state_event_type": null
+          },
+          "extensions": {}
+        },
+        "chat.dm": {
+          "description": "A direct-message conversation.",
+          "id": {
+            "scheme": "profile-defined",
+            "pattern": null,
+            "examples": [
+              "dm:alice",
+              "irc:irc.libera.chat:dm:alice"
+            ]
+          },
+          "state": {
+            "derivation": "event-log",
+            "state_event_type": null
+          },
+          "extensions": {}
+        }
+      },
+      "event_types": {
+        "chat.message": {
+          "description": "A message sent to a chat channel.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "irc_identity": {
+                "$ref": "#/$defs/irc_identity"
+              }
+            },
+            "$defs": {
+              "irc_identity": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "account": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "user": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "host": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "open",
+            "description": "Any authorized channel participant may send a message."
+          },
+          "privacy": "public",
+          "extensions": {}
+        },
+        "chat.notice": {
+          "description": "A notice sent to a chat channel.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "open",
+            "description": "Any authorized channel participant may send a notice."
+          },
+          "privacy": "public",
+          "extensions": {}
+        },
+        "chat.dm_message": {
+          "description": "A direct message.",
+          "kind": 7800,
+          "object_type": "chat.dm",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "open",
+            "description": "Any authorized participant may send a direct message."
+          },
+          "privacy": "profile-defined",
+          "extensions": {}
+        },
+        "chat.dm_notice": {
+          "description": "A direct notice.",
+          "kind": 7800,
+          "object_type": "chat.dm",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "creates",
+          "authorization": {
+            "model": "open",
+            "description": "Any authorized participant may send a direct notice."
+          },
+          "privacy": "profile-defined",
+          "extensions": {}
+        },
+        "chat.topic": {
+          "description": "Current channel topic state.",
+          "kind": 37800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "topic"
+            ],
+            "properties": {
+              "topic": {
+                "type": "string"
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "updates",
+          "authorization": {
+            "model": "profile-defined",
+            "description": "The chat profile defines who may update a channel topic."
+          },
+          "privacy": "public",
+          "extensions": {}
+        },
+        "chat.join": {
+          "description": "A participant joined a chat channel.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "references": [],
+          "state_effect": "profile-defined",
+          "authorization": {
+            "model": "profile-defined",
+            "description": "The chat profile defines join authority."
+          },
+          "privacy": "public",
+          "extensions": {}
+        },
+        "chat.part": {
+          "description": "A participant left a chat channel.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "reason": {
+                "type": "string"
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "profile-defined",
+          "authorization": {
+            "model": "profile-defined",
+            "description": "The chat profile defines part authority."
+          },
+          "privacy": "public",
+          "extensions": {}
+        },
+        "chat.quit": {
+          "description": "A participant quit in channel context.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "reason": {
+                "type": "string"
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "profile-defined",
+          "authorization": {
+            "model": "profile-defined",
+            "description": "The chat profile defines quit authority."
+          },
+          "privacy": "public",
+          "extensions": {}
+        },
+        "chat.kick": {
+          "description": "A participant was removed from a chat channel.",
+          "kind": 7800,
+          "object_type": "chat.channel",
+          "required_tags": [
+            "overnet_v",
+            "overnet_et",
+            "overnet_ot",
+            "overnet_oid",
+            "v",
+            "t",
+            "o",
+            "d"
+          ],
+          "body_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "target_nick"
+            ],
+            "properties": {
+              "target_nick": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          },
+          "references": [],
+          "state_effect": "profile-defined",
+          "authorization": {
+            "model": "profile-defined",
+            "description": "The chat profile defines kick authority."
+          },
+          "privacy": "public",
+          "extensions": {}
+        }
+      },
+      "fixtures": {
+        "valid": [
+          "fixtures/profile-contracts/valid-profile-event-irc-channel-message-contract-set.json",
+          "fixtures/profile-contracts/valid-profile-event-irc-channel-notice-contract-set.json",
+          "fixtures/profile-contracts/valid-profile-event-irc-dm-message-contract-set.json",
+          "fixtures/profile-contracts/valid-profile-event-irc-dm-notice-contract-set.json",
+          "fixtures/profile-contracts/valid-profile-event-irc-channel-topic-contract-set.json",
+          "fixtures/profile-contracts/valid-profile-event-irc-channel-join-contract-set.json",
+          "fixtures/profile-contracts/valid-profile-event-irc-channel-part-contract-set.json",
+          "fixtures/profile-contracts/valid-profile-event-irc-channel-quit-contract-set.json",
+          "fixtures/profile-contracts/valid-profile-event-irc-channel-kick-contract-set.json"
+        ],
+        "invalid": [
+          "fixtures/profile-contracts/invalid-profile-event-irc-channel-message-body-schema.json"
+        ]
+      },
+      "extensions": {}
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_valid": true
+  }
+}

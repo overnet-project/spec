@@ -1,0 +1,33 @@
+{
+  "description": "profile-aware validation rejects an IRC channel PRIVMSG event whose chat.message body omits text",
+  "input": {
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-chat-irc-surface-contract.json",
+      "fixtures/profile-contracts/valid-irc-adapter-contract.json"
+    ],
+    "event": {
+      "id": "3636363636363636363636363636363636363636363636363636363636363636",
+      "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "created_at": 1744300801,
+      "kind": 7800,
+      "tags": [
+        ["overnet_v", "0.1.0"],
+        ["overnet_et", "chat.message"],
+        ["overnet_ot", "chat.channel"],
+        ["overnet_oid", "irc:irc.libera.chat:#overnet"],
+        ["v", "0.1.0"],
+        ["t", "chat.message"],
+        ["o", "chat.channel"],
+        ["d", "irc:irc.libera.chat:#overnet"]
+      ],
+      "content": "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\",\"synthetic_identity\"]},\"body\":{}}",
+      "sig": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    }
+  },
+  "expected": {
+    "overnet_valid": true,
+    "profile_contract_set_valid": true,
+    "profile_event_valid": false,
+    "reason": "profile_event.body_schema_mismatch"
+  }
+}

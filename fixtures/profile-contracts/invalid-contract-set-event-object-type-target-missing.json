@@ -1,0 +1,92 @@
+{
+  "description": "contract-set validation rejects an external event object_type that is covered by depends_on but absent from the dependency contract",
+  "input": {
+    "contract_fixtures": [
+      "fixtures/profile-contracts/valid-chat-irc-surface-contract.json"
+    ],
+    "contracts": [
+      {
+        "contract_version": 1,
+        "profile": "irc",
+        "profile_version": "1.0.0",
+        "status": "draft",
+        "description": "Invalid IRC profile contract with an unresolved external event object type.",
+        "capabilities": [
+          "irc.events"
+        ],
+        "depends_on": [
+          {
+            "profile": "chat",
+            "version": ">=1.0.0 <2.0.0"
+          }
+        ],
+        "object_types": {
+          "irc.network": {
+            "description": "An IRC network namespace.",
+            "id": {
+              "scheme": "profile-defined",
+              "pattern": null,
+              "examples": [
+                "irc:irc.libera.chat"
+              ]
+            },
+            "state": {
+              "derivation": "event-log",
+              "state_event_type": null
+            },
+            "extensions": {}
+          }
+        },
+        "event_types": {
+          "irc.mode": {
+            "description": "An observed IRC channel mode change targeting a missing chat object type.",
+            "kind": 7800,
+            "object_type": "chat.thread",
+            "required_tags": [
+              "overnet_v",
+              "overnet_et",
+              "overnet_ot",
+              "overnet_oid",
+              "v",
+              "t",
+              "o",
+              "d"
+            ],
+            "body_schema": {
+              "type": "object",
+              "required": [
+                "mode"
+              ],
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "references": [],
+            "state_effect": "creates",
+            "authorization": {
+              "model": "external-authority",
+              "description": "The IRC network is the external authority for observed channel mode changes."
+            },
+            "privacy": "public",
+            "extensions": {}
+          }
+        },
+        "fixtures": {
+          "valid": [],
+          "invalid": [
+            "fixtures/profile-contracts/invalid-contract-set-event-object-type-target-missing.json"
+          ]
+        },
+        "extensions": {}
+      }
+    ]
+  },
+  "expected": {
+    "overnet_valid": false,
+    "profile_contract_set_valid": false,
+    "reason": "profile_contract_set.event_object_type_missing"
+  }
+}
