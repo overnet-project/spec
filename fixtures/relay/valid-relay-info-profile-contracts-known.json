@@ -1,0 +1,65 @@
+{
+  "description": "A relay that selects profile contracts advertises its profile contract policy and selected contract context in the Overnet relay information metadata.",
+  "input": {
+    "relay_info_document": {
+      "name": "Volunteer Relay 01",
+      "supported_nips": [1, 11, 42, 77],
+      "overnet": {
+        "core_version": "0.1.0",
+        "relay_profile": "volunteer-basic",
+        "capabilities": [
+          "overnet.events.publish",
+          "overnet.events.query",
+          "overnet.events.subscribe",
+          "overnet.events.sync",
+          "overnet.objects.read"
+        ],
+        "limits": {
+          "retention_seconds": 604800,
+          "max_event_bytes": 65536,
+          "max_filter_limit": 100,
+          "max_subscriptions": 32,
+          "max_negentropy_sessions": 8
+        },
+        "service_policies": {
+          "publish": "open",
+          "query": "open",
+          "subscribe": "open",
+          "sync": "open",
+          "object_read": "open"
+        },
+        "profile_contracts": {
+          "configured": true,
+          "enforced": true,
+          "policy": "known",
+          "profiles": ["chat"],
+          "event_types": ["chat.message"]
+        }
+      }
+    }
+  },
+  "expected": {
+    "assertions": [
+      {
+        "path": "overnet.profile_contracts.configured",
+        "equals": true
+      },
+      {
+        "path": "overnet.profile_contracts.enforced",
+        "equals": true
+      },
+      {
+        "path": "overnet.profile_contracts.policy",
+        "equals": "known"
+      },
+      {
+        "path": "overnet.profile_contracts.profiles",
+        "contains": "chat"
+      },
+      {
+        "path": "overnet.profile_contracts.event_types",
+        "contains": "chat.message"
+      }
+    ]
+  }
+}

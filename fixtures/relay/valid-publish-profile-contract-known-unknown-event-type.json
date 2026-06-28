@@ -1,0 +1,48 @@
+{
+  "description": "A relay using known profile contract policy does not reject a core-valid event only because its non-core event type is not defined by the selected profile contract context.",
+  "input": {
+    "relay": {
+      "service_policies": {
+        "publish": "open"
+      },
+      "profile_contract_policy": "known",
+      "profile_contract_context": {
+        "profiles": ["chat"],
+        "event_types": ["chat.message"]
+      }
+    },
+    "message": [
+      "EVENT",
+      {
+        "id": "4444444444444444444444444444444444444444444444444444444444444444",
+        "pubkey": "5555555555555555555555555555555555555555555555555555555555555555",
+        "created_at": 1700000000,
+        "kind": 7800,
+        "tags": [
+          ["overnet_v", "0.1.0"],
+          ["overnet_et", "chat.notice"],
+          ["overnet_ot", "chat.channel"],
+          ["overnet_oid", "irc:local:#overnet"]
+        ],
+        "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"text\":\"notice\"}}",
+        "sig": "66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"
+      }
+    ],
+    "validation": {
+      "nostr_valid": true,
+      "overnet_valid": true,
+      "profile_contract_context_valid": true,
+      "profile_event_validation": "not_applicable"
+    }
+  },
+  "expected": {
+    "responses": [
+      [
+        "OK",
+        "4444444444444444444444444444444444444444444444444444444444444444",
+        true,
+        "accepted: stored"
+      ]
+    ]
+  }
+}

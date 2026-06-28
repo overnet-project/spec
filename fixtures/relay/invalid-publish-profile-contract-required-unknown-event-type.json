@@ -1,0 +1,49 @@
+{
+  "description": "A relay using required profile contract policy rejects a non-core event whose event type is not defined by the selected profile contract context.",
+  "input": {
+    "relay": {
+      "service_policies": {
+        "publish": "open"
+      },
+      "profile_contract_policy": "required",
+      "profile_contract_context": {
+        "profiles": ["chat"],
+        "event_types": ["chat.message"]
+      }
+    },
+    "message": [
+      "EVENT",
+      {
+        "id": "1111111111111111111111111111111111111111111111111111111111111111",
+        "pubkey": "2222222222222222222222222222222222222222222222222222222222222222",
+        "created_at": 1700000000,
+        "kind": 7800,
+        "tags": [
+          ["overnet_v", "0.1.0"],
+          ["overnet_et", "chat.notice"],
+          ["overnet_ot", "chat.channel"],
+          ["overnet_oid", "irc:local:#overnet"]
+        ],
+        "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"text\":\"notice\"}}",
+        "sig": "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
+      }
+    ],
+    "validation": {
+      "nostr_valid": true,
+      "overnet_valid": true,
+      "profile_contract_context_valid": true,
+      "profile_event_valid": false,
+      "reason": "profile_event.event_type_undefined"
+    }
+  },
+  "expected": {
+    "responses": [
+      [
+        "OK",
+        "1111111111111111111111111111111111111111111111111111111111111111",
+        false,
+        "invalid: profile_event.event_type_undefined"
+      ]
+    ]
+  }
+}

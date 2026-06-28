@@ -135,6 +135,7 @@ The `overnet` object MUST include:
 | `capabilities` | array of strings | yes | Supported Overnet relay capabilities |
 | `limits` | object | yes | Machine-readable service limits |
 | `service_policies` | object | yes | Machine-readable access policy for baseline services |
+| `profile_contracts` | object | no | Machine-readable profile contract policy and advertised selected contract context |
 | `pricing_url` | string | no | Human-readable pricing or operator policy page |
 
 The `capabilities` array for a generic relay MUST include all of:
@@ -169,7 +170,51 @@ The `service_policies` object MUST include:
 | `sync` | string | yes | One of `open`, `auth`, `paid`, `closed` |
 | `object_read` | string | yes | One of `open`, `auth`, `paid`, `closed` |
 
-### 5.2 Example Relay Information Document
+### 5.2 Profile Contract Metadata
+
+Profile contracts are defined by the [Overnet core Profile section](core.md#326-profile) and the [Overnet Profile Contract Specification](profile-contracts.md).
+
+A relay MAY select one or more profile contracts as local relay policy.
+
+If a relay enforces profile contract policy for publish acceptance, the relay information document's `overnet` object MUST include a `profile_contracts` object that accurately describes that policy.
+
+The `profile_contracts` object MUST include:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `configured` | boolean | yes | Whether the relay has a selected profile contract context |
+| `enforced` | boolean | yes | Whether selected profile contracts affect publish acceptance |
+| `policy` | string | yes | One of `off`, `known`, `required` |
+| `profiles` | array of strings | yes | Profile namespaces selected by the relay |
+| `event_types` | array of strings | yes | Event type names defined by the selected profile contract context |
+
+If `profile_contracts` is present, `configured` MUST be `true`.
+
+The `policy` field has the following meaning:
+
+- `off`: selected profile contracts are advertised but do not affect publish acceptance.
+- `known`: events whose `overnet_et` matches a selected profile contract event type are subject to profile-aware event validation. Other core-valid events are not rejected only because no selected profile contract defines their event type.
+- `required`: non-core events are rejected unless their `overnet_et` matches exactly one event type definition in the selected profile contract context and the event passes profile-aware event validation.
+
+Core event types defined by the Overnet core, including [`core.delegation`](core.md#614-delegation-events) and [`core.removal`](core.md#613-removal-and-tombstones), remain governed by core validation. A relay MUST NOT reject a core event type only because no selected profile contract defines that core event type.
+
+When `policy` is `known` or `required`, the selected profile contract context MUST be valid according to the Overnet Profile Contract Specification.
+
+The relay information document MAY include additional `profile_contracts` fields for contract identifiers, retrieval locations, hashes, or operator-specific contract metadata.
+
+The following `profile_contracts` object is informative.
+
+```json
+{
+  "configured": true,
+  "enforced": true,
+  "policy": "known",
+  "profiles": ["chat"],
+  "event_types": ["chat.message"]
+}
+```
+
+### 5.3 Example Relay Information Document
 
 The following example is informative.
 
@@ -249,8 +294,10 @@ Before accepting an Overnet publish, a relay MUST perform all of the following:
 
 1. verify Nostr event structure and signature validity
 2. verify Overnet core validity
-3. verify any applicable companion profile requirements
+3. verify any applicable companion profile requirements, including the profile contract policy advertised in §5.2
 4. apply current operator policy for the client and event
+
+When a relay rejects a publish because profile-aware validation fails or because the relay's profile contract policy rejects an otherwise core-valid non-core event, the relay MUST return an `OK` message with success value `false` and a message beginning with `invalid:`.
 
 If the event is accepted, the relay MUST return an `OK` message with:
 
