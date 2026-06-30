@@ -1,30 +1,64 @@
 {
-  "description": "Invalid: delegated removal references a delegation that is expired at the removal event timestamp.",
-  "input": {
-    "id": "4455667744556677445566774455667744556677445566774455667744556677",
-    "pubkey": "a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2",
-    "created_at": 1744305000,
-    "kind": 7801,
-    "tags": [
-      ["overnet_v", "0.1.0"],
-      ["overnet_et", "core.removal"],
-      ["overnet_ot", "chat.channel"],
-      ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"],
-      ["e", "a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2"],
-      ["overnet_delegate", "ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00"]
-    ],
-    "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{}}",
-    "sig": "44556677445566774455667744556677445566774455667744556677445566774455667744556677445566774455667744556677445566774455667744556677"
-  },
-  "expected": {
-    "overnet_valid": false,
-    "reason": "Delegation is expired at removal event timestamp"
-  },
-  "context": {
-    "target_fixture": "valid-native-event",
-    "delegation_fixture": "valid-delegation-event",
-    "use_delegate_pubkey": true,
-    "match_target_e": true,
-    "match_delegation_ref": true
-  }
+   "context" : {
+      "delegation_fixture" : "valid-delegation-event",
+      "match_delegation_ref" : true,
+      "match_target_e" : true,
+      "target_fixture" : "valid-native-event",
+      "use_delegate_pubkey" : true
+   },
+   "description" : "Invalid: delegated removal references a delegation that is expired at the removal event timestamp.",
+   "expected" : {
+      "overnet_valid" : false,
+      "reason" : "Delegation is expired at removal event timestamp"
+   },
+   "input" : {
+      "content" : "{\"provenance\":{\"type\":\"native\"},\"body\":{}}",
+      "created_at" : 1744305000,
+      "id" : "4455667744556677445566774455667744556677445566774455667744556677",
+      "kind" : 7801,
+      "pubkey" : "a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2",
+      "sig" : "44556677445566774455667744556677445566774455667744556677445566774455667744556677445566774455667744556677445566774455667744556677",
+      "tags" : [
+         [
+            "overnet_v",
+            "0.1.0"
+         ],
+         [
+            "overnet_et",
+            "core.removal"
+         ],
+         [
+            "overnet_ot",
+            "chat.channel"
+         ],
+         [
+            "overnet_oid",
+            "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+         ],
+         [
+            "e",
+            "a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2"
+         ],
+         [
+            "overnet_delegate",
+            "ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00"
+         ],
+         [
+            "v",
+            "0.1.0"
+         ],
+         [
+            "t",
+            "core.removal"
+         ],
+         [
+            "o",
+            "chat.channel"
+         ],
+         [
+            "d",
+            "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+         ]
+      ]
+   }
 }

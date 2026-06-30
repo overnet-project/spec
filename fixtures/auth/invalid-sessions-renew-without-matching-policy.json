@@ -1,0 +1,82 @@
+{
+  "description": "A renewal request is rejected when the stored session no longer has a matching reusable policy, even if interactive approval would otherwise be available.",
+  "input": {
+    "agent": {
+      "identities": [
+        {
+          "identity_id": "default",
+          "private_key": "1111111111111111111111111111111111111111111111111111111111111111",
+          "public_identity": {
+            "scheme": "nostr.pubkey",
+            "value": "4f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa"
+          }
+        }
+      ],
+      "policies": [],
+      "service_pins": {
+        "wss://relay.example.test/auth": {
+          "scheme": "nostr.pubkey",
+          "value": "1111111111111111111111111111111111111111111111111111111111111111",
+          "display": "relay.example.test authority"
+        }
+      },
+      "sessions": [
+        {
+          "session_handle": {
+            "id": "sess-1"
+          },
+          "identity_id": "default",
+          "program_id": "irc.bridge",
+          "service": {
+            "locators": ["wss://relay.example.test/auth"],
+            "service_identity": {
+              "scheme": "nostr.pubkey",
+              "value": "1111111111111111111111111111111111111111111111111111111111111111",
+              "display": "relay.example.test authority"
+            }
+          },
+          "scope": "irc://irc.example.test/overnet",
+          "action": "session.delegate",
+          "renewable": true,
+          "expires_at": 1776884345,
+          "artifacts": [
+            {
+              "type": "nostr.event",
+              "params": {
+                "kind": 14142,
+                "tags": [
+                  ["relay", "wss://relay.example.test/auth"],
+                  ["server", "irc://irc.example.test/overnet"],
+                  ["delegate", "9778a076e7d41b398fbde5d685e685b359cfc4f6e4316b6e67f2903288a65e05"],
+                  ["session", "renewed-session-1"],
+                  ["expires_at", "1776887945"]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "request": {
+      "type": "request",
+      "id": "renew-policy-1",
+      "method": "sessions.renew",
+      "params": {
+        "session_handle": {
+          "id": "sess-1"
+        },
+        "interactive": true
+      }
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "renew-policy-1",
+      "ok": false,
+      "error": {
+        "code": "policy_denied"
+      }
+    }
+  }
+}

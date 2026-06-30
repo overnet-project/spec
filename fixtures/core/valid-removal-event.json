@@ -1,25 +1,56 @@
 {
-  "description": "A valid Overnet Removal event (kind 7801) that tombstones a prior event using an e tag reference.",
-  "input": {
-    "id": "b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3",
-    "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
-    "created_at": 1744301000,
-    "kind": 7801,
-    "tags": [
-      ["overnet_v", "0.1.0"],
-      ["overnet_et", "core.removal"],
-      ["overnet_ot", "chat.channel"],
-      ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"],
-      ["e", "a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2"]
-    ],
-    "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{}}",
-    "sig": "c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4"
-  },
-  "expected": {
-    "overnet_valid": true
-  },
-  "context": {
-    "target_fixture": "valid-native-event",
-    "match_target_e": true
-  }
+   "context" : {
+      "match_target_e" : true,
+      "target_fixture" : "valid-native-event"
+   },
+   "description" : "A valid Overnet Removal event (kind 7801) that tombstones a prior event using an e tag reference.",
+   "expected" : {
+      "overnet_valid" : true
+   },
+   "input" : {
+      "content" : "{\"provenance\":{\"type\":\"native\"},\"body\":{}}",
+      "created_at" : 1744301000,
+      "id" : "b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3d4b2c3",
+      "kind" : 7801,
+      "pubkey" : "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "sig" : "c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4d5e6c4",
+      "tags" : [
+         [
+            "overnet_v",
+            "0.1.0"
+         ],
+         [
+            "overnet_et",
+            "core.removal"
+         ],
+         [
+            "overnet_ot",
+            "chat.channel"
+         ],
+         [
+            "overnet_oid",
+            "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+         ],
+         [
+            "e",
+            "a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2"
+         ],
+         [
+            "v",
+            "0.1.0"
+         ],
+         [
+            "t",
+            "core.removal"
+         ],
+         [
+            "o",
+            "chat.channel"
+         ],
+         [
+            "d",
+            "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+         ]
+      ]
+   }
 }

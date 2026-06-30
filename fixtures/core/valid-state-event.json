@@ -1,21 +1,48 @@
 {
-  "description": "A valid Overnet State event (kind 37800) representing a user profile. The d tag must match the object identifier.",
-  "input": {
-    "id": "e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6",
-    "pubkey": "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
-    "created_at": 1744300900,
-    "kind": 37800,
-    "tags": [
-      ["d", "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5"],
-      ["overnet_v", "0.1.0"],
-      ["overnet_et", "identity.profile"],
-      ["overnet_ot", "identity.profile"],
-      ["overnet_oid", "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5"]
-    ],
-    "content": "{\"provenance\":{\"type\":\"native\"},\"body\":{\"display_name\":\"Alice\",\"bio\":\"Overnet early adopter\"}}",
-    "sig": "f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8"
-  },
-  "expected": {
-    "overnet_valid": true
-  }
+   "description" : "A valid Overnet State event (kind 37800) representing a user profile. The d tag must match the object identifier.",
+   "expected" : {
+      "overnet_valid" : true
+   },
+   "input" : {
+      "content" : "{\"provenance\":{\"type\":\"native\"},\"body\":{\"display_name\":\"Alice\",\"bio\":\"Overnet early adopter\"}}",
+      "created_at" : 1744300900,
+      "id" : "e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6a7e5f6",
+      "kind" : 37800,
+      "pubkey" : "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5",
+      "sig" : "f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8a9b0f8",
+      "tags" : [
+         [
+            "d",
+            "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5"
+         ],
+         [
+            "overnet_v",
+            "0.1.0"
+         ],
+         [
+            "overnet_et",
+            "identity.profile"
+         ],
+         [
+            "overnet_ot",
+            "identity.profile"
+         ],
+         [
+            "overnet_oid",
+            "b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5d6b4c5"
+         ],
+         [
+            "v",
+            "0.1.0"
+         ],
+         [
+            "t",
+            "identity.profile"
+         ],
+         [
+            "o",
+            "identity.profile"
+         ]
+      ]
+   }
 }
