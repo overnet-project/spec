@@ -22,7 +22,7 @@
     "assertions": [
       {
         "path": "result.protocol_version",
-        "equals": "0.1.0"
+        "equals": "0.2.0"
       }
     ]
   }

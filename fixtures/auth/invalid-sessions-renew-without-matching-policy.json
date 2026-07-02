@@ -75,7 +75,7 @@
       "id": "renew-policy-1",
       "ok": false,
       "error": {
-        "code": "policy_denied"
+        "code": "auth.policy_denied"
       }
     }
   }

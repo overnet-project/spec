@@ -52,7 +52,7 @@
       "id": "backend-1",
       "ok": false,
       "error": {
-        "code": "backend_unavailable"
+        "code": "auth.backend_unavailable"
       }
     }
   }

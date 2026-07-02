@@ -1,0 +1,26 @@
+{
+  "description": "A request naming a method outside the baseline method set is rejected with protocol.unknown_method.",
+  "input": {
+    "agent": {
+      "identities": [],
+      "policies": [],
+      "service_pins": {}
+    },
+    "request": {
+      "type": "request",
+      "id": "unknown-method-1",
+      "method": "no.such_method",
+      "params": {}
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "unknown-method-1",
+      "ok": false,
+      "error": {
+        "code": "protocol.unknown_method"
+      }
+    }
+  }
+}

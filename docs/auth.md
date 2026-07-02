@@ -975,21 +975,37 @@ This method revokes or forgets local auth-agent session state. It does not imply
 
 ### 10.17 Baseline Error Codes
 
-At minimum, the auth-agent protocol MUST distinguish:
+Auth-agent error responses use the shared error object and baseline error code
+conventions defined in the Overnet Program Protocol specification, section 8.
+Error codes are namespaced: envelope-level failures use the shared `protocol.`
+codes, and auth-domain failures use the `auth.` namespace defined by this
+document.
 
-- `invalid_request`
-- `unknown_identity`
-- `identity_required`
-- `unsupported_action`
-- `unsupported_artifact`
-- `approval_required`
-- `policy_denied`
-- `service_identity_mismatch`
-- `headless_unavailable`
-- `backend_unavailable`
-- `internal_failure`
+For envelope-level failures the auth-agent protocol MUST use the applicable
+baseline `protocol.` codes rather than auth-specific codes:
 
-Companion specifications MAY define narrower codes.
+| Code | Meaning |
+|---|---|
+| `protocol.invalid_message` | Request envelope is malformed (not an object, wrong `type`, missing `method`) |
+| `protocol.unknown_method` | `method` is not recognized in this context |
+| `protocol.invalid_params` | `params` is missing required structure |
+
+At minimum, the auth-agent protocol MUST additionally distinguish the
+following auth-domain codes:
+
+- `auth.unknown_identity`
+- `auth.identity_required`
+- `auth.unsupported_action`
+- `auth.unsupported_artifact`
+- `auth.approval_required`
+- `auth.policy_denied`
+- `auth.service_identity_mismatch`
+- `auth.headless_unavailable`
+- `auth.backend_unavailable`
+- `auth.internal_failure`
+
+Companion specifications MAY define narrower codes within the `auth.`
+namespace.
 
 ## 11. Bridge Model
 

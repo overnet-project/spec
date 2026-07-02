@@ -71,7 +71,7 @@
       "id": "renew-2",
       "ok": false,
       "error": {
-        "code": "service_identity_mismatch"
+        "code": "auth.service_identity_mismatch"
       }
     }
   }

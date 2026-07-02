@@ -240,6 +240,13 @@ This version defines the following baseline error codes:
 | `runtime.service_unavailable` | Requested runtime service is unavailable |
 | `program.operation_failed` | Program-side operation failed |
 
+Error codes are namespaced by the layer that raises them. The `protocol.`
+codes above are shared: companion request/response protocols in this
+specification family that reuse this envelope (for example, the auth-agent
+protocol) MUST use the applicable `protocol.` codes for envelope-level
+failures, and MUST namespace their domain-specific codes with a
+protocol-specific prefix (such as `runtime.`, `program.`, or `auth.`).
+
 ### 8.3 Fatal Errors
 
 Some protocol errors are fatal to the session.

@@ -1,0 +1,26 @@
+{
+  "description": "A message whose type is not request is rejected with protocol.invalid_message.",
+  "input": {
+    "agent": {
+      "identities": [],
+      "policies": [],
+      "service_pins": {}
+    },
+    "request": {
+      "type": "notification",
+      "id": "envelope-1",
+      "method": "agent.info",
+      "params": {}
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "envelope-1",
+      "ok": false,
+      "error": {
+        "code": "protocol.invalid_message"
+      }
+    }
+  }
+}

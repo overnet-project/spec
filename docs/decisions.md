@@ -233,3 +233,17 @@ Contract set validation rejects duplicate profile entries, missing dependency co
 - Implicit cross-profile references. Convenient in small examples, but makes validation dependent on ambient knowledge and weakens automation.
 
 **Rationale:** Explicit dependency-based composition gives validators, adapters, clients, and automated test systems a deterministic way to load related profile semantics without centralizing all application behavior or allowing one contract to rewrite another contract's meaning. Keeping V1 limited to explicit references leaves room for later extension without committing to inheritance semantics now.
+
+## D016: One Namespaced Error Code Vocabulary Across Companion Protocols
+
+**Date:** 2026-07-02
+
+**Decision:** All request/response protocols in the specification family that reuse the Overnet Program Protocol envelope share one error code convention. Envelope-level failures use the shared `protocol.` baseline codes defined in the Program Protocol specification, section 8. Domain-specific failures use a protocol-specific namespace prefix: `runtime.` and `program.` for the program protocol, `auth.` for the auth-agent protocol. The auth-agent protocol's original bare codes (`invalid_request`, `policy_denied`, and the rest) are replaced: `invalid_request` splits into the applicable `protocol.` codes, and the auth-domain codes gain the `auth.` prefix.
+
+**Alternatives considered:**
+
+- Keep separate vocabularies per protocol. No migration cost, but the two vocabularies were already drifting apart, and every consumer that handles both surfaces has to maintain a mapping.
+- Namespace all auth codes under `auth.` including envelope failures (e.g., `auth.invalid_request`). Keeps one prefix per protocol, but hides the fact that envelope-level failures are the same failure across protocols and would leave `invalid_request` conflating malformed envelopes, unknown methods, and malformed params.
+- A single flat shared list without namespaces. Smallest codes, but collision-prone as companion protocols add domain codes.
+
+**Rationale:** Envelope handling is implemented once (shared framing, shared error object), so envelope-level errors should have exactly one name across protocols. Namespacing domain codes by protocol keeps each protocol free to evolve its own vocabulary without collisions while remaining self-describing in logs and tests. Splitting `invalid_request` also restores information the auth protocol was discarding: unknown methods and malformed params are distinguishable failure classes in the program protocol and become so in the auth-agent protocol.

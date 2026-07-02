@@ -1,0 +1,26 @@
+{
+  "description": "A policies.grant request whose params is not an object is rejected with protocol.invalid_params.",
+  "input": {
+    "agent": {
+      "identities": [],
+      "policies": [],
+      "service_pins": {}
+    },
+    "request": {
+      "type": "request",
+      "id": "grant-params-1",
+      "method": "policies.grant",
+      "params": "not an object"
+    }
+  },
+  "expected": {
+    "response": {
+      "type": "response",
+      "id": "grant-params-1",
+      "ok": false,
+      "error": {
+        "code": "protocol.invalid_params"
+      }
+    }
+  }
+}
