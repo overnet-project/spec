@@ -1004,6 +1004,11 @@ following auth-domain codes:
 - `auth.backend_unavailable`
 - `auth.internal_failure`
 
+`auth.internal_failure` is the fallback code: an agent that encounters an
+unexpected internal failure while handling an otherwise well-formed request
+MUST still answer that request with an `auth.internal_failure` error response
+rather than leaving the request unanswered.
+
 Companion specifications MAY define narrower codes within the `auth.`
 namespace.
 
