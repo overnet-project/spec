@@ -247,3 +247,19 @@ Contract set validation rejects duplicate profile entries, missing dependency co
 - A single flat shared list without namespaces. Smallest codes, but collision-prone as companion protocols add domain codes.
 
 **Rationale:** Envelope handling is implemented once (shared framing, shared error object), so envelope-level errors should have exactly one name across protocols. Namespacing domain codes by protocol keeps each protocol free to evolve its own vocabulary without collisions while remaining self-describing in logs and tests. Splitting `invalid_request` also restores information the auth protocol was discarding: unknown methods and malformed params are distinguishable failure classes in the program protocol and become so in the auth-agent protocol.
+
+## D017: Runtime Diagnostics Are an Opt-In Runtime Contract
+
+**Date:** 2026-07-03
+
+**Decision:** The Overnet Program Runtime specification defines runtime diagnostics as an optional, opt-in runtime contract for command and service execution. Diagnostics are runtime-generated diagnostic records, not Nostr events, not Overnet events, and not baseline program protocol messages.
+
+When a runtime implements diagnostics, the default diagnostic facility is safe by construction: it must not change operation behavior, diagnostic sink failures must not fail the operation, and default diagnostic records must not include request parameters, response results, secrets, auth artifacts, bearer tokens, message bodies, decrypted private-message content, or structured error details.
+
+**Alternatives considered:**
+
+- Leave diagnostics entirely implementation-local. This avoids specification work, but it lets runtime implementations drift on privacy and failure semantics.
+- Define diagnostics as baseline program protocol notifications. This makes diagnostics portable, but it exposes runtime-internal operational data to supervised programs and couples diagnostics to one transport too early.
+- Define a mandatory observability subsystem. This overconstrains implementations before deployment and operator needs are better understood.
+
+**Rationale:** Applications should be able to get useful runtime diagnostics without hand-instrumenting every service path, but diagnostics are dangerous if they leak payloads or change behavior. Making diagnostics opt-in and implementation-defined at the sink/transport layer preserves implementation freedom while giving all runtimes one safety contract.

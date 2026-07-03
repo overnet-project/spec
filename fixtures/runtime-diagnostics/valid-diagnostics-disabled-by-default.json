@@ -1,0 +1,29 @@
+{
+  "description": "Runtime diagnostics are disabled by default and emit no diagnostic records unless explicitly enabled.",
+  "input": {
+    "operation": {
+      "surface": "program.services",
+      "method": "config.get",
+      "session_id": "instance-1",
+      "program_id": "diagnostic.program",
+      "request_id": "req-3",
+      "params": {
+        "private": "<fixture-secret-default-disabled>"
+      },
+      "result": {
+        "config": {}
+      }
+    }
+  },
+  "expected": {
+    "diagnostics": [],
+    "invariants": [
+      {
+        "surface": "diagnostics",
+        "must_not_contain": [
+          "<fixture-secret-default-disabled>"
+        ]
+      }
+    ]
+  }
+}

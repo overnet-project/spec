@@ -396,6 +396,8 @@ If a program emits ordinary diagnostics to standard error, the runtime MAY captu
 
 Standard error output is not a substitute for structured protocol notifications such as `program.log` or `program.health`.
 
+Runtime diagnostics are defined by the Overnet Program Runtime specification. They are not baseline protocol messages.
+
 ## 13. Security Considerations
 
 Implementations MUST treat all protocol input as untrusted.

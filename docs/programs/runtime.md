@@ -201,6 +201,68 @@ The protocol MUST include a structured health and status channel.
 
 The runtime MUST be able to receive program-reported health and readiness information distinct from general logs.
 
+### 7.5 Runtime Diagnostics
+
+Runtime diagnostics are runtime-generated diagnostic records about runtime-managed command, service, or dispatch execution.
+
+Runtime diagnostics are distinct from:
+
+- Nostr events
+- Overnet events
+- program-emitted `program.log` notifications
+- program-emitted `program.health` notifications
+- ordinary program standard error output
+
+A runtime SHOULD provide an opt-in diagnostic facility for runtime-managed command and service execution.
+
+Runtime diagnostics MUST be disabled unless explicitly enabled by the operator, embedding application, deployment configuration, or test harness.
+
+When runtime diagnostics are implemented:
+
+- diagnostic collection MUST NOT change the success, failure, result, error, or ordering semantics of the diagnosed operation
+- diagnostic sink, transport, formatting, or storage failures MUST NOT cause the diagnosed operation to fail
+- diagnostics MUST NOT be sent to the supervised program unless a later specification defines an explicit program-visible diagnostic capability
+- diagnostics MUST NOT contain request parameters, response results, raw secret plaintext, private keys, auth artifacts, bearer tokens, message bodies, decrypted private-message content, or structured error details by default
+- diagnostics MUST NOT expose secret-handle identifiers unless a service contract explicitly requires that identifier to be visible on the diagnosed surface
+- error diagnostics SHOULD report normalized error `code` and `message` fields when those fields are available
+- terminal diagnostics SHOULD include a non-negative duration measured by the runtime
+
+Implementation-local diagnostic APIs MAY use implementation-local field names.
+
+Portable or serialized structured diagnostic records SHOULD identify, at minimum:
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| `diagnostic_type` | string | yes | Diagnostic record type |
+| `surface` | string | yes | Runtime surface that processed the operation |
+| `method` | string | yes | Runtime method or command name |
+| `session_id` | string | no | Runtime session identifier when safe to expose |
+| `program_id` | string | no | Program identifier when safe to expose |
+| `request_id` | string | no | Request correlation identifier when safe to expose |
+| `duration_ms` | number | no | Non-negative operation duration for terminal diagnostics |
+| `error` | object | no | Sanitized error summary for failure diagnostics |
+
+The baseline diagnostic record types for command and service execution are:
+
+| `diagnostic_type` | Meaning |
+|---|---|
+| `command.start` | The runtime started processing a command or service operation |
+| `command.success` | The command or service operation completed successfully |
+| `command.error` | The command or service operation failed |
+
+The `error` object in a diagnostic record MUST NOT contain fields other than:
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| `code` | string | yes | Normalized error code |
+| `message` | string | yes | Human-readable normalized error message |
+
+The diagnostic sink, transport, retention policy, and operator presentation are implementation-defined.
+
+Implementations MAY provide an explicitly unsafe diagnostics mode for local development.
+
+Unsafe diagnostics mode MUST be separate from the default diagnostic facility, MUST require explicit enablement, and MUST be clearly identified as unsafe in operator-facing configuration or documentation.
+
 ## 8. Runtime-Managed Services
 
 The runtime MUST expose a standard service model to programs.
@@ -393,6 +455,7 @@ Therefore:
 - production-oriented runtimes MUST rely primarily on plaintext avoidance, least privilege, isolation of secret consumers, revocation, rotation, and audit rather than on assumed memory scrubbing guarantees
 - if plaintext must be materialized in memory to complete a runtime-managed operation, the runtime MUST minimize the lifetime and number of plaintext copies as much as practical
 - production-oriented deployments SHOULD restrict crash dumps, debugger access, swap exposure, and log disclosure for processes that may transiently handle plaintext secrets
+- runtime diagnostics MUST follow the redaction requirements in section 7.5
 - if a program owns a TLS endpoint, that program and its execution environment are part of the trust boundary for the corresponding certificate and private key material
 - raw certificate PEM, raw private key PEM, and TLS passphrases MUST NOT be transported through ordinary Overnet program protocol request or response payloads
 - production-oriented runtimes SHOULD supply TLS asset references through host-managed configuration or host-managed secret facilities rather than inline plaintext values
