@@ -1,0 +1,22 @@
+{
+   "description" : "An adapted IRC event whose origin has no applicable trusted authority record verifies as unverified, the permissionless default.",
+   "expected" : {
+      "outcome" : "unverified"
+   },
+   "input" : {
+      "event" : {
+         "pubkey" : "f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0",
+         "created_at" : 1744300860,
+         "kind" : 7800,
+         "content" : "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.other.net/#chan\",\"external_identity\":\"bob\",\"limitations\":[\"unsigned\"]},\"body\":{\"text\":\"hi\"}}"
+      },
+      "trusted_authority_records" : [
+         {
+            "pubkey" : "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+            "created_at" : 1744301100,
+            "kind" : 37800,
+            "content" : "{\"provenance\":{\"type\":\"native\"},\"body\":{\"protocol\":\"irc\",\"origin\":\"irc.libera.chat\",\"origin_match\":\"prefix\",\"pubkeys\":[\"a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4\"]}}"
+         }
+      ]
+   }
+}

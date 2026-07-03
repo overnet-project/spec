@@ -1,0 +1,15 @@
+{
+   "description" : "Provenance verification does not apply to native Overnet data; the outcome is not_applicable.",
+   "expected" : {
+      "outcome" : "not_applicable"
+   },
+   "input" : {
+      "event" : {
+         "pubkey" : "a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4",
+         "created_at" : 1744300860,
+         "kind" : 7800,
+         "content" : "{\"provenance\":{\"type\":\"native\"},\"body\":{\"text\":\"hi\"}}"
+      },
+      "trusted_authority_records" : []
+   }
+}

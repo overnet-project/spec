@@ -166,6 +166,23 @@ The IRC sender identity MUST be carried through provenance using `external_ident
 
 The adapter MUST NOT present IRC-originated content as native Overnet content.
 
+### 5.1 Adapter Provenance Authority and Origin Resolution
+
+Overnet core provenance verification (core specification §7.9) evaluates whether the Nostr pubkey that signed an adapted event is authoritative for the external origin the event claims. This section specializes that model for IRC by defining the authority scope and origin matching for IRC-adapted events.
+
+The authority scope for IRC-adapted events defined by this specification is the IRC network. An IRC adapter authority record (core specification §6.15) for a network:
+
+- MUST set `body.protocol` to `"irc"`
+- MUST set `body.origin` to the IRC network identifier `<network>` as used in the `provenance.origin` forms of section 9
+- MUST set `body.origin_match` to `"prefix"`
+- MUST list in `body.pubkeys` the adapter Nostr pubkeys authoritative for adapting that IRC network into Overnet
+
+The origin scope separator for the IRC origin space is `/`. Under prefix matching, a network authority record for `<network>` applies to an adapted event whose `provenance.origin` is exactly `<network>` (network-scoped events such as `irc.nick`) or begins with `<network>/` (channel-scoped and direct-message-scoped events, whose origins take the `<network>/<channel>` and `<network>/<nick>` forms defined in section 9). The separator ensures a record for `irc.libera.chat` does not match an unrelated origin such as `irc.libera.chatnet/#x`.
+
+A consumer that has anchored a network authority record classifies an IRC-adapted event as `authoritative`, `forged`, `unverified`, or `unresolvable` per core specification §7.9.2. An event that claims an IRC origin but is signed by a pubkey outside the anchored network authority record resolves to `forged`.
+
+This outbound provenance authority — which adapter pubkey is authoritative for adapting a network's observed traffic into Overnet — is distinct from the inbound authenticated actor binding of section 11.2, which binds an IRC client connection to a Nostr pubkey for authoritative writes into a hosted channel. An implementation MUST NOT conflate the two: a connection authorized to write authoritatively into a hosted channel is not thereby authoritative for adapting an external network's traffic, and vice versa.
+
 ## 6. IRC Identity Mapping
 
 ### 6.1 External Identity Form
@@ -1641,6 +1658,7 @@ An implementation claiming conformance with this IRC adapter specification MUST,
 - emit adapted provenance with protocol `irc`
 - include the required limitation identifiers defined by this specification
 - preserve the distinction between adapter identity and IRC sender identity
+- resolve IRC origin authority as defined in section 5.1 before presenting any IRC-adapted event as carrying authoritative external attribution, per core specification §7.9.3
 
 An implementation MAY additionally claim support for the optional derived channel presence state defined in section 8.12.
 
@@ -1724,3 +1742,4 @@ The following IRC adapter topics remain open:
 - richer direct-message session semantics beyond target-directed `PRIVMSG` and `NOTICE` presentation
 - interaction between relay-carried encrypted direct-message transport and richer IRC direct-message session semantics
 - write-back and bidirectional synchronization semantics beyond the minimal server-side presentation slice
+- discovery and distribution of IRC network authority records (section 5.1), including how a consumer obtains a candidate network authority record before deciding whether to anchor it

@@ -1,0 +1,22 @@
+{
+   "description" : "An adapted IRC event signed by a pubkey that a trusted prefix authority record lists as authoritative for the network verifies as authoritative.",
+   "expected" : {
+      "outcome" : "authoritative"
+   },
+   "input" : {
+      "event" : {
+         "pubkey" : "a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4",
+         "created_at" : 1744300860,
+         "kind" : 7800,
+         "content" : "{\"provenance\":{\"type\":\"adapted\",\"protocol\":\"irc\",\"origin\":\"irc.libera.chat/#overnet\",\"external_identity\":\"alice\",\"limitations\":[\"unsigned\",\"no_edit_history\"]},\"body\":{\"text\":\"hi\"}}"
+      },
+      "trusted_authority_records" : [
+         {
+            "pubkey" : "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+            "created_at" : 1744301100,
+            "kind" : 37800,
+            "content" : "{\"provenance\":{\"type\":\"native\"},\"body\":{\"protocol\":\"irc\",\"origin\":\"irc.libera.chat\",\"origin_match\":\"prefix\",\"pubkeys\":[\"a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4\"]}}"
+         }
+      ]
+   }
+}

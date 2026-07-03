@@ -344,6 +344,24 @@ Provenance is metadata describing the origin of data, the identity or system fro
 
 Provenance is required for all Overnet data. Adapted data is subject to stricter provenance requirements than native Overnet data.
 
+#### 3.2.10 Authority Record
+
+An authority record is a native Overnet object that binds an external adapter origin to the set of Nostr public keys that are authoritative for adapting that origin into Overnet.
+
+An authority record is ordinary signed Overnet data. It grants no privilege by itself; it is an assertion whose weight depends entirely on whether a consumer trusts the identity that signed it.
+
+#### 3.2.11 Trust Anchor
+
+A trust anchor is an authority record, or a public key permitted to sign authority records for a given scope, that a consumer has decided to trust through configuration, operator policy, or a profile-defined mechanism.
+
+Trust anchors are how a consumer roots provenance verification in identities it has chosen to trust, without any mandatory central registry.
+
+#### 3.2.12 Provenance Verification
+
+Provenance verification is the consumer-side operation that evaluates whether the signing identity of an adapted event is authoritative for the external origin the event claims, relative to the consumer's trust anchors.
+
+Provenance verification does not decide whether an event is admitted or stored. It decides whether adapted data may be presented as carrying authoritative external attribution or authority.
+
 ### 3.3 Compliance Terms
 
 #### 3.3.1 Core-Compliant Client
@@ -471,6 +489,7 @@ In particular:
 - an adapter MUST NOT represent a network-scoped concept as object-scoped, channel-scoped, user-scoped, or session-scoped unless the companion specification explicitly documents that transformation and its consequences
 - an adapter MUST NOT overstate identity stability, object stability, authorship, authorization, or capability beyond what the source system actually provides
 - an observed external action MUST be distinguishable from native Overnet authority unless a companion specification explicitly defines equivalent authority semantics
+- adapted data presented as carrying authoritative external identity, authorship, or authority MUST be distinguishable from adapted data whose external attribution is unverified or forged, as defined by the provenance verification model in §7.9
 - lossy, synthetic, delayed, partial, inferred, or policy-shaped mappings MUST be disclosed through provenance, limitations, companion specification text, or a combination of those mechanisms
 - derived views, convenience projections, or implementation-local aggregations MUST NOT be treated as the canonical meaning of adapted data unless the companion specification explicitly defines them as such
 
@@ -965,7 +984,40 @@ The baseline core defines exactly one delegation action:
 
 The baseline core does not define delegation revocation. Profiles or later core revisions MAY define explicit revocation behavior.
 
-## 7. Identity, Authentication, and Trust
+### 6.15 Adapter Authority Records
+
+The core defines a baseline object for binding an external adapter origin to the Nostr public keys authoritative for adapting that origin. This object is the resolution mechanism referenced by the adapted-authorization rule in §7.2 and the provenance verification model in §7.9.
+
+An adapter authority record is an Overnet State event with `kind` `37800` and `overnet_et` and `overnet_ot` values `"core.adapter_authority"`.
+
+An adapter authority record MUST:
+
+- be native Overnet data with `provenance.type` value `"native"`
+- set `overnet_oid` (and the `d` mirror) to the authority scope identifier `"<protocol>:<origin>"`, where `<protocol>` and `<origin>` are the `body.protocol` and `body.origin` values
+- include a `body` object with the fields defined below
+
+Because the object is a kind `37800` parameterized replaceable event, each signing pubkey has at most one current authority record per authority scope. A signer revises its record by publishing a newer event for the same scope, and MAY revoke it by publishing a record with an empty `pubkeys` array.
+
+The `body` fields are:
+
+| Field | Type | Description |
+|---|---|---|
+| `protocol` | string | The external protocol or system this authority applies to (e.g., `"irc"`) |
+| `origin` | string | The external origin, or origin prefix, this record is authoritative for |
+| `origin_match` | string | OPTIONAL. `"exact"` (default) or `"prefix"`. See below. |
+| `pubkeys` | array of 64-character lowercase hex strings | The Nostr pubkeys authoritative for adapting the origin. MAY be empty. |
+| `not_before` | integer | OPTIONAL Unix timestamp before which the record is not yet in effect |
+| `not_after` | integer | OPTIONAL Unix timestamp after which the record is no longer in effect |
+
+`body.protocol` and `body.origin` are REQUIRED. `body.pubkeys` is REQUIRED and MUST be an array; an empty array is a valid assertion that no pubkey is currently authoritative for the scope.
+
+When `body.origin_match` is `"exact"` or absent, the record applies only to adapted events whose `provenance.origin` equals `body.origin`.
+
+When `body.origin_match` is `"prefix"`, the record applies to adapted events whose `provenance.origin` equals `body.origin` or begins with `body.origin` followed by a scope separator. The scope separator for an origin space is defined by the applicable adapter specification; a companion specification that permits prefix authority MUST define the separator so that prefix matching cannot span an unintended origin boundary.
+
+Signing an adapter authority record asserts only that the signer claims the listed pubkeys are authoritative for the origin. The record carries authority for a consumer only when that consumer trusts the signer as a trust anchor for the scope, as defined in §7.9. The core defines no mandatory global registry of authority records and no privileged authority-record signer.
+
+
 
 ### 7.1 Identity Model
 
@@ -982,6 +1034,8 @@ Where interactive or session-level authentication is required, a relay or servic
 The baseline authorization model is conservative. Unless an applicable profile or explicit delegation rule states otherwise, a native Overnet event that revises or removes prior event state is authorized only when the acting Nostr `pubkey` matches the authoring `pubkey` of the target event.
 
 For adapted data, a revision or removal is authorized only when it is issued by the same adapter `pubkey` that authored the adapted target event, unless an applicable companion specification defines a different rule.
+
+The baseline continuity rule above governs authorization between two events with the same adapter pubkey, but it does not by itself establish whether a given pubkey is the legitimate adapter for an external origin. That question is answered by the adapter authority records defined in §6.15, evaluated through the provenance verification model in §7.9.
 
 Moderator, administrative, or delegated override authority is not part of the baseline core authorization model. Implementations MUST NOT assume such override authority unless it is explicitly defined by the core or by an applicable companion specification.
 
@@ -1013,13 +1067,60 @@ At minimum, implementations MUST prevent trivial replay of identical operations 
 
 A relay validates and serves Overnet data, but relay acceptance alone does not imply that all semantic claims carried by an event are true.
 
-Adapted data carries additional trust boundaries. An implementation MUST make clear whether data is native or adapted and MUST preserve provenance sufficient for clients to evaluate trust.
+Adapted data carries additional trust boundaries. An implementation MUST make clear whether data is native or adapted and MUST preserve provenance sufficient for clients to evaluate trust. The provenance verification model in §7.9 defines how a consumer evaluates whether the signing identity of an adapted event is authoritative for the external origin it claims.
 
 ### 7.8 Threat Model
 
 Implementations SHOULD assume the possibility of forged external mappings, replayed operations, compromised identities, misleading provenance, conflicting event ordering, and policy-sensitive capability exposure.
 
 The core security and privacy requirements are defined later in this document.
+
+### 7.9 Adapter Provenance Verification
+
+Provenance in an adapted event is self-asserted. Any identity may sign an event that claims any external protocol, origin, and external identity. A relay that accepts an event validates its Nostr signature, structure, and local policy, but relay acceptance does not establish that the signing identity is authoritative for the external origin the event claims (§7.7). Overnet does not close this gap by restricting who may publish, because permissionless publication is a core design objective (§1.6, §5.1, §5.8). Instead, the core defines a consumer-side verification boundary at which forged external attribution becomes detectable and non-authoritative, without preventing the event from being carried.
+
+#### 7.9.1 Trust Anchors
+
+A consumer maintains a set of trust anchors. A trust anchor designates a signing identity that the consumer trusts to assert adapter authority records (§6.15) for a stated protocol and origin scope.
+
+Trust anchors MUST be established by explicit consumer configuration or operator policy. The core does not define a mandatory global registry and does not privilege any signer; which anchors a consumer trusts is a local decision, consistent with operator choice (§5.8).
+
+A companion specification or profile MAY define mechanisms for discovering or distributing authority records, but the decision to trust an anchor remains with the consumer. A consumer MAY adopt a trust-on-first-use policy, but such a policy is weaker: absent an anchored record, an unfamiliar signing identity yields the `unverified` outcome below rather than `forged`.
+
+An authority record is a *trusted authority record* for a consumer when it is anchored directly by that consumer, or when it is signed by an identity the consumer has anchored as permitted to assert authority records for the relevant scope. The baseline core does not define transitive anchor chains; a profile MAY define them.
+
+#### 7.9.2 The Verification Operation
+
+Provenance verification takes an adapted event and the consumer's trusted authority records and produces exactly one outcome.
+
+An authority record is *applicable* to an adapted event when it is a trusted authority record, its `body.protocol` equals the event's `provenance.protocol`, and its origin selector matches the event's `provenance.origin` under the matching rule in §6.15. An applicable record is *in effect* at the event's `created_at` when it is well-formed and within any `not_before`/`not_after` window it declares.
+
+The outcome is determined as follows:
+
+| Outcome | Condition |
+|---|---|
+| `authoritative` | At least one applicable authority record is in effect and lists the event's signing `pubkey`, and no applicable in-effect record contradicts that determination. |
+| `forged` | At least one applicable authority record is in effect, and no applicable in-effect record lists the event's signing `pubkey`. |
+| `unverified` | No applicable authority record is known. Authority is neither confirmed nor refuted. |
+| `unresolvable` | An applicable authority record exists but no safe determination can be made — for example the applicable record is malformed, is outside its validity window, or in-effect applicable records conflict in a way the consumer's policy cannot reconcile. |
+
+Verification applies to adapted data. Native Overnet data (`provenance.type` value `"native"`) is not subject to this operation; its authority is governed by the baseline identity and authorization model (§7.1, §7.2).
+
+The `forged` outcome is positive evidence that the signing identity is not authoritative for the origin it claims. The `unverified` outcome is the permissionless default and MUST NOT be reported as `forged`: it means the consumer holds no applicable anchor, not that misattribution was detected.
+
+#### 7.9.3 Consumer Conformance Obligations
+
+A consumer that renders or acts on adapted data:
+
+- MUST NOT present adapted data as carrying authoritative external identity, authorship, or authority unless verification yields `authoritative`
+- MUST be able to distinguish the four outcomes in §7.9.2 wherever that distinction affects presentation, authorization, or trust
+- MUST NOT present an event whose outcome is `forged` as authoritative external attribution, and SHOULD surface, quarantine, or reject it as a provenance violation according to policy
+- MAY present `unverified` adapted data, but MUST NOT represent it as verified or authoritative external attribution
+- MUST treat `unresolvable` as not authoritative
+
+A consumer that does not verify provenance MUST NOT represent adapted external attribution as authoritative. A consumer MAY decline to implement verification only by declining to make authoritative claims about adapted attribution at all.
+
+These obligations constrain how a consumer *presents and trusts* adapted data. They do not require a relay to reject unverifiable events, and they do not make an unverified or forged event invalid as a core event; such an event remains a structurally valid carrier whose external attribution has simply not been established.
 
 ## 8. Core Protocol Semantics
 
@@ -1296,6 +1397,8 @@ All Overnet data MUST carry provenance as defined in §6.3.3.
 
 Adapted data MUST disclose its origin, relevant mapping context, and any known translation limitations as defined in §6.3.3 and §6.3.4.
 
+A consumer MUST NOT present adapted data as carrying authoritative external identity, authorship, or authority except as permitted by the provenance verification model in §7.9. Adapted external attribution that has not been verified as `authoritative` MUST NOT be represented as authoritative.
+
 ### 13.4 Privacy Considerations
 
 Implementations SHOULD minimize unnecessary exposure of identity, mapping, capability, and policy information.
@@ -1325,6 +1428,8 @@ Such controls SHOULD be represented through defined outcome or error semantics r
 ### 14.1 Core Client Conformance
 
 A core-compliant client MUST satisfy all mandatory client requirements in this specification.
+
+A core-compliant client that renders or acts on adapted data MUST satisfy the consumer conformance obligations for provenance verification in §7.9.3.
 
 Support for optional capabilities or profiles is not implied unless explicitly claimed.
 
@@ -1358,6 +1463,8 @@ The following topics remain intentionally open or are expected to be completed b
 - subscription resume and continuation rules
 - the exact session-oriented authentication handshake details where used
 - stronger identity continuity, rotation, and revocation mechanisms
+- standard discovery and distribution mechanisms for adapter authority records (§6.15), including how consumers obtain candidate records before deciding whether to anchor them
+- governance conventions for delegated or transitive trust anchors and for reconciling competing authority records for the same origin
 - concrete reference tag conventions for revision, supersession, and removal relationships
 - detailed adapter specifications for systems such as IRC, email, and GitLab-like systems
 - a language-agnostic program runtime or program-protocol specification for Overnet programs
