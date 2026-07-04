@@ -127,3 +127,7 @@ Small clarifications and focused pull requests are especially helpful while the 
 
 This repository is licensed under the GNU General Public License, version 3.
 See [LICENSE](LICENSE).
+
+## AI Usage
+
+This code was developed in part with AI tooling such as Claude Code and Codex. We want to be upfront about that.
