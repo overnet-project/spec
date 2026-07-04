@@ -1,0 +1,35 @@
+{
+   "description" : "Invalid: delegated kind 7801 removal references a validly signed delegation event that uses the wrong kind (not 7800). A referenced delegation event MUST be a valid baseline core delegation event per section 6.14, using kind 7800.",
+   "expected" : {
+      "overnet_valid" : false,
+      "reason" : "Delegated removal delegation event must use kind 7800"
+   },
+   "context" : {
+      "target_fixture" : "valid-native-event",
+      "match_target_e" : true,
+      "use_delegate_pubkey" : true,
+      "delegation_override" : {
+         "kind" : 37800
+      }
+   },
+   "input" : {
+      "content" : "{\"provenance\":{\"type\":\"native\"},\"body\":{}}",
+      "created_at" : 1744301000,
+      "id" : "cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004",
+      "kind" : 7801,
+      "pubkey" : "a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2c3a1b2",
+      "sig" : "cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004cafe0004",
+      "tags" : [
+         ["overnet_v", "0.1.0"],
+         ["overnet_et", "core.removal"],
+         ["overnet_ot", "chat.channel"],
+         ["overnet_oid", "f47ac10b-58cc-4372-a567-0e02b2c3d479"],
+         ["e", "a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2f3a1e2"],
+         ["overnet_delegate", "ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00ddeeff00"],
+         ["v", "0.1.0"],
+         ["t", "core.removal"],
+         ["o", "chat.channel"],
+         ["d", "f47ac10b-58cc-4372-a567-0e02b2c3d479"]
+      ]
+   }
+}

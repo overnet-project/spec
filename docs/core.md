@@ -947,12 +947,16 @@ For baseline core authorization, a kind `7801` removal MUST be authorized agains
 
 Under the baseline core authorization model, a kind `7801` removal is authorized only when the removal event's Nostr `pubkey` matches the authoring `pubkey` of the target event identified by the `e` tag.
 
+The target event used to establish this authorization MUST be a valid Nostr event: its `id` MUST match its content and its signature MUST verify against its `pubkey`. An event that fails this verification does not establish an authoring `pubkey`, so authorization cannot be established and the removal MUST be rejected. A consumer MUST NOT authorize a removal against an unverified or forged target event.
+
 A delegated removal MAY be authorized by a separate delegation event. When a kind `7801` removal uses delegation, it MUST include exactly one `overnet_delegate` tag whose value is the Nostr event ID of the delegation event being used for authorization.
 
 When a delegated removal is evaluated, the referenced delegation event MUST be available. If the referenced delegation event is unavailable, authorization cannot be established and the removal MUST be rejected.
 
 The referenced delegation event MUST:
 
+- be a valid Nostr event whose `id` matches its content and whose signature verifies against its `pubkey`
+- be a valid baseline core delegation event as defined in §6.14, in particular using `kind` `7800` and native provenance
 - be an Overnet event with `overnet_et` value `"core.delegation"`
 - have the same `overnet_ot` and `overnet_oid` values as the removal event
 - have a `body.action` value of `"remove"`
