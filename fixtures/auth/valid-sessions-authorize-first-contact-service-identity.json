@@ -1,7 +1,8 @@
 {
-  "description": "A first-contact request with a stable presented service identity succeeds interactively and reports first_contact pin state.",
+  "description": "A first-contact request with a stable presented service identity succeeds under an operator-configured unattended auto-approval agent and reports first_contact pin state.",
   "input": {
     "agent": {
+      "allow_unattended_autoapprove": true,
       "identities": [
         {
           "identity_id": "default",

@@ -1,7 +1,8 @@
 {
-  "description": "A signing request is rejected with backend_unavailable when the chosen identity has no available signing backend.",
+  "description": "A signing request under an operator-configured unattended auto-approval agent is rejected with backend_unavailable when the chosen identity has no available signing backend.",
   "input": {
     "agent": {
+      "allow_unattended_autoapprove": true,
       "identities": [
         {
           "identity_id": "default",

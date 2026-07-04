@@ -1,7 +1,8 @@
 {
-  "description": "A first-contact IRC auth request without a stable service identity uses provisional exact locator trust and returns one signed Nostr auth event artifact.",
+  "description": "A first-contact IRC auth request without a stable service identity, handled by an operator-configured unattended auto-approval agent, uses provisional exact locator trust and returns one signed Nostr auth event artifact.",
   "input": {
     "agent": {
+      "allow_unattended_autoapprove": true,
       "identities": [
         {
           "identity_id": "default",

@@ -432,10 +432,18 @@ An implementation MAY bind policy more narrowly, but it MUST NOT bind policy mor
 
 ### 8.4 Headless Behavior
 
+Whether an interactive approval channel is available is a property of the auth agent's own environment. The auth agent MUST determine this for itself. It MUST NOT treat any request-supplied signal, such as a client-provided interactivity flag, as evidence that a user is present or that a request has been approved. A requesting program cannot vouch for its own approval.
+
 If no approval UI or TTY is available and no existing reusable policy authorizes the request:
 
 - the auth agent MUST fail closed
 - the auth agent MUST NOT silently auto-approve merely because the requesting program is local
+- the auth agent MUST NOT auto-approve based on a request-supplied interactivity hint
+
+An operator MAY configure an auth agent to run in an unattended auto-approval mode, in which a request that passes structural validation and service-identity checks is approved without an interactive prompt. This mode:
+
+- MUST be an explicit operator configuration of the agent itself, disabled by default
+- MUST NOT be selectable or triggerable by a requesting program or by request content
 
 ### 8.5 Approval Reuse
 
