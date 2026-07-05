@@ -123,11 +123,11 @@ Small clarifications and focused pull requests are especially helpful while the 
 - [adapter-irc-perl](https://github.com/overnet-project/adapter-irc-perl)
 - [irc-server](https://github.com/overnet-project/irc-server)
 
+## AI Usage
+
+This code was developed in part with AI tooling such as Claude Code and Codex. We want to be upfront about that.
+
 ## License
 
 This repository is licensed under the GNU General Public License, version 3.
 See [LICENSE](LICENSE).
-
-## AI Usage
-
-This code was developed in part with AI tooling such as Claude Code and Codex. We want to be upfront about that.
