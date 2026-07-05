@@ -75,6 +75,8 @@ Each service method defined in this document is subject to runtime permission en
 
 A runtime MUST reject a method call when the calling program instance lacks the required permission for that service operation.
 
+Permission enforcement MUST fail closed. If a runtime cannot determine the required permission for a service method, it MUST reject the call rather than dispatch it without enforcement.
+
 This document names baseline permission identifiers. A runtime MAY define more specific internal permissions, but it MUST preserve the baseline semantics defined here.
 
 ### 3.3 Result Shape
