@@ -1,0 +1,31 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/validate.yml'
+      - 'fixtures/**'
+      - 'schemas/**'
+      - 'tools/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/validate.yml'
+      - 'fixtures/**'
+      - 'schemas/**'
+      - 'tools/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The validator uses only core Perl modules, so the runner's system
+      # perl suffices and no dependency installation is needed.
+      - name: Validate fixtures and schemas
+        run: perl tools/validate-fixtures

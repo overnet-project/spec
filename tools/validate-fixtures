@@ -1,0 +1,120 @@
+#!/usr/bin/env perl
+#
+# Structural integrity checks for the conformance fixtures and schemas.
+#
+# This deliberately checks structure, not semantics: whether a fixture's
+# expected verdict is *correct* is owned by the downstream conformance
+# suites (core-perl and friends), not by this repository.
+#
+# Uses only core Perl modules so CI needs no dependency installation.
+#
+use strict;
+use warnings;
+
+use File::Find;
+use JSON::PP ();
+
+my $json = JSON::PP->new;
+my @errors;
+
+sub check_file {
+    my ($path) = @_;
+
+    open my $fh, '<', $path or do {
+        push @errors, "$path: cannot read: $!";
+        return;
+    };
+    my $text = do { local $/; <$fh> };
+    close $fh;
+
+    my $data = eval { $json->decode($text) };
+    if (!defined $data) {
+        my ($msg) = split /\n/, ($@ || 'unknown error');
+        push @errors, "$path: invalid JSON: $msg";
+        return;
+    }
+
+    return $data;
+}
+
+sub check_fixture {
+    my ($path, $data) = @_;
+
+    if (ref $data ne 'HASH') {
+        push @errors, "$path: fixture must be a JSON object";
+        return;
+    }
+
+    for my $key (qw(description input expected)) {
+        if (!exists $data->{$key}) {
+            push @errors, "$path: missing required key '$key'";
+        }
+    }
+
+    if (exists $data->{description}
+        && (ref $data->{description} || !length($data->{description} // ''))) {
+        push @errors, "$path: description must be a non-empty string";
+    }
+    if (exists $data->{expected} && ref $data->{expected} ne 'HASH') {
+        push @errors, "$path: expected must be a JSON object";
+    }
+
+    # Naming consistency: only for families whose expectation is the plain
+    # overnet_valid verdict. Families with additional *_valid dimensions
+    # (e.g. profile-contracts) name fixtures for the specific dimension, so
+    # the top-level verdict cannot be inferred from the filename.
+    my $expected = $data->{expected};
+    if (ref $expected eq 'HASH' && exists $expected->{overnet_valid}) {
+        my @valid_keys = grep { /_valid\z/ } keys %$expected;
+        if (@valid_keys == 1) {
+            my ($name) = $path =~ m{([^/]+)\z};
+            my $verdict = $expected->{overnet_valid} ? 1 : 0;
+            if ($name =~ /\Avalid-/ && !$verdict) {
+                push @errors, "$path: named 'valid-' but expected.overnet_valid is false";
+            }
+            if ($name =~ /\Ainvalid-/ && $verdict) {
+                push @errors, "$path: named 'invalid-' but expected.overnet_valid is true";
+            }
+        }
+    }
+
+    return;
+}
+
+my $fixture_count = 0;
+find(
+    {
+        no_chdir => 1,
+        wanted   => sub {
+            return unless /\.json\z/;
+            my $data = check_file($File::Find::name);
+            return unless defined $data;
+            $fixture_count++;
+            check_fixture($File::Find::name, $data);
+        },
+    },
+    'fixtures'
+);
+
+my $schema_count = 0;
+if (-d 'schemas') {
+    find(
+        {
+            no_chdir => 1,
+            wanted   => sub {
+                return unless /\.json\z/;
+                $schema_count++ if defined check_file($File::Find::name);
+            },
+        },
+        'schemas'
+    );
+}
+
+if (@errors) {
+    print STDERR "$_\n" for @errors;
+    print STDERR scalar(@errors), " problem(s) found\n";
+    exit 1;
+}
+
+print "OK: $fixture_count fixtures and $schema_count schemas are structurally valid\n";
+exit 0;
