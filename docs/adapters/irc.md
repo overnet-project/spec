@@ -1105,6 +1105,13 @@ For this profile:
 - when a channel is currently `+m` and a client lacking both `irc.operator` and `irc.voice` attempts channel-targeted `PRIVMSG` or `NOTICE`, the implementation MUST reject that send with `404 ERR_CANNOTSENDTOCHAN`
 - a `closed` / `+i` channel MUST NOT grant new authoritative membership through ordinary local IRC `JOIN` alone without an invite or other authorized `NIP-29` admission path
 - an attempted authoritative `JOIN` whose current IRC user mask matches one current authoritative `+b` entry MUST be rejected with `474 ERR_BANNEDFROMCHAN`
+- the IRC user mask evaluated for `+b` matching MUST be the mask the authoritative adapter observed for the joining client connection, not a mask asserted by the joining client; only the authoritative adapter that terminates the IRC connection observes the joining client's real IRC user mask
+
+The mask an authoritative hosted-channel relay sees on a `9021` join request is carried by the publisher and is trustworthy only when the publisher is the authoritative adapter that observed the connection. A relay authorizing join requests published to it does not observe the joining client's network origin and cannot cryptographically verify the asserted mask. Therefore, for a channel with one or more active ban masks:
+
+- relay-side `+b` mask enforcement is best-effort; a publisher that controls its own delegated session key can assert an arbitrary `overnet_irc_mask`, so mask bans MUST NOT be relied on as the authoritative exclusion mechanism
+- an authoritative hosted-channel relay MUST NOT treat a `9021` join request that omits a well-formed non-empty `overnet_irc_mask` tag as unbanned; it MUST reject such a request rather than admit an actor whose mask cannot be evaluated against the active bans
+- the authoritative, non-evadable exclusion mechanism for a hosted channel is `9001` pubkey removal together with a `closed` channel; operators MUST use pubkey removal, not mask bans alone, when hard exclusion of a specific authenticated identity is required
 
 This profile does not yet require one exact IRC numeric for initial join-request submission; an implementation MAY use a server notice or another stable implementation-defined acknowledgement path.
 
