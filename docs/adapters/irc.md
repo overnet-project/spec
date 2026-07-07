@@ -763,6 +763,21 @@ When authoritative `NIP-29` control events are published through such a delegate
 - the implementation MUST attach one monotonically increasing per-session first tag `["overnet_sequence", "<positive_integer>"]`
 - the implementation MUST reset that per-session sequence when a new delegation grant replaces the old one for that IRC client connection
 
+An authoritative hosted-channel relay that authorizes `NIP-29` control events under this delegation model MUST NOT treat the `overnet_actor` tag as authenticated on its own. Before accepting a control event of kind `9000`, `9001`, `9002`, `9009`, `9021`, or `9022`, the relay:
+
+- MUST resolve the control event's `overnet_authority` tag to one delegation grant event already accepted and currently retained by that relay, and MUST reject the control event when no such grant event is known
+- MUST retain accepted unexpired grant events for this resolution even when Nostr replaceable-event storage semantics replace an earlier grant event for the same signing pubkey, because one authoritative pubkey holds one concurrent session grant per IRC client connection; a retained grant MAY be dropped once its `expires_at` time has passed
+- MUST reject the control event unless the referenced grant event uses the deployment's configured grant kind
+- MUST reject the control event unless the referenced grant event is signed by the pubkey named in the control event's `overnet_actor` tag
+- MUST reject the control event unless the referenced grant event's first `delegate` tag equals the control event's signing pubkey
+- MUST reject the control event unless the referenced grant event's first `relay` tag equals the relay's own configured relay URL
+- MUST reject the control event unless the referenced grant event carries non-empty first `server` and `session` tags
+- MUST reject the control event when the referenced grant event's first `expires_at` tag is missing, is not a base-10 unsigned integer string, or is less than the control event's `created_at`
+
+Successful relay-side grant verification establishes only that the signing session key may currently act for the `overnet_actor` pubkey. Whether that actor is authorized to perform the specific control action remains governed by the current authoritative group state derived under section 11.4.
+
+Because the grant kind is a Nostr replaceable kind, a newly accepted grant for the same authoritative pubkey replaces the previous one at the relay; control events that reference a replaced grant are rejected by the resolution rule above, which matches the section 11.2.2 requirement that a superseded grant stop being honored.
+
 #### 11.2.3 Optional SASL `NOSTR` Binding Surface
 
 An implementation claiming support for the authoritative profile in section 11.1 MAY expose the same authoritative pubkey binding and optional session delegation through IRCv3 capability `sasl` with mechanism name `NOSTR`.
@@ -847,6 +862,13 @@ At minimum, an implementation claiming this profile MUST be able to derive curre
 For this profile:
 
 - relay-signed `39001`, `39002`, and `39003` events are authoritative snapshots of current relay state, but they MUST NOT be interpreted as creating a separate non-`NIP-29` authority model
+- a `39000`, `39001`, `39002`, or `39003` event is relay-signed only when its signing pubkey is one of the deployment's explicitly configured authoritative snapshot identities; a snapshot-kind event signed by any other pubkey is not an authoritative snapshot
+- an authoritative hosted-channel relay MUST reject a published `39001`, `39002`, or `39003` event whose signing pubkey is not one of its configured authoritative snapshot identities, and MUST reject all such published events when it has no configured authoritative snapshot identity
+- when deriving current authoritative state, an implementation MUST ignore a stored `39001`, `39002`, or `39003` event whose signing pubkey is not one of the deployment's configured authoritative snapshot identities
+- a `39000` group-metadata event MAY additionally be published as a delegated authoritative write carrying the section 11.2.2 delegation tags, because the section 11.3 hosted-channel creation flow publishes initial authoritative group metadata through the delegated session key
+- an authoritative hosted-channel relay MUST reject a published `39000` event unless its signing pubkey is a configured authoritative snapshot identity, or the event passes the section 11.2.2 relay-side delegation-grant verification and its effective actor either currently holds role `irc.operator` for the bound group or the bound group has no current durable members
+- an authoritative hosted-channel relay MUST reject a delegated `39000` event for a tombstoned group; reactivation flows through the section 11.4 `9002` metadata path for a retained operator
+- when deriving current authoritative state, an implementation MUST ignore a stored `39000` event unless its signing pubkey is a configured authoritative snapshot identity or the event carries well-formed section 11.2.2 delegation tags whose effective actor differs from the event's signing pubkey
 - if accepted control-event history and relay-signed snapshots disagree, the implementation MUST prefer the authoritative relay state it actually enforces; a stale or partial snapshot MUST NOT silently widen authority
 - `39002` membership snapshots MAY be partial and therefore MUST NOT be treated as exhaustive unless the implementation explicitly knows they are exhaustive for that deployment
 - when deriving current authoritative state, the implementation MUST process relevant authoritative events in one deterministic total order rather than in relay delivery order or local input-array order
