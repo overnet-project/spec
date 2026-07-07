@@ -1416,6 +1416,12 @@ For this baseline:
 - when the implementation does not have authoritative IRC-side values for `<username>`, `<host>`, or `<realname>`, it MAY use stable implementation-defined presentational placeholder values for `WHOIS` in the same way as for `WHO`
 - `<server_description>` MAY be a stable implementation-defined presentational description string
 
+For the `<host>` presented in `USERHOST`, `WHO`, and `WHOIS` replies, and in any authoritative IRC user mask derived under section 11:
+
+- an implementation that terminates the client transport connection SHOULD treat the client's real network transport address, such as its IP address, as private and SHOULD NOT expose it as the presented host unless an operator explicitly configures the implementation to do so
+- such an implementation SHOULD instead present a stable cloaked host that does not reveal the underlying transport address
+- a cloaked host SHOULD be stable for a given client transport identity so that host presentation and mask matching remain consistent for that identity across queries and reconnections
+
 This baseline does not require support for:
 
 - `WHO` against non-channel masks
