@@ -329,6 +329,18 @@ Example:
 }
 ```
 
+`program_id` names the client program the policy authorizes, and it is matched
+exactly. The value above authorizes the IRC auth bridge; a different client
+requires its own policies, so the local IRC proxy — which authorizes as
+`irc.proxy` — is not covered by these. An agent with no matching policy has no
+way to ask a person for approval and refuses the request, so a `program_id` that
+does not name the client actually connecting presents as an approval failure
+rather than as a configuration mismatch.
+
+Both actions are required for a client that delegates: `session.authenticate`
+alone admits the client and then refuses the delegation it needs to act on an
+authoritative channel.
+
 The reference implementation currently recognizes:
 
 - `daemon.endpoint`
