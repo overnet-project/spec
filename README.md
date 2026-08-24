@@ -21,9 +21,8 @@ This repository is in active development.
 The current specifications should be treated as working drafts.
 They are being revised alongside early implementation work in the sibling repositories:
 
-- [core-perl](https://github.com/overnet-project/core-perl)
-- [relay-perl](https://github.com/overnet-project/relay-perl)
-- [adapter-irc-perl](https://github.com/overnet-project/adapter-irc-perl)
+- [overnet-perl](https://github.com/overnet-project/overnet-perl)
+- [overnet-burner](https://github.com/overnet-project/overnet-burner)
 - [irc-server](https://github.com/overnet-project/irc-server)
 
 The current document is useful as:
@@ -118,9 +117,8 @@ Small clarifications and focused pull requests are especially helpful while the 
 
 ## Related Repositories
 
-- [core-perl](https://github.com/overnet-project/core-perl)
-- [relay-perl](https://github.com/overnet-project/relay-perl)
-- [adapter-irc-perl](https://github.com/overnet-project/adapter-irc-perl)
+- [overnet-perl](https://github.com/overnet-project/overnet-perl)
+- [overnet-burner](https://github.com/overnet-project/overnet-burner)
 - [irc-server](https://github.com/overnet-project/irc-server)
 
 ## AI Usage
